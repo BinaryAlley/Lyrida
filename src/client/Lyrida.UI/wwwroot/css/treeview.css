@@ -1,0 +1,18 @@
+﻿.treeview {
+    font-family: Arial, sans-serif;
+    list-style-type: none;
+}
+
+.treeview ul {
+    list-style-type: none;
+    padding-left: 20px;
+    /*display: none;*/ /* collapse treeview items to top level items by default */
+}
+
+.treeview li {
+    cursor: pointer;
+    user-select: none; /* prevent text selection */
+    -moz-user-select: none; /* Firefox */
+    -webkit-user-select: none; /* Chrome, Safari, and Opera */
+    -ms-user-select: none; /* IE 10+ */
+}

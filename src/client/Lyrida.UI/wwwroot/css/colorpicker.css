@@ -1,0 +1,29 @@
+﻿.color-picker {
+    width: 40px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+/* For Webkit-based browsers (e.g., Chrome, Safari) */
+.color-picker::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+}
+
+/* For Firefox */
+.color-picker::-moz-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker::-moz-color-swatch {
+    border: none;
+}

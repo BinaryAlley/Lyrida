@@ -1,0 +1,37 @@
+﻿@using Lyrida.Infrastructure.Common.Enums;
+@using Lyrida.Infrastructure.Localization;
+@using Lyrida.UI.Common.Entities.FileSystem;
+@inject ITranslationService translattionService
+
+<div class="dynTab-container">
+    <ul class="dynTab-tabs dynTab-clearfix" id="dynTab_tabHeaders">
+        <!-- tabs will be populated dynamically here -->
+        <li id="dynTab_addTab">
+            <a href="#" title="Add Tab">+</a>
+        </li>
+    </ul>
+</div>
+<div id="dynTab_tabPages"></div>
+
+@section Scripts {
+    <script type="text/javascript">
+        const initialPages = [
+            // { title: "Home", path: "/app" },
+            // { title: "Desktop", path: "C:\\Users\\" },
+        ];
+        let nextTabId = initialPages.length;
+
+        $('#dynTab_addTab').click((e) => {
+            e.preventDefault();
+            addNewTab("New Tab", "/app");
+        });
+
+        $(document).ready(() => {
+            if (initialPages && initialPages.length > 0) {
+                initialPages.forEach((page, index) => {
+                    addNewTab(page.title, page.path, index);
+                });
+            }
+        });
+    </script>
+}

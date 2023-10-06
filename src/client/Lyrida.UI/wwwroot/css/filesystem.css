@@ -1,0 +1,487 @@
+﻿/*dynamic explorer tabs*/
+.dynTab-container {
+    background: #222222;
+    margin: 0;
+    padding: 0;
+    height: 35px;
+}
+
+ul.dynTab-tabs {
+    margin: 0;
+    list-style-type: none;
+    line-height: 35px;
+    overflow: hidden;
+    display: inline-block;
+    padding-right: 20px;
+}
+
+ul.dynTab-tabs > li.active {
+    border-left: 1px solid rgb(0, 0, 0);
+    border-top: 1px solid rgb(0, 0, 0);
+    border-right: 1px solid rgb(119, 119, 119);
+    border-bottom: 1px solid rgb(119, 119, 119);
+    background: #444444;
+}
+
+ul.dynTab-tabs > li.active > a {
+    color: #6DCBFE;
+}
+
+ul.dynTab-tabs > li {
+    float: left;
+    margin: 3px 0;
+    padding: 0 3px 0 10px;
+    height: 25px;
+    border-left: 1px solid rgb(119, 119, 119);
+    border-top: 1px solid rgb(119, 119, 119);
+    border-right: 1px solid rgb(0, 0, 0);
+    border-bottom: 1px solid rgb(0, 0, 0);
+    background: #191E21;
+    box-shadow: 0 5px 10px rgba(0,0,0,.3);
+    max-width: 200px;
+    line-height: 25px;
+    position: relative;
+}
+
+ul.dynTab-tabs > li > a {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+    color: #DDDDDD;
+}
+
+ul.dynTab-tabs > li:not(.active):hover {
+    background: #232323;
+}
+
+.dynTab-clearfix:before, .dynTab-clearfix:after {
+    content: "";
+    display: table;
+}
+
+.dynTab-clearfix:after {
+    clear: both;
+}
+
+.dynTab-clearfix {
+    zoom: 1;
+}
+
+.dynTab-tabs > li > a.closeIcon {
+    margin-left: 10px;
+    vertical-align: middle;
+    text-align: end;
+    display: inline-block; /* So width and height can be applied */
+    width: 15px;  /* Width of your image */
+    height: 15px;  /* Height of your image */
+    background-image: url('../images/ui/close_tab_unlit.png'); 
+    background-repeat: no-repeat;
+    background-size: contain;  /* Resize image to fit the element */
+}
+
+.dynTab-tabs > li:hover > a.closeIcon, 
+.dynTab-tabs > li.active > a.closeIcon {
+    background-image: url('../images/ui/close_tab_lit.png');
+}
+
+#dynTab_addTab {
+    border-radius: 5px;
+    margin-left: 15px;
+    width: 30px;
+    text-align: center;
+    padding: 0px;
+}
+
+#dynTab_tabPages {
+    margin: auto;
+    width: 100%;
+    height: calc(100% - 112px);
+}
+
+div[id^="tabPage"] {
+    background-color: #131313;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: left;
+    align-items: stretch;
+
+    border-top-color: #777777;
+    border-top-style: solid;
+    border-top-width: 1px;
+
+    border-bottom-color: #000000;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+}
+
+div[id^="drivesContainer"] {
+    width: 100px;
+    background-color: #232323;
+
+    border-right-color: #000000;
+    border-right-style: solid;
+    border-right-width: 1px;
+
+    border-left-color: #777777;
+    border-left-style: solid;
+    border-left-width: 1px;
+}
+
+div[id^="explorerContainer"] {
+    background-color: #232323;
+
+    border-right-color: #000000;
+    border-right-style: solid;
+    border-right-width: 1px;
+
+    border-left-color: #777777;
+    border-left-style: solid;
+    border-left-width: 1px;
+
+    margin: auto;
+    width: 100%;
+    height: 100%;
+}
+
+.scrollVertical {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.scrollHorizontal {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+div[id^="detailsHeader"] {
+    color: deepskyblue;
+}
+
+div[id^="explorer"]:not([id*="Container"]) {
+    margin: 1px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    border: 0px solid black;
+    padding: 0px;
+    gap: 0px 10px;
+}
+
+.Details {
+    width: 100% !important;
+    overflow-x: hidden;
+    height: auto !important;
+}
+
+.List {
+    width: auto !important;
+    overflow-x: auto;
+    height: 100% !important;
+}
+
+/*filesystem element*/
+.e {
+    font-family: monospace;
+    height: 16px;
+    white-space: nowrap;
+    padding: 1px 5px 1px 1px;
+    background-color: #191E21;
+
+    border-bottom-color: #000000;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+
+    border-top-color: #444444;
+    border-top-style: solid;
+    border-top-width: 1px;
+
+    border-right-color: #000000;
+    border-right-style: solid;
+    border-right-width: 1px;
+
+    border-left-color: #444444;
+    border-left-style: solid;
+    border-left-width: 1px;
+
+    display: flex;
+    align-items: center;
+}
+
+.e.details-icons {
+    width: 100%;
+    display: flex;  
+    align-items: center; 
+}
+
+.e.small-icons {
+    width: 310px;
+    align-items: center;
+}
+
+.e.medium-icons {
+    width: 74px;
+    height: 115px;
+    flex-direction: column;  
+    align-items: center;    
+    padding: 5px;          
+}
+
+.e.large-icons {
+    width: 105px;
+    height: 161px;
+    flex-direction: column;  
+    align-items: center;    
+    padding: 5px; 
+}
+
+.e.extra-large-icons {
+    width: 270px;
+    height: 290px;
+    flex-direction: column;  
+    align-items: center;    
+    padding: 5px;
+}
+
+.e.list-icons .icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    padding-right: 3px;
+}
+
+.e.details-icons .icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    padding-right: 3px;
+
+    display: flex;
+    justify-content: center;
+}
+
+.e.small-icons .icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    padding-right: 3px;
+}
+
+.e.medium-icons .icon {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.e.large-icons .icon {
+    width: 100%;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.e.extra-large-icons .icon {
+    width: 100%;
+    height: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 5px;
+}
+
+.e.list-icons .icon img {
+    height: 16px;  
+    width: 16px;   
+}
+
+.e.details-icons .icon img {
+    height: 16px;  
+    width: 16px;   
+}
+
+.e.small-icons .icon img {
+    height: 16px;  
+    width: 16px;   
+}
+
+.e.medium-icons .icon img {
+    height: 48px;  
+    width: auto;   
+    max-width: 100%;  
+}
+
+.e.large-icons .icon img {
+    height: 90px;  
+    width: auto;   
+    max-width: 100%;  
+}
+
+.e.extra-large-icons .icon img {
+    height: 240px;  
+    width: auto;   
+    max-width: 100%;  
+}
+
+.e.small-icons .text {
+    width: 293px;   
+    display: flex;
+    align-items: center;
+}
+
+.e.medium-icons .text {
+    width: 74px;
+    height: 67px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.e.large-icons .text {
+    width: 94px;
+    height: 66px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.e.extra-large-icons .text {
+    width: 256px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.e.details-icons .text span {
+    overflow: hidden;
+    text-overflow: ellipsis;    
+}
+
+.e.small-icons .text span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.e.medium-icons .text span {
+    max-width: 74px;
+    max-height: 67px;
+    display: block;       
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+}
+
+.e.large-icons .text span {
+    max-width: 94px;
+    max-height: 66px;
+    display: block;       
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+}
+
+.e.extra-large-icons .text span {
+    max-width: 256px;
+    max-height: 36px;
+    display: block;       
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+}
+
+
+.e.details-icons .date-modified, 
+.e.details-icons .type, 
+.e.details-icons .size {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    text-align: right;
+    white-space: nowrap;
+}
+
+.e.details-icons .text { 
+    flex: 1;  
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+.e.details-icons .date-modified {
+    width: 180px; 
+    padding-left: 10px;
+}
+.e.details-icons .type {
+    width: 200px; 
+    padding-left: 10px;  
+}
+.e.details-icons .size {
+    width: 100px; 
+    padding-left: 10px; 
+    padding-right: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.e:nth-child(even) {
+    background-color: #28292B;
+}
+
+.e:hover {
+    background-color: #4D4D4D;
+    border-top-color: #999999;
+    border-left-color: #999999;
+}
+
+/*directory*/
+.d {
+    color: #6DCBFE;
+}
+
+/*file*/
+.f {
+    color: #BBBBBB;
+}
+
+/*filesystem item text*/
+.t {
+    user-select: none;
+}
+
+.selected {
+    background-color: #0048D7;
+}
+
+div[id^="previewContainer"] {
+    width: 150px;
+    background-color: #232323;
+
+    border-right-color: #000000;
+    border-right-style: solid;
+    border-right-width: 1px;
+
+    border-left-color: #777777;
+    border-left-style: solid;
+    border-left-width: 1px;
+}

@@ -1,0 +1,50 @@
+﻿@using Lyrida.Infrastructure.Common.Enums;
+@using Lyrida.Infrastructure.Localization;
+@inject ITranslationService translationService;
+<div id="navigatorHistory">
+    <img src="~/images/ui/previous.png" title="@translationService.Translate(Terms.Back)" alt="@translationService.Translate(Terms.Back)" />
+    <img src="~/images/ui/next.png" title="@translationService.Translate(Terms.Forward)" alt="@translationService.Translate(Terms.Forward)" />
+    <img src="~/images/ui/previous.png" title="@translationService.Translate(Terms.UpOneLevel)" alt="@translationService.Translate(Terms.UpOneLevel)" style="transform: rotate(90deg);" />
+</div>
+<div id="navigator">
+    <input type="text" class="enlightenment-input" id="addressBarInput" />
+    <div id="address-bar">
+        <ul id="pathSegments"></ul>
+    </div>
+</div>
+<button id="btnNavigate" type="submit" class="confirm-button">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 6L9 17L4 12" stroke="#0F9D58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+</button>
+
+<script type="text/javascript">
+    $('#addressBarInput').keypress(function (event) {
+        if (event.which === 13) {  // 13 is the key code for "enter"
+            event.preventDefault();  // prevent any default action
+            parsePath(true);
+        } 
+    });
+    $('#addressBarInput').keydown(function (event) {
+        if (event.which === 27) {
+            event.preventDefault();  // prevent any default action
+            inputField.style.display = 'none'; // Hide #addressBarInput
+            addressBar.style.display = 'block'; // Show #address-bar
+        }
+    });
+
+    document.getElementById('address-bar').addEventListener('click', function () {
+        // If the clicked element is the ul itself or one of its direct children (but not deeper nested children)
+        if (event.target === event.currentTarget || event.target.parentElement === event.currentTarget) {
+            this.style.display = 'none'; // Hide #address-bar
+            document.getElementById('addressBarInput').style.display = 'block'; // Show #addressBarInput
+            document.getElementById('addressBarInput').focus(); // Focus on the input
+        }
+    });
+
+    document.getElementById('btnNavigate').addEventListener('click', function () {
+        parsePath(true);
+        inputField.style.display = 'none'; // Hide #addressBarInput
+        addressBar.style.display = 'block'; // Show #address-bar
+    });
+</script>

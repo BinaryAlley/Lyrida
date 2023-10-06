@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BaseOutputPath>..\..\..\bin\server\</BaseOutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <LangVersion>10.0</LangVersion>    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Core\FileSystem\DirectoryService.cs" />
+    <Compile Remove="Core\FileSystem\FileService.cs" />
+    <Compile Remove="Core\FileSystem\FileSystemPermissionsService.cs" />
+    <Compile Remove="Core\FileSystem\FileSystemService.cs" />
+    <Compile Remove="Core\FileSystem\IDirectoryService.cs" />
+    <Compile Remove="Core\FileSystem\IFileService.cs" />
+    <Compile Remove="Core\FileSystem\IFileSystemPermissionService.cs" />
+    <Compile Remove="Core\FileSystem\IFileSystemService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\CommonAssemblyInfo.cs" Link="CommonAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="7.1.0" />
+    <PackageReference Include="FluentValidation" Version="11.7.1" />
+    <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
+    <PackageReference Include="MediatR" Version="12.1.1" />
+    <PackageReference Include="MediatR.Extensions.Autofac.DependencyInjection" Version="11.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lyrida.DataAccess\Lyrida.DataAccess.csproj" />
+    <ProjectReference Include="..\Lyrida.Domain\Lyrida.Domain.csproj" />
+    <ProjectReference Include="..\Lyrida.Infrastructure\Lyrida.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Core\FileSystem\Directories\Commands\" />
+    <Folder Include="Core\FileSystem\Files\Commands\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <Target Name="RemoveSatelliteAssemblies" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceSatellitePaths)" />
+    </ItemGroup>
+  </Target>
+</Project>

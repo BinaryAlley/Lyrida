@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Lyrida.Client</title>
+    <base href="@Configuration["BASE_URL"]/"> <!--if an environmental setting for a different base path was provided (ie: docker compose), use it as base path-->
+    <link rel="stylesheet" href="~/css/button.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/textbox.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/checkbox.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/combobox.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/navigator.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/colorpicker.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/scrollbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/treeview.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/filesystem.css" asp-append-version="true" />
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script type="text/javascript">
+        let baseUrl = "@Configuration["BASE_URL"]" || ""; 
+    </script>
+</head>
+<body>
+    <header>
+        @*only display navigation stuff in the header when we are actually on the explorer page*@
+        @if (!string.IsNullOrWhiteSpace(Context.Request.Path.Value) && Context.Request.Path.Value.Equals("/Filesystem", StringComparison.OrdinalIgnoreCase))
+        {        
+            <div class="viewMode">
+                <img src="~/images/ui/list.png" id="listView" alt="List view" title="List view" style="width: 16px; height: 16px; cursor: pointer;" />
+                <img src="~/images/ui/details.png" id="detailsView" alt="Details view" title="Details view" style="width: 16px; height: 16px; cursor: pointer;" />
+                <img src="~/images/ui/small-icons.png" id="smallIconsView" alt="Small icons view" title="Small icons view" style="width: 16px; height: 16px; cursor: pointer;" />
+                <img src="~/images/ui/medium-icons.png" id="mediumIconsView" alt="Medium icons view" title="Medium icons view" style="width: 16px; height: 16px; cursor: pointer;" />
+                <img src="~/images/ui/large-icons.png" id="largeIconsView" alt="Large icons view" title="Large icons view" style="width: 16px; height: 16px; cursor: pointer;" />
+                <img src="~/images/ui/extra-large-icons.png" id="extraLargeIconsView" alt="Extra large icons view" title="Extra large icons view" style="width: 16px; height: 16px; cursor: pointer;" />
+            </div>
+            <button>Split</button>
+            @await Html.PartialAsync("_NavigatorPartial")
+        }
+    </header>
+    @RenderBody()
+    <footer>
+        &copy; 2023 - Lyrida - <a asp-area="" asp-controller="Filesystem" asp-action="Index">Privacy</a>
+    </footer>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
