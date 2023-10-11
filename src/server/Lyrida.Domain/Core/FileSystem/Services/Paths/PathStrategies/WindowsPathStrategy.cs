@@ -33,7 +33,7 @@ public class WindowsPathStrategy : IWindowsPathStrategy
             return false;
         // regular expression to match valid absolute paths
         // this allows drive letters (e.g., C:\) and UNC paths (e.g., \\server\share)
-        var pathPattern = @"^(?:[a-zA-Z]:\\|\\\\[\w.]+\\[\w.$]+)\\?(?:[\w]+\\?)*$";
+        var pathPattern = @"^[a-zA-Z]:\\(?:[a-zA-Z0-9\s().-]+\\)*[a-zA-Z0-9\s().-]*\\?$";
         return Regex.IsMatch(path, pathPattern);
     }
 
@@ -44,11 +44,11 @@ public class WindowsPathStrategy : IWindowsPathStrategy
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments, or an error.</returns>
     public ErrorOr<IEnumerable<PathSegment>> ParsePath(string path)
     {
-        // Validation: Ensure the path is not null or empty.
-        if (string.IsNullOrEmpty(path))
+        // validation: ensure the path is not null or empty.
+        if (string.IsNullOrWhiteSpace(path))
             return Errors.FileSystem.InvalidPath;
         // Windows paths usually start with a drive letter and colon, e.g., "C:"
-        if (!char.IsLetter(path[0]) || path[1] != ':' || path[2] != '\\')
+        if (!path.Contains(':') || !path.Contains('\\') || !char.IsLetter(path[0]) || path[1] != ':' || path[2] != '\\')
             return Errors.FileSystem.InvalidPath;
         return ErrorOrFactory.From(GetPathSegments());
         IEnumerable<PathSegment> GetPathSegments()
@@ -56,9 +56,15 @@ public class WindowsPathStrategy : IWindowsPathStrategy
             // the drive segment
             yield return new PathSegment(path[..2], isDirectory: false, isDrive: true);
             // extract the other segments
-            foreach (var segment in path[3..].Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries))
-            {                
-                bool isDirectory = !segment.Contains('.'); // Assuming segments with extensions are files
+            var segments = path[3..].Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var segment = segments[i];
+                bool isDirectory;
+                if (segment.Contains('.'))                   
+                    isDirectory = (i != segments.Length - 1) || path.EndsWith('\\'); // check if it's the last segment or if the next segment also contains a path delimiter
+                else
+                    isDirectory = true;
                 yield return new PathSegment(segment, isDirectory, isDrive: false);
             }
         }
@@ -71,7 +77,25 @@ public class WindowsPathStrategy : IWindowsPathStrategy
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments of the path up one level from <paramref name="path"/>, or an error.</returns>
     public ErrorOr<IEnumerable<PathSegment>> GoUpOneLevel(string path)
     {
-        throw new NotImplementedException();
+        // validation: ensure the path is not null or empty
+        if (!IsValidPath(path))
+            return Errors.FileSystem.InvalidPath;
+        // if path is just a drive letter followed by ":\", return null
+        if (Regex.IsMatch(path, @"^[a-zA-Z]:\\?$"))
+            return Errors.FileSystem.CannotNavigateUp;
+        // trim trailing slash for consistent processing
+        if (path.EndsWith("\\"))
+            path = path.TrimEnd('\\');
+        // find the last occurrence of a slash
+        int lastIndex = path.LastIndexOf('\\');
+        // if there's no slash found (shouldn't happen due to previous steps), or if we are at the root level after trimming, return error
+        if (lastIndex < 0)
+            return Errors.FileSystem.CannotNavigateUp;
+        // if we are at the drive root level after trimming, return drive root
+        if (lastIndex == 2 && path[1] == ':')
+            return ParsePath(path[..3]);
+        // return the path up to the last slash
+        return ParsePath(path[..lastIndex]);
     }
 
     /// <summary>

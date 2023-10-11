@@ -1,4 +1,5 @@
 ﻿#region ========================================================================= USING =====================================================================================
+using Lyrida.Domain.Common.Enums;
 using Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 #endregion
 
@@ -13,6 +14,10 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Platform;
 public interface IPlatformContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
+    #endregion
+
+    #region ==================================================================== PROPERTIES =================================================================================
+    PlatformType Platform { get; }
     IPathStrategy PathService { get; }
     #endregion
 }

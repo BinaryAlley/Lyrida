@@ -48,21 +48,27 @@ public class FileSystemController : Controller
     [HttpGet("GetFiles")]
     public async Task<IActionResult> GetFiles(string path)
     {
-        var response = await apiHttpClient.GetAsync($"files?path={path}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
+        var response = await apiHttpClient.GetAsync($"files?path={path}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language, environment, platform);
         return Json(new { success = true, files = JsonConvert.DeserializeObject<FileEntity[]>(response) });
     }
 
     [HttpGet("GetDirectories")]
     public async Task<IActionResult> GetDirectories(string path)
     {
-        var response = await apiHttpClient.GetAsync($"directories?path={path}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
+        var response = await apiHttpClient.GetAsync($"directories?path={path}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language, environment, platform);
         return Json(new { success = true, directories = JsonConvert.DeserializeObject<DirectoryEntity[]>(response) });
     }
 
-    [HttpGet("GetThumbnail/{path}")]
+    [HttpGet("GetThumbnail")]
     public async Task<IActionResult> GetThumbnail(string path)
     {
-        var response = await apiHttpClient.GetBlobAsync($"thumbnails?path={Uri.EscapeDataString(path)}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
+        var response = await apiHttpClient.GetBlobAsync($"thumbnails?path={Uri.EscapeDataString(path)}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language, environment, platform);
         return new ObjectResult(new
         {
             Data = Convert.ToBase64String(response.Data),
@@ -73,16 +79,30 @@ public class FileSystemController : Controller
     [HttpGet("CheckPath")]
     public async Task<IActionResult> CheckPath(string path)
     {
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
         var response = await apiHttpClient.GetAsync($"paths/validate?path={Uri.EscapeDataString(path)}", HttpContext.Items["UserToken"]?.ToString(), 
-            translationService.Language, platform: PlatformType.Windows);
+            translationService.Language, environment, platform);
         return Json(new { success = response == "true" });
     }
 
     [HttpGet("ParsePath")]
     public async Task<IActionResult> ParsePath(string path)
     {
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
         var response = await apiHttpClient.GetAsync($"paths/parse?path={Uri.EscapeDataString(path)}", HttpContext.Items["UserToken"]?.ToString(), 
-            translationService.Language, platform: PlatformType.Windows);
+            translationService.Language, environment, platform);
+        return Json(new { success = true, pathSegments = JsonConvert.DeserializeObject<PathSegmentEntity[]>(response) });
+    }
+
+    [HttpGet("GoUpOneLevel")]
+    public async Task<IActionResult> GoUpOneLevel(string path)
+    {
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
+        var response = await apiHttpClient.GetAsync($"paths/goUpOneLevel?path={Uri.EscapeDataString(path)}", HttpContext.Items["UserToken"]?.ToString(),
+            translationService.Language, environment, platform);
         return Json(new { success = true, pathSegments = JsonConvert.DeserializeObject<PathSegmentEntity[]>(response) });
     }
     #endregion

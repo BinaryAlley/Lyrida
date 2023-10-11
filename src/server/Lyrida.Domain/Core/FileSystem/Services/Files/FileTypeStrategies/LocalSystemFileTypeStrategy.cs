@@ -24,6 +24,7 @@ internal class LocalSystemFileTypeStrategy : ILocalSystemFileTypeStrategy
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IFileSystem fileSystem;
+    private readonly IFileSystemPermissionsService fileSystemPermissionsService;
     private const int BUFFER_SIZE = 16; // 16 bytes should be more than enough for common images header types
     #endregion
 
@@ -32,9 +33,11 @@ internal class LocalSystemFileTypeStrategy : ILocalSystemFileTypeStrategy
     /// Overload C-tor
     /// </summary>
     /// <param name="fileSystem">Injected service used to interact with the local filesystem</param>
-    public LocalSystemFileTypeStrategy(IFileSystem fileSystem)
+    /// <param name="fileSystemPermissionsService">Injected service used to determine local filesystem permissions</param>
+    public LocalSystemFileTypeStrategy(IFileSystem fileSystem, IFileSystemPermissionsService fileSystemPermissionsService)
     {
         this.fileSystem = fileSystem;
+        this.fileSystemPermissionsService = fileSystemPermissionsService;
     }
     #endregion
 
@@ -52,12 +55,12 @@ internal class LocalSystemFileTypeStrategy : ILocalSystemFileTypeStrategy
     /// <summary>
     /// Determines if a file identified by <paramref name="path"/> is of type image or not, and returns its type.
     /// </summary>
-    /// <param name="path">The path of the file to determine if it is an image or not</param>
+    /// <param name="path">The path of the file to determine if it is an image or not.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing the type of image or an error.</returns>
     public async Task<ErrorOr<ImageType>> GetImageTypeAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
+        if (!fileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
             return Errors.Permission.UnauthorizedAccess;
         Memory<byte> buffer = new byte[BUFFER_SIZE];
         using var stream = fileSystem.FileStream.New(path.Path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
@@ -73,7 +76,7 @@ internal class LocalSystemFileTypeStrategy : ILocalSystemFileTypeStrategy
             return type;
         // no known image header types were found, check other methods
         string content = Encoding.UTF8.GetString(buffer.ToArray());
-        if (IsSvg(content))
+        if (IsSvg(content, path.Path))
             return ImageType.SVG;
         else if (IsTga(buffer.ToArray()))
             return ImageType.TGA;
@@ -82,17 +85,35 @@ internal class LocalSystemFileTypeStrategy : ILocalSystemFileTypeStrategy
     }
 
     /// <summary>
-    /// Determines if the content belongs to an SVG.
+    /// Determines if the content of a file identified by <paramref name="path"/> belongs to a SVG.
     /// </summary>
-    private static bool IsSvg(string content)
+    /// <param name="initialContent">The initial content of the file to check.</param>
+    /// <param name="path">Path of the file to check.</param>
+    /// <returns><see langword="true"/> if the file is a SVG image, <see langword="false"/> otherwise.</returns>
+    private bool IsSvg(string initialContent, string path)
     {
-        // we just check for the SVG tag in the first few lines, though this isn't a comprehensive validation
-        return content.Contains("<svg", StringComparison.OrdinalIgnoreCase);
+        // check if it starts with <svg
+        if (initialContent.StartsWith("<svg", StringComparison.OrdinalIgnoreCase))
+            return true;
+        // check if it starts with <?xml
+        if (initialContent.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase))
+        {
+            // Read more content from the file
+            using var stream = fileSystem.FileStream.New(path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
+            byte[] svgBuffer = new byte[1000];
+            stream.Read(svgBuffer, 0, 1000);
+            string extendedContent = Encoding.UTF8.GetString(svgBuffer);
+            // check if the extended content contains <svg
+            return extendedContent.Contains("<svg", StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
     }
 
     /// <summary>
     /// Determines if the buffer represents a TGA file.
     /// </summary>
+    /// <param name="buffer">Byte array to check.</param>
+    /// <returns><see langword="true"/> if the file is a TGA image, <see langword="false"/> otherwise.</returns>
     private static bool IsTga(byte[] buffer)
     {
         if (buffer.Length < 18)

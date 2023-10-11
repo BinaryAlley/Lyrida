@@ -6,7 +6,7 @@ using Mono.Unix.Native;
 using System.Security.Principal;
 using Lyrida.Domain.Common.Enums;
 using System.Security.AccessControl;
-using System.Runtime.InteropServices;
+using Lyrida.Domain.Core.FileSystem.Services.Platform;
 #endregion
 
 namespace Lyrida.Domain.Core.FileSystem.Services.Permissions;
@@ -17,8 +17,23 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Permissions;
 /// <remarks>
 /// Creation Date: 03rd of November, 2021
 /// </remarks>
-internal class FileSystemPermissionsService 
+internal class FileSystemPermissionsService : IFileSystemPermissionsService
 {
+    #region ================================================================== FIELD MEMBERS ================================================================================
+    private readonly IPlatformContextManager platformContextManager;
+    #endregion
+
+    #region ====================================================================== CTOR =====================================================================================
+    /// <summary>
+    /// Overload C-tor
+    /// </summary>
+    /// <param name="platformContextManager">Injected facade service for platform contextual services</param>
+    public FileSystemPermissionsService(IPlatformContextManager platformContextManager)
+    {
+         this.platformContextManager = platformContextManager;
+    }
+    #endregion
+
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
     /// Checks if <paramref name="path"/> can be accessed.
@@ -27,11 +42,12 @@ internal class FileSystemPermissionsService
     /// <param name="accessMode">The mode in which to access the path.</param>
     /// <param name="isFile">Indicates whether the path represents a file or directory.</param>
     /// <returns><see langword="true"/>, if <paramref name="path"/> can be accessed, <see langword="false"/> otherwise.</returns>
-    public static bool CanAccessPath(string path, FileAccessMode accessMode, bool isFile = true)
+    public bool CanAccessPath(string path, FileAccessMode accessMode, bool isFile = true)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        PlatformType platformType = platformContextManager.GetCurrentContext().Platform;
+        if (platformType == PlatformType.Unix)
             return CanAccessPathLinux(path, accessMode);
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        else if (platformType == PlatformType.Windows)
             return CanAccessPathWindows(path, accessMode, isFile);
         else
             throw new PlatformNotSupportedException("Support for this platform is not compiled into this assembly.");
@@ -111,7 +127,7 @@ internal class FileSystemPermissionsService
                 }
                 return true;
             }
-            catch (UnauthorizedAccessException)
+            catch 
             {
                 return false;
             }
@@ -153,7 +169,7 @@ internal class FileSystemPermissionsService
                 // Check if the current rule applies to the current user or the groups they belong to
                 if (identity?.User?.Equals(accessRule.IdentityReference) == true || principal.IsInRole((SecurityIdentifier)accessRule.IdentityReference))
                 {
-                    if (accessRule.AccessControlType.Equals(AccessControlType.Deny) && (accessRule.FileSystemRights & rights) == rights)                    
+                    if (accessRule.AccessControlType.Equals(AccessControlType.Deny) && (accessRule.FileSystemRights & rights) == rights)
                         return false; // if there's a deny rule that matches the specified rights, return false immediately
                     else if (accessRule.AccessControlType.Equals(AccessControlType.Allow) && (accessRule.FileSystemRights & rights) == rights)
                         allowAccess = true;
@@ -161,15 +177,11 @@ internal class FileSystemPermissionsService
             }
 
         }
-        catch (UnauthorizedAccessException)
-        {
-            return false;
-        }
-        catch (Exception)
+        catch 
         {
             return false;
         }
         return allowAccess;
     }
-#endregion
+    #endregion
 }

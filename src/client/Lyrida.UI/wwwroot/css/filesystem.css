@@ -120,8 +120,9 @@ div[id^="tabPage"] {
     border-bottom-width: 1px;
 }
 
-div[id^="drivesContainer"] {
-    width: 100px;
+div[id^="drivesContainer"] { 
+    width: 0px;
+    visibility: hidden;
     background-color: #232323;
 
     border-right-color: #000000;
@@ -474,7 +475,8 @@ div[id^="explorer"]:not([id*="Container"]) {
 }
 
 div[id^="previewContainer"] {
-    width: 150px;
+    width: 0px;
+    visibility: hidden;
     background-color: #232323;
 
     border-right-color: #000000;

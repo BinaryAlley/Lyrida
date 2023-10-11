@@ -24,8 +24,8 @@
     <header>
         @*only display navigation stuff in the header when we are actually on the explorer page*@
         @if (!string.IsNullOrWhiteSpace(Context.Request.Path.Value) && Context.Request.Path.Value.Equals("/Filesystem", StringComparison.OrdinalIgnoreCase))
-        {        
-            <div class="viewMode">
+        {
+            <div id="viewModeGroup">
                 <img src="~/images/ui/list.png" id="listView" alt="List view" title="List view" style="width: 16px; height: 16px; cursor: pointer;" />
                 <img src="~/images/ui/details.png" id="detailsView" alt="Details view" title="Details view" style="width: 16px; height: 16px; cursor: pointer;" />
                 <img src="~/images/ui/small-icons.png" id="smallIconsView" alt="Small icons view" title="Small icons view" style="width: 16px; height: 16px; cursor: pointer;" />
@@ -33,7 +33,6 @@
                 <img src="~/images/ui/large-icons.png" id="largeIconsView" alt="Large icons view" title="Large icons view" style="width: 16px; height: 16px; cursor: pointer;" />
                 <img src="~/images/ui/extra-large-icons.png" id="extraLargeIconsView" alt="Extra large icons view" title="Extra large icons view" style="width: 16px; height: 16px; cursor: pointer;" />
             </div>
-            <button>Split</button>
             @await Html.PartialAsync("_NavigatorPartial")
         }
     </header>

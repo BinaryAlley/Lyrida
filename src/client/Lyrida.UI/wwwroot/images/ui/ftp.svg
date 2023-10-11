@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+ <style type="text/css" id="current-color-scheme">
+            .ColorScheme-Text {
+                color:#039bfc;
+            }
+        </style>
+
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feComponentTransfer in="SourceAlpha" result="adjustedAlpha">
+                <feFuncA type="table" tableValues="0 0.5 1"/>
+            </feComponentTransfer>
+            <feGaussianBlur in="adjustedAlpha" stdDeviation="2" result="blur"/>
+            <feFlood flood-color="#039bfc" result="color"/>
+            <feComposite in="color" in2="blur" operator="in" result="softGlowColored"/>
+            <feMerge>
+                <feMergeNode in="softGlowColored"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+  <linearGradient id="b" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -723.44 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="b-3" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -753.02 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="linearGradient1299" x1="5" x2="195" y1="174.76" y2="174.76" gradientTransform="matrix(.32632 0 0 .095367 -.63187 42.834)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#039bfc" stop-opacity="0" offset="0"/>
+   <stop stop-color="#039bfc" offset=".225"/>
+   <stop stop-color="#039bfc" offset=".5"/>
+   <stop stop-color="#039bfc" offset=".775"/>
+   <stop stop-color="#039bfc" stop-opacity="0" offset="1"/>
+  </linearGradient>
+ </defs>
+
+ <g stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9.5" y="9.5" width="45" height="45" ry="5" fill="none" stroke="#039bfc" style="paint-order:stroke fill markers" filter="url(#glow)"/>
+ </g>
+ <g transform="translate(16,16) scale(0.12)">
+	<g><path fill="#039bfc" filter="url(#glow)" d="M60.1,255.4V246H10v-18.9h50.1v-9.4h41.5v-18.9h18.9v-18.9H10V28.9h236v151.1H139.4v18.9h18.9v18.9h41.5v9.4H246V246h-46.2v9.4H60.1L60.1,255.4z M78.8,133.2v-22.5h18.8v-10H78.8V86h20.4v-10H66.6v57.1H78.8z M132.9,133.2V86h16.3v-10h-44.8v10h16.3v47.2H132.9L132.9,133.2z M169.1,133.2v-19.9h6.3c6.4,0.2,11.8-1.5,16.1-5.1c4.3-3.5,6.5-8.2,6.5-14.1c0-12-7.1-18.1-21.3-18.1H157v57.1H169.1L169.1,133.2z M169.1,103.9V85.5h5.4c7.1,0,10.6,3,10.6,9.1c0,6.2-3.6,9.3-10.7,9.3H169.1z M10,19.4V0.6h108.6v18.9H10L10,19.4z"/></g>
+</g>
+</svg>

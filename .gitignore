@@ -23,3 +23,5 @@ tests/GeneratedReports/*
 bin/*
 build/credentials.txt
 .git/*
+lyrida.key
+lyrida.key.pub

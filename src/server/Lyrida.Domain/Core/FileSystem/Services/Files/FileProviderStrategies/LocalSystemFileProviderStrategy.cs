@@ -23,6 +23,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IFileSystem fileSystem;
+    private readonly IFileSystemPermissionsService fileSystemPermissionsService;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -30,9 +31,11 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     /// Overload C-tor
     /// </summary>
     /// <param name="fileSystem">Injected service used to interact with the local filesystem</param>
-    public LocalSystemFileProviderStrategy(IFileSystem fileSystem)
+    /// <param name="fileSystemPermissionsService">Injected service used to determine local filesystem permissions</param>
+    public LocalSystemFileProviderStrategy(IFileSystem fileSystem, IFileSystemPermissionsService fileSystemPermissionsService)
     {
         this.fileSystem = fileSystem;
+        this.fileSystemPermissionsService = fileSystemPermissionsService;
     }
     #endregion
 
@@ -45,7 +48,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     public ErrorOr<Task<IEnumerable<string>>> GetFilePathsAsync(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ListDirectory))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ListDirectory))
             return Errors.Permission.UnauthorizedAccess;
         return Task.Run(() => fileSystem.Directory.GetFiles(path).OrderBy(path => path).AsEnumerable());
     }
@@ -68,7 +71,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     public ErrorOr<Task<byte[]>> GetFileAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
+        if (!fileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
             return Errors.Permission.UnauthorizedAccess;
         return Task.Run(() => System.IO.File.ReadAllBytes(path.Path));
     }
@@ -81,7 +84,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     public ErrorOr<DateTime?> GetLastWriteTime(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
         return fileSystem.File.GetLastWriteTime(path);
     }
@@ -94,7 +97,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     public ErrorOr<DateTime?> GetCreationTime(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
         return fileSystem.File.GetCreationTime(path);
     }
@@ -107,7 +110,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     public ErrorOr<long?> GetSize(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
         return fileSystem.FileInfo.New(path)?.Length ?? 0;
     }

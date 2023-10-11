@@ -5,6 +5,7 @@ html, body {
     min-height: 100%;
     height: 100%;
     font-size: 14px;
+    overflow-x: hidden;
 }
 
 header {
@@ -18,10 +19,18 @@ header {
     font-weight: bold;
     align-items: center;
     display: flex;
+    flex-wrap: nowrap;
     border-bottom-style: solid;
     border-bottom-width: 1px;
     border-bottom-color: #000000;
     background-image: linear-gradient(180deg, #505050, #464646, #404040, #363636);
+}
+
+.masked {
+    /* -webkit-mask: url(#maskID);
+    mask: url(#maskID);*/
+    clip-path: polygon(0px 0px, 100% 0px, 100% calc(100vh - 100px), 0px calc(100vh - 100px)); 
+
 }
 
 footer {
@@ -39,59 +48,91 @@ footer {
     background-image: linear-gradient(180deg, #505050, #464646, #404040, #363636);
 }
 
-.viewMode {
+#viewModeGroup {
     /* No need for width; it'll take as much as it needs */
     display: flex; /* If you want its contents side by side */
-    margin-right: 10px; /* Optional: to provide spacing between viewMode and the navigator */
+    margin-right: 10px; /* Optional: to provide spacing between viewModeGroup and the navigator */
+    align-items: center;
+    width: 125px;
 }
 
-#navigatorHistory, #btnNavigate {
+#navigationControlsGroup {
+    width: 165px;
+    display: flex;
+    align-items: center;
+}
+
+#addressBarGroup {
+    flex-grow: 1;
+    display: flex;
+    height: 28px;
+    align-items: center;
+
+    overflow-x: hidden;
+}
+
+#navigatorHistory {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+#navigatorHistory, #btnNavigate, #btnEditPath {
     flex-shrink: 0; /* Don't let them shrink */
 }
 
 
 #navigator {
-    position: relative;
     flex-grow: 1; /* Let it take the remaining space */
     display: flex; /* Use flex for its children */
+    flex-wrap: nowrap;
     align-items: center; /* Vertically center its children */
-    height: 24px;
+    height: 28px;
+    overflow-x: hidden;
 }
 
-#navigator, #navigatorHistory, .viewMode {
+#navigator, #viewModeGroup {
     margin-left: 10px;
 }
 
 #navigatorHistory img {
-    width: 20px;
-    height: 20px;
+    width: 26px;
+    height: 26px;
     cursor: pointer;
 }
 
-#addressBarInput, #address-bar {
+#viewModeGroup img {
+    margin-right: 5px;
+}
+
+/*#addressBarInput, #addressBar {
     position: absolute;
-    top: 50%; /* Center the element vertically */
-    left: 0;
+    top: 50%;*/ /* Center the element vertically */
+    /*left: 0;
     width: 100%;
     transform: translateY(-50%);
-}
+}*/
 
 #addressBarInput {
     display: none; /* Initially hidden */
     width: 100%;
 }
 
-#address-bar {
+#addressBar {
     background-color: #23232355;
-    height: 28px !important;
+    /*height: 28px !important;*/
     margin-top: -2px;
     padding-left:2px;
     vertical-align: middle;
     height: 28px; /* Remove the !important directive */
     margin-top: 0; /* Reset this so it doesn't interfere with our centering */
+    flex-grow: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
-#address-bar ul {
+#addressBar ul {
     height: 100%;
     list-style-type: none;
     padding: 0;
@@ -101,40 +142,90 @@ footer {
 
 #pathSegments {
     margin:0px !important;
+
+   
 }
 
-header #btnNavigate {
+header #btnNavigate, header #btnEditPath {
     text-align: end !important;
 }
 
 #btnNavigate {
-    margin: 0px 10px 2px 15px;
+    margin: 0px 10px 2px 0px;
     height: 28px;
     width: 35px;
 }
 
+#btnEditPath {
+    margin: 0px 10px 2px 12px;
+    height: 28px;
+    width: 35px;
+}
+
+#addressBarGroup::-webkit-scrollbar,
+#navigator::-webkit-scrollbar {
+    display: none; /* Hide scrollbar */
+    width: 0;      /* Remove width */
+}
+
+#addressBarGroup,
+#navigator {
+    scrollbar-width: none; /* Firefox 64+ */
+}
+
+#addressBarGroup,
+#navigator {
+    -ms-overflow-style: none; /* IE 10+ */
+}
 
 
-@media (max-width: 600px) {
+
+
+
+/* For Webkit browsers like Chrome, Safari */
+#addressBar::-webkit-scrollbar {
+    height: 0;  
+}
+
+/* For Internet Explorer and Edge */
+#addressBar {
+    -ms-overflow-style: none;  /*IE and Edge */
+}
+
+/* For Firefox */
+#addressBar ::-moz-scrollbar {
+    width: 0; 
+    display: none;
+}
+
+@media (max-width: 768px) {
     header {
         flex-wrap: wrap;
+        justify-content: space-between;
+        height: 64px;
+    }
+    #viewModeGroup {
+        height: 26px;
     }
 
-     .viewMode, button {
-        flex-basis: auto; /* reset any flex-basis applied */
-        margin-right: 10px; /* Add some spacing to the right */
+    #addressBarGroup {
+        flex-basis: 100%; /* Make C take the full width on wrap, hence pushing it to a new line */
     }
+     /*#viewModeGroup, button {
+        flex-basis: auto;*/ /* reset any flex-basis applied */
+        /*margin-right: 10px;*/ /* Add some spacing to the right */
+    /*}
 
     #navigator, #btnNavigate {
-        flex-basis: 100%; /* Make them take full width */
-        margin-top: 10px; /* Add some space above */
-    }
+        flex-basis: 100%;*/ /* Make them take full width */
+        /*margin-top: 10px;*/ /* Add some space above */
+    /*}
 
     #navigator {
-        margin-left: 0; /* Reset margin to left align */
-    }
+        margin-left: 0;*/ /* Reset margin to left align */
+    /*}
     
     #btnNavigate {
-        margin-left: auto; /* Push it to the right */
-    }
+        margin-left: auto;*/ /* Push it to the right */
+    /*}*/
 }

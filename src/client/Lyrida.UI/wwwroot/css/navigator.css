@@ -27,7 +27,10 @@
     cursor: pointer;
     font-family: Arial, sans-serif;
     font-size: 14px;
-    border-radius: 3px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
     color: #6DCBFE;
     padding: 3px 8px 3px 8px;
@@ -172,4 +175,10 @@
 .navigator-combobox:hover > .shine-effect::before,
 .navigator-combobox:hover > .shine-effect::after {
     opacity: 1;
+}
+
+@media (max-width: 768px) {
+    #dynTab_tabPages {
+        height: calc(100% - 140px) !important;
+    }
 }

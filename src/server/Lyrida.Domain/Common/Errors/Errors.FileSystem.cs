@@ -16,6 +16,7 @@ public static partial class Errors
     {
         #region ==================================================================== PROPERTIES =================================================================================
         public static Error InvalidPath => Error.Failure(nameof(InvalidPath));
+        public static Error CannotNavigateUp => Error.Failure(nameof(CannotNavigateUp));
         #endregion
     }
 }

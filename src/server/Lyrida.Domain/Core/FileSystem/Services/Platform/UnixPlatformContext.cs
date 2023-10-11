@@ -1,4 +1,5 @@
 ﻿#region ========================================================================= USING =====================================================================================
+using Lyrida.Domain.Common.Enums;
 using Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 #endregion
 
@@ -13,6 +14,7 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Platform;
 internal class UnixPlatformContext : IUnixPlatformContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
+    public PlatformType Platform { get; } = PlatformType.Unix;
     public IPathStrategy PathService { get; private set; }
     #endregion
 

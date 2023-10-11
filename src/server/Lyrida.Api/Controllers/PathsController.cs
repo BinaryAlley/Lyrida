@@ -59,5 +59,16 @@ public class PathsController : ApiController
         ErrorOr<IEnumerable<PathSegmentEntity>> getResult = await mediator.Send(new ParsePathQuery(path));
         return getResult.Match(result => Ok(result), errors => Problem(errors));
     }
+
+    /// <summary>
+    /// Navigates up one level from <paramref name="path"/>.
+    /// </summary>
+    [HttpGet("goUpOneLevel")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GoUpOneLevel([FromQuery, ModelBinder(typeof(UrlStringBinder))] string path)
+    {
+        ErrorOr<IEnumerable<PathSegmentEntity>> getResult = await mediator.Send(new NavigateUpOneLevelQuery(path));
+        return getResult.Match(result => Ok(result), errors => Problem(errors));
+    }
     #endregion
 }

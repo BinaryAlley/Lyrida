@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+ <style type="text/css" id="current-color-scheme">
+            .ColorScheme-Text {
+                color:#039bfc;
+            }
+        </style>
+
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feComponentTransfer in="SourceAlpha" result="adjustedAlpha">
+                <feFuncA type="table" tableValues="0 0.5 1"/>
+            </feComponentTransfer>
+            <feGaussianBlur in="adjustedAlpha" stdDeviation="2" result="blur"/>
+            <feFlood flood-color="#039bfc" result="color"/>
+            <feComposite in="color" in2="blur" operator="in" result="softGlowColored"/>
+            <feMerge>
+                <feMergeNode in="softGlowColored"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+  <linearGradient id="b" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -723.44 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="b-3" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -753.02 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="linearGradient1299" x1="5" x2="195" y1="174.76" y2="174.76" gradientTransform="matrix(.32632 0 0 .095367 -.63187 42.834)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#039bfc" stop-opacity="0" offset="0"/>
+   <stop stop-color="#039bfc" offset=".225"/>
+   <stop stop-color="#039bfc" offset=".5"/>
+   <stop stop-color="#039bfc" offset=".775"/>
+   <stop stop-color="#039bfc" stop-opacity="0" offset="1"/>
+  </linearGradient>
+ </defs>
+
+
+ <g transform="translate(1,1) scale(0.23)">
+	<g xmlns="http://www.w3.org/2000/svg"><path fill="#039bfc" filter="url(#glow)" d="M128,246c-65.2,0-118-52.8-118-118C10,62.8,62.8,10,128,10c65.2,0,118,52.8,118,118C246,193.2,193.2,246,128,246z M128,33.6c-52.1,0-94.4,42.3-94.4,94.4s42.3,94.4,94.4,94.4s94.4-42.3,94.4-94.4S180.1,33.6,128,33.6z M180.9,111.2c0-7.5-5.8-13.4-16.2-13.4c-9.1,0-14.5,4.7-14.5,11.1c0,16.6,43.3,9.9,43.3,36.2c0,13.8-10,24.5-27.8,24.5c-18.6,0-29.6-9.5-29.6-23v-4.2h12.9v1.8c0,10.1,7.8,14.3,17.6,14.3c9.3,0,13.8-5.2,13.8-11.9c0-17.5-43.2-10.1-43.2-36.6c0-12.6,10.3-23.3,27.7-23.3c17.8,0,28.9,10.4,28.9,23v3.4h-12.9L180.9,111.2L180.9,111.2z M96.5,169.6c-18,0-28.8-12.1-28.8-27.4v-28.3c0-15.3,10.7-27.4,28.8-27.4c18,0,28.7,12,28.7,27.4v28.3C125.2,157.5,114.5,169.6,96.5,169.6z M112.8,113.5c0-8.5-5.4-15.8-16.3-15.8c-10.8,0-16.3,7.3-16.3,15.8v29.3c0,8.4,5.4,15.7,16.3,15.7s16.3-7.3,16.3-15.7V113.5z"/></g>
+</g>
+</svg>

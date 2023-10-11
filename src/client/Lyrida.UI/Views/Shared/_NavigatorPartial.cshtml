@@ -1,50 +1,57 @@
 ﻿@using Lyrida.Infrastructure.Common.Enums;
 @using Lyrida.Infrastructure.Localization;
 @inject ITranslationService translationService;
-<div id="navigatorHistory">
-    <img src="~/images/ui/previous.png" title="@translationService.Translate(Terms.Back)" alt="@translationService.Translate(Terms.Back)" />
-    <img src="~/images/ui/next.png" title="@translationService.Translate(Terms.Forward)" alt="@translationService.Translate(Terms.Forward)" />
-    <img src="~/images/ui/previous.png" title="@translationService.Translate(Terms.UpOneLevel)" alt="@translationService.Translate(Terms.UpOneLevel)" style="transform: rotate(90deg);" />
-</div>
-<div id="navigator">
-    <input type="text" class="enlightenment-input" id="addressBarInput" />
-    <div id="address-bar">
-        <ul id="pathSegments"></ul>
+
+<div id="navigationControlsGroup">
+    <div id="navigatorHistory">
+        <img src="~/images/ui/previous.svg" title="@translationService.Translate(Terms.Back)" alt="@translationService.Translate(Terms.Back)" />
+        <img src="~/images/ui/next.svg" title="@translationService.Translate(Terms.Forward)" alt="@translationService.Translate(Terms.Forward)" />
+        <img src="~/images/ui/up.svg" id="btnUpOneLevel" title="@translationService.Translate(Terms.UpOneLevel)" alt="@translationService.Translate(Terms.UpOneLevel)" />
     </div>
+    <img src="~/images/ui/tree-view.svg" id="btnTreeView" alt="Tree view" title="Tree view" style="width: 24px; height: 24px; cursor: pointer;" />
+    <img src="~/images/ui/preview.svg" id="btnPreview" alt="Preview" title="Preview" style="width: 24px; height: 24px; cursor: pointer;" />
+    <img src="~/images/ui/split-view.svg" id="btnSplitView" alt="Split view" title="Split view" style="width: 24px; height: 24px; cursor: pointer;" />
 </div>
-<button id="btnNavigate" type="submit" class="confirm-button">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 6L9 17L4 12" stroke="#0F9D58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-</button>
+<svg width="0" height="0" style="position:absolute"><!--to be removed, we use drop down reparenting instead-->
+    <defs>
+        <mask id="maskID">
+            <rect x="0" y="0" width="50%" height="100%" fill="white" />
+            <rect x="50%" y="0" width="50%" height="100%" fill="black" />
+        </mask>
+    </defs>
+</svg>
 
-<script type="text/javascript">
-    $('#addressBarInput').keypress(function (event) {
-        if (event.which === 13) {  // 13 is the key code for "enter"
-            event.preventDefault();  // prevent any default action
-            parsePath(true);
-        } 
-    });
-    $('#addressBarInput').keydown(function (event) {
-        if (event.which === 27) {
-            event.preventDefault();  // prevent any default action
-            inputField.style.display = 'none'; // Hide #addressBarInput
-            addressBar.style.display = 'block'; // Show #address-bar
-        }
-    });
 
-    document.getElementById('address-bar').addEventListener('click', function () {
-        // If the clicked element is the ul itself or one of its direct children (but not deeper nested children)
-        if (event.target === event.currentTarget || event.target.parentElement === event.currentTarget) {
-            this.style.display = 'none'; // Hide #address-bar
-            document.getElementById('addressBarInput').style.display = 'block'; // Show #addressBarInput
-            document.getElementById('addressBarInput').focus(); // Focus on the input
-        }
-    });
+<div id="addressBarGroup">
+    <div id="navigator">
+        <input type="text" class="enlightenment-input" id="addressBarInput" />
 
-    document.getElementById('btnNavigate').addEventListener('click', function () {
-        parsePath(true);
-        inputField.style.display = 'none'; // Hide #addressBarInput
-        addressBar.style.display = 'block'; // Show #address-bar
-    });
-</script>
+        <div style="flex: 0 0 50px;">
+            <div class="enlightenment-combobox inline-block" id="environmentsCombobox">
+                <div class="shine-effect" style="top: 1px;"></div>
+                <input type="checkbox" id="environmentsDropdownToggle" class="enlightenment-toggle-checkbox" />
+                <label class="enlightenment-toggle" for="environmentsDropdownToggle" style="padding: 0 13px 0px 16px; background-position: right 0px top 50%, left 7px top 50%, 0 0; background-size: 0px 0px, 3px auto, 100%;">
+                    <img src="~/images/ui/os.svg" alt="Local File System" data-platform-id="2" style="width: 23px;">
+                </label>
+                <div class="enlightenment-dropdown" id="environmentsDropdown">
+                    <div class="shine-effect" style="top: -4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="addressBar">
+            <ul id="pathSegments"></ul>
+        </div>
+    </div>
+    <button id="btnEditPath" type="submit" class="abort-button">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path style="fill:#009BFC;fill-opacity:1;stroke:none"
+                  d="m22.27 4l-18.27 18.27v5.73h5.73c0 0 18.269-18.269 18.27-18.27zm-2.865 4.299l4.297 4.297-11.701 11.703v-2.299h-4v-2.299zm-12.404 12.402v2.299h4v2.299l-1.701 1.701h-2l-2.297-2.297v-2z"/>
+        </svg>
+    </button>
+    <button id="btnNavigate" type="submit" class="confirm-button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 6L9 17L4 12" stroke="#0F9D58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </button>
+</div>

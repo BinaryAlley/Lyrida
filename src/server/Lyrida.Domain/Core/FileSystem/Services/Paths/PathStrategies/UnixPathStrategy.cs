@@ -35,7 +35,7 @@ public class UnixPathStrategy : IUnixPathStrategy
         // check for relative paths
         if (path.StartsWith("./") || path.StartsWith("../"))
             return false;
-        var pathPattern = @"^\/[\w\-\.]+(\/[\w\-\.]+)*\/?$";
+        var pathPattern = @"^\/([\w\-\.\~!$&'()*+,;=:@ ]+(\/[\w\-\.\~!$&'()*+,;=:@ ]+)*)?\/?$";
         return Regex.IsMatch(path, pathPattern);
     }
 
@@ -46,18 +46,22 @@ public class UnixPathStrategy : IUnixPathStrategy
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments, or an error.</returns>
     public ErrorOr<IEnumerable<PathSegment>> ParsePath(string path)
     {
-        if (string.IsNullOrEmpty(path))
+        if (string.IsNullOrWhiteSpace(path))
             return Errors.FileSystem.InvalidPath;
         // if path starts with anything other than '/', it's considered relative and invalid for this parser
         if (!path.StartsWith('/'))
             return Errors.FileSystem.InvalidPath;
         // get the path segments
-        IEnumerable<PathSegment> segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(segment =>
-            {                              
-                bool isDirectory = !segment.Contains('.'); // assuming segments with extensions are files
-                return new PathSegment(segment, isDirectory, isDrive: false);
-            });
+        var splitSegments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        IEnumerable<PathSegment> segments = splitSegments.Select((segment, index) =>
+        {
+            bool isDirectory;
+            if (segment.Contains('.'))
+                isDirectory = (index != splitSegments.Count - 1) || path.EndsWith('/'); // check if it's the last segment or if the path ends with a '/'
+            else
+                isDirectory = true;
+            return new PathSegment(segment, isDirectory, isDrive: false);
+        });
         return ErrorOrFactory.From(segments);
     }
 
@@ -68,7 +72,19 @@ public class UnixPathStrategy : IUnixPathStrategy
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments of the path up one level from <paramref name="path"/>, or an error.</returns>
     public ErrorOr<IEnumerable<PathSegment>> GoUpOneLevel(string path)
     {
-        throw new NotImplementedException();
+        // validation: ensure the path is not null or empty
+        if (!IsValidPath(path))
+            return Errors.FileSystem.InvalidPath;
+        // trim trailing slash for consistent processing
+        if (path.EndsWith("/"))
+            path = path.TrimEnd('/');
+        // find the last occurrence of a slash
+        int lastIndex = path.LastIndexOf('/');
+        // if there's no slash found (shouldn't happen due to previous steps), or if we are at the root level after trimming, return error
+        if (lastIndex <= 0)
+            return Errors.FileSystem.CannotNavigateUp;
+        // return the path up to the last slash
+        return ParsePath(path[..lastIndex]);
     }
 
     /// <summary>

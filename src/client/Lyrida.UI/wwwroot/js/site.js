@@ -1,17 +1,15 @@
 ﻿// test placeholders
 const environmentTypes = [
-    // { title: "Home", path: "/app" },
-    { id: 1, title: "Local File System", "name": "local", platformType: "unix", initialPath: "/app/" },
-    { id: 2, title: "Local File System", "name": "local", platformType: "windows", initialPath: "C:\\Users\\Andromeda\\Desktop" },
-    { id: 3, title: "File Transfer Protocol", "name": "ftp", platformType: "unix", initialPath: "ftp://user:pasword@hostname:21/home/user" },
-    { id: 4, title: "Google Drive", "name": "gdrive", platformType: "unix", initialPath: "/test/address/" },
+    // ORDER OF ENVIRONMENTS MATTERS! (or, at least, their ID's must remain unchanged..)
+    { id: 1, title: "Local File System", "name": "local", platformType: "Unix", initialPath: "/app/" },
+    { id: 2, title: "Local File System", "name": "local", platformType: "Windows", initialPath: "C:\\Users\\Andromeda\\Desktop" },
+    { id: 3, title: "File Transfer Protocol", "name": "ftp", platformType: "Unix", initialPath: "ftp://user:pasword@hostname:21/home/user" },
+    { id: 4, title: "Google Drive", "name": "gdrive", platformType: "Unix", initialPath: "/test/address/" },
 ];
 
 // ==================================
 // Constants
 // ==================================
-// TODO: remove in production!
-const PATH_CHAR_SEPARATOR = "/";
 // Development mode
 const IS_DEBUG = true;
 // Customizable timeout duration for scroll actions.
@@ -70,7 +68,7 @@ const FILE_ICONS = {
     "sendfile": "application-vnd.kde.bluedevil-sendfile.svg",
     "snap": "application-vnd.snap.svg",
     "stream": "application-octet-stream.svg",
-    "svg": "application-msoutlook.svg",
+    "svg": "application-image.svg",
     "sql": "application-sql.svg",
     "sqlite": "application-sql.svg",
     "tar": "application-x-7z-ace.svg",
@@ -90,20 +88,41 @@ const FILE_ICONS = {
 // DOM Elements
 // ==================================
 
-const inputField = document.getElementById('addressBarInput');
-const addressBar = document.getElementById('address-bar');
-const pathSegmentsContainer = document.getElementById("pathSegments");
+const addressBarInput = document.getElementById('addressBarInput');
+const addressBar = document.getElementById('addressBar');
+const pathSegmentsContainer = document.getElementById('pathSegments');
+const environmentDropdown = document.getElementById('environmentsDropdown');
+const navigatorContainer = document.getElementById('navigator');
+const addressBarGroup = document.getElementById('addressBarGroup');
+const environmentsDropdownToggle = document.getElementById('environmentsDropdownToggle');
+const environmentsCombobox = document.getElementById('environmentsCombobox');
 
 /**
- * Retrieves the explorer container element.
+ * Retrieves the active's tab explorer container element.
  * @returns {HTMLElement} - The explorer container element.
  */
-function getExplorerContainer() {
+function getActiveExplorerContainer() {
     return document.getElementById(`explorerContainer${activeTabId}`);
 }
 
 /**
- * Retrieves the active details header element.
+ * Retrieves the active tab's treeview container element.
+ * @returns {HTMLElement} - The treeview container element.
+ */
+function getActiveTreeview() {
+    return document.getElementById(`drivesContainer${activeTabId}`);
+}
+
+/**
+ * Retrieves the active's tab preview container element.
+ * @returns {HTMLElement} - The preview container element.
+ */
+function getActivePreview() {
+    return document.getElementById(`previewContainer${activeTabId}`);
+}
+
+/**
+ * Retrieves the active's tab details header element.
  * @returns {HTMLElement} - The active details header element.
  */
 function getActiveDetailsHeader() {
@@ -127,6 +146,9 @@ let resizeTimeout; // timeout to delay thumbnail loading after resizing
 let hasScrolledAfterModeChange = false; // flag to track if scrolling occurred after a mode change
 let abortController; // allows the cancellation of thumbnail retrieval jobs
 let activeTabId; // tracks the currently active tab's ID
+let activeEnvironmentId = 1; // tracks the currently active platform ID, used for creating a new tab
+let addressBarWidth;
+let addressBarCachedScroll = 0;
 
 // ==================================
 // Event Handlers
@@ -137,12 +159,12 @@ let activeTabId; // tracks the currently active tab's ID
  */
 function bindEventsToActiveExplorer() {
     const explorer = getActiveExplorer();
-    const explorerContainer = getExplorerContainer();
+    const explorerContainer = getActiveExplorerContainer();
     // remove any previously bound event listeners
     unbindEventsFromExplorer(explorer, explorerContainer);
     explorer.addEventListener('scroll', handleScrollEvent);
     explorerContainer.addEventListener('scroll', handleScrollEvent);
-    explorer.addEventListener('wheel', scrollHorizontally);
+    explorer.addEventListener('wheel', scrollHorizontally, { passive: false });
     if (IS_DEBUG)
         console.info(getCurrentTime() + " Bound events to explorer with Id " + activeTabId);
 }
@@ -155,7 +177,7 @@ function bindEventsToActiveExplorer() {
 function unbindEventsFromExplorer(explorer, explorerContainer) {
     explorer.removeEventListener('scroll', handleScrollEvent);
     explorerContainer.removeEventListener('scroll', handleScrollEvent);
-    explorer.removeEventListener('wheel', scrollHorizontally);
+    explorer.removeEventListener('wheel', scrollHorizontally, { passive: false });
     if (IS_DEBUG)
         console.info(getCurrentTime() + " Unbound events from explorer with Id " + activeTabId);
 }
@@ -208,12 +230,50 @@ function scrollHorizontally(event) {
     getActiveExplorer().scrollLeft += (event.deltaY > 0 ? 1 : -1) * 80;
 }
 
+/** 
+ * Make address bar horizontally scrollable.
+ */
+addressBar.addEventListener('wheel', function (event) {
+    event.preventDefault();
+    this.scrollLeft += (event.deltaY > 0 ? 1 : -1) * 80;
+}, { passive: false });
+
+/**
+ * Toggles the visibility of the folders treeview panel.
+ */
+document.getElementById('btnTreeView').addEventListener('click', function () {
+    const treeview = getActiveTreeview();
+    const computedStyle = window.getComputedStyle(treeview);
+    // using computedStyle to check the actual styles being applied to the element
+    treeview.style.width = computedStyle.width === '0px' ? '100px' : '0px';
+    treeview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+});
+
+/**
+ * Toggles the visibility of the file preview panel.
+ */
+document.getElementById('btnPreview').addEventListener('click', function () {
+    const preview = getActivePreview();
+    const computedStyle = window.getComputedStyle(preview);
+    // using computedStyle to check the actual styles being applied to the element
+    preview.style.width = computedStyle.width === '0px' ? '150px' : '0px';
+    preview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+});
+
+/**
+ * Toggles the split mode for the current tab
+ */
+document.getElementById('btnSplitView').addEventListener('click', function () {
+
+});
+
 // ==================================
 // Event Listeners Initializations
 // ==================================
 
 // adjust thumbnails upon window resizing
 window.addEventListener('resize', handleResizeEvent);
+environmentsDropdownToggle.addEventListener('change', handleEnvironemtComboboxChange);
 
 // button click handlers for different view modes.
 $('#detailsView').click(() => switchViewMode(setDetailsViewMode));
@@ -258,29 +318,23 @@ function switchViewMode(callback) {
  */
 function setDetailsViewMode() {
     const explorer = getActiveExplorer();
-    const explorerContainer = getExplorerContainer();
+    const explorerContainer = getActiveExplorerContainer();
     const detailsHeader = getActiveDetailsHeader();
-
     if (explorer) {
         // update DOM elements to reflect 'Details' view mode
         explorer.classList.remove('List');
         explorer.classList.add('Details');
         explorer.scrollLeft = 0;
         explorer.style.flexDirection = "column";
-
         explorerContainer.classList.remove('scrollHorizontal');
         explorerContainer.classList.add('scrollVertical');
-
         detailsHeader.style.height = "20px";
-
-        explorer.removeEventListener('wheel', scrollHorizontally);
-
+        explorer.removeEventListener('wheel', scrollHorizontally, { passive: false });
         // update item icons to match the 'Details' view style
         explorer.querySelectorAll('.e').forEach(el => {
             el.classList.remove('list-icons', 'small-icons', 'medium-icons', 'large-icons', 'extra-large-icons');
             el.classList.add('details-icons');
         });
-
         // display the extended item details
         showExtraDetails();
         if (IS_DEBUG)
@@ -293,28 +347,22 @@ function setDetailsViewMode() {
  */
 function setListViewMode() {
     const explorer = getActiveExplorer();
-    const explorerContainer = getExplorerContainer();
+    const explorerContainer = getActiveExplorerContainer();
     const detailsHeader = getActiveDetailsHeader();
-
     if (explorer) {
         // update DOM elements to reflect 'List' view mode
         explorer.classList.remove('Details');
         explorer.classList.add('List');
         explorer.style.flexDirection = "column";
-
         explorerContainer.classList.remove('scrollVertical');
         explorerContainer.classList.add('scrollHorizontal');
-
         detailsHeader.style.height = "0px";
-
-        explorer.addEventListener('wheel', scrollHorizontally);
-
+        explorer.addEventListener('wheel', scrollHorizontally, { passive: false });
         // update item icons to match the 'List' view style
         explorer.querySelectorAll('.e').forEach(el => {
             el.classList.remove('details-icons', 'small-icons', 'medium-icons', 'large-icons', 'extra-large-icons');
             el.classList.add('list-icons');
         });
-
         // hide the extended item details
         hideExtraDetails();
         if (IS_DEBUG)
@@ -328,28 +376,22 @@ function setListViewMode() {
  */
 function setIconsViewMode(size) {
     const explorer = getActiveExplorer();
-    const explorerContainer = getExplorerContainer();
+    const explorerContainer = getActiveExplorerContainer();
     const detailsHeader = getActiveDetailsHeader();
-
     if (explorer) {
         // update DOM elements to reflect 'Icons' view mode
         explorer.classList.remove('List');
         explorer.classList.add('Details');
         explorer.style.flexDirection = "row";
-
         explorerContainer.classList.remove('scrollHorizontal');
         explorerContainer.classList.add('scrollVertical');
-
         detailsHeader.style.height = "0px";
-
-        explorer.removeEventListener('wheel', scrollHorizontally);
-
+        explorer.removeEventListener('wheel', scrollHorizontally, { passive: false });
         // update item icons based on the specified size
         explorer.querySelectorAll('.e').forEach(el => {
             el.classList.remove('list-icons', 'details-icons', 'small-icons', 'medium-icons', 'large-icons', 'extra-large-icons');
             el.classList.add(size + '-icons');
         });
-
         // hide the extended item details
         hideExtraDetails();
         if (IS_DEBUG)
@@ -378,40 +420,92 @@ function showExtraDetails() {
 /**
  * Fetches directory and file data for the given file system path. 
  * @param {string} path - The file system path to fetch data from.
+ * @param {string} path - The Id of the environment for which to fetch the data at the provided path.
  * @param {Function} callback - A function to be executed after successful data retrieval.
  */
-function fetchDataForPath(path, callback) {
-    // fetch directory data for the path.
-    $.ajax({
-        url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(path),
-        type: 'GET',
-        success: function (directoriesData) {
-            if (directoriesData.success) {
-                // fetch file data, upon successful directory fetch.
-                $.ajax({
-                    url: baseUrl + '/FileSystem/GetFiles?path=' + encodeURIComponent(path),
-                    type: 'GET',
-                    success: function (filesData) {
-                        if (filesData.success) {
-                            // combine directory and file data.
-                            const combinedData = {
-                                path: path,
-                                directories: directoriesData.directories,
-                                files: filesData.files
-                            };
-                            callback(combinedData);
-                            if (IS_DEBUG)
-                                console.info(getCurrentTime() + " Got the directories and files for: " + path);
+function fetchDataForPath(path, environmentId, callback) {
+    if (path !== null) {
+        // fetch directory data for the path.
+        $.ajax({
+            url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(path),
+            type: 'GET',
+            headers: {
+                "X-Environment-Type": environmentId.toString()
+            },
+            success: function (directoriesData) {
+                if (directoriesData.success) {
+                    // fetch file data, upon successful directory fetch.
+                    $.ajax({
+                        url: baseUrl + '/FileSystem/GetFiles?path=' + encodeURIComponent(path),
+                        type: 'GET',
+                        headers: {
+                            "X-Environment-Type": environmentId.toString()
+                        },
+                        success: function (filesData) {
+                            if (filesData.success) {
+                                // combine directory and file data.
+                                const combinedData = {
+                                    path: path,
+                                    directories: directoriesData.directories,
+                                    files: filesData.files
+                                };
+                                callback(combinedData);
+                                if (IS_DEBUG)
+                                    console.info(getCurrentTime() + " Got the directories and files for: " + path);
+                            }
+                        },
+                        error: function (error) {
+                            console.error('Failed to fetch files:', error);
                         }
-                    },
-                    error: function (error) {
-                        console.error('Failed to fetch files:', error);
-                    }
-                });
+                    });
+                }
+            },
+            error: function (error) {
+                console.error('Failed to fetch directories:', error);
             }
+        });
+    } else
+        callback(null);
+}
+
+/**
+ * Navigates up one level from the current path
+ */
+function goUpOneLevel() {
+    const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+    const foundEnvironmentPlatformType = foundEnvironment.platformType;
+    const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
+    if (!addressBarInput.value.endsWith(separator))
+        addressBarInput.value = addressBarInput.value + separator;
+    const path = addressBarInput.value;
+    $.ajax({
+        url: baseUrl + '/FileSystem/GoUpOneLevel?path=' + encodeURIComponent(path),
+        type: 'GET',
+        headers: {
+            "X-Environment-Type": activeEnvironmentId.toString()
+        },
+        success: function (data) {
+            if (data.success) {
+                renderAddressBar(data.pathSegments);
+                addressBarInput.style.display = 'none'; 
+                addressBar.style.display = 'block'; 
+                // find the last directory in the list of path segments
+                var lastDirectory = null;
+                for (var i = data.pathSegments.length - 1; i >= 0; i--) {
+                    if (data.pathSegments[i].isDirectory) {
+                        lastDirectory = data.pathSegments[i];
+                        break;
+                    }
+                }
+                const concatenatedPath = (foundEnvironmentPlatformType === "Unix" ? '/' : '') + data.pathSegments.map(segment => segment.name).join(separator);
+                addressBarInput.value = concatenatedPath + (!concatenatedPath.endsWith(separator) ? separator : '');
+                updateCurrentTab(concatenatedPath, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"));
+            }
+            else
+                console.error(data.errorMessage);
         },
         error: function (error) {
-            console.error('Failed to fetch directories:', error);
+            console.error('Failed to fetch files:', error);
         }
     });
 }
@@ -421,22 +515,25 @@ function fetchDataForPath(path, callback) {
  * Fetches directory and file data for the tab and renders its content.
  * @param {string} title - The title of the tab.
  * @param {string} path - The file path associated with the tab.
- * @param {number} [id] - The optional ID for the tab. If not provided, it increments a global ID.
+ * @param {number} [tabId] - The optional ID for the tab. If not provided, it increments a global ID.
+ * @param {number} platformId - The platform ID for the tab.
  */
-function addNewTab(title, path, id) {
+function addNewTab(title, path, tabId, platformId) {
+    if (platformId !== null)
+        activeEnvironmentId = platformId;
     // determine the tab ID
-    const currentTabId = (typeof id !== 'undefined') ? id : nextTabId++;
+    const currentTabId = (tabId !== null && typeof tabId !== 'undefined') ? tabId : nextTabId++;
     // construct the new page object
-    const newPage = { title: title, path: path, id: currentTabId };
+    const newPage = { title: title, path: path, tabId: currentTabId, platformId: activeEnvironmentId };
     initialPages.push(newPage);
     // render the new tab's header
-    renderTab(newPage);
+    renderTabHeader(newPage);
     // set the current path as the title of the tab header
     document.getElementById(`tabHeader${currentTabId}`).setAttribute("title", path);
     // fetch directory data for the new tab
-    fetchDataForPath(path, function (data) {
-        // Render the tab's content and bind events.
-        renderTabContent(currentTabId, data);
+    fetchDataForPath(path, activeEnvironmentId, function (data) {
+        // render the tab's content and bind events.
+        renderTabPage(currentTabId, data);
         bindEventsToActiveExplorer();
         switchViewMode(setListViewMode);
     });
@@ -445,24 +542,32 @@ function addNewTab(title, path, id) {
 /**
  * Updates the content of the currently active tab with the data from the provided path.
  * @param {string} path - The file system path to fetch data from.
+ * @param {string} title - The title of the active tab.
  */
 function updateCurrentTab(path, title) {
     const explorer = getActiveExplorer();
     if (explorer) {
+        // if there was a job for thumbnails retrieval, cancel it
+        if (abortController) {
+            abortController.abort();
+            abortController = null;
+        }
         // update the tab header title
         let tabHeader = document.getElementById(`tabHeader${activeTabId}`);
         explorer.setAttribute("data-path", path);
         tabHeader.getElementsByTagName('a')[0].textContent = title;
-        fetchDataForPath(path, function (data) {
+        fetchDataForPath(path, activeEnvironmentId, function (data) {
             // update the current tab's content with the fetched data
             updateTabContent(activeTabId, data);
             // rebind necessary event handlers to the updated content
             bindEventsToActiveExplorer();
             switchViewMode(setListViewMode);
         });
+        // set the current path as the title of the tab header
+        document.getElementById(`tabHeader${activeTabId}`).setAttribute("title", path);
     }
     else
-        addNewTab(title, path);
+        addNewTab(title, path, null, null);
 }
 
 /**
@@ -477,10 +582,30 @@ function switchTab(tabId) {
     $(`#tabPage${tabId}`).show();
     // set the current tab as active
     $(`#tabHeader${tabId}`).addClass('active');
+    const explorer = document.getElementById(`explorer${tabId}`);
+    const environmentId = Number(explorer.getAttribute('data-environment'));
+    const environment = environmentTypes.find(item => item.id === environmentId);
+    activeEnvironmentId = environmentId;
+    // set the environment drop down values (title, icon, etc)
+    if (typeof environment !== 'undefined') { //getEnvironmentIconPath(type);
+        const environmentsCombobox = document.getElementById('environmentsCombobox');
+        const imgElement = environmentsCombobox.querySelector("label.enlightenment-toggle img");
+        imgElement.src = getEnvironmentIconPath(environment);
+        environmentsCombobox.setAttribute('title', (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title);
+    }
     // update address bar input with current explorer path
-    const path = document.getElementById(`explorer${tabId}`).getAttribute('data-path');
-    $('#addressBarInput').val(path);
-    parsePath(false);
+    const path = explorer.getAttribute('data-path');
+    if (path !== null && path !== "null") {
+        addressBarInput.value = path;
+        parsePath(false);
+        environmentsDropdownToggle.checked = false; // toggle the checkbox state
+    } else {
+        addressBarInput.value = '';
+        environmentsDropdownToggle.checked = true; // toggle the checkbox state
+        renderAddressBar(null);
+        console.log(activeTabId);
+    }
+    environmentsDropdownToggle.dispatchEvent(new Event('change'));
     // update the active tab id
     activeTabId = tabId;
     if (SHOW_THUMBNAILS)
@@ -491,10 +616,10 @@ function switchTab(tabId) {
  * Renders and initializes a new tab in the UI based on provided page data.
  * @param {Object} page - The page data for the new tab, containing at least 'id' and 'title'.
  */
-function renderTab(page) {
+function renderTabHeader(page) {
     // create tab header
     let tabHeader = document.createElement("li");
-    tabHeader.id = `tabHeader${page.id}`;
+    tabHeader.id = `tabHeader${page.tabId}`;
     // create tab link
     let tabLink = document.createElement("a");
     tabLink.href = "#";
@@ -514,9 +639,9 @@ function renderTab(page) {
         const prevTab = $(tabHeader).prev('li');
         // remove current tab header and content
         tabHeader.remove();
-        $(`#tabPage${page.id}`).remove();
+        $(`#tabPage${page.tabId}`).remove();
         // remove tab data from initialPages array
-        const index = initialPages.findIndex(p => p.id === page.id);
+        const index = initialPages.findIndex(p => p.id === page.tabId);
         if (index !== -1)
             initialPages.splice(index, 1);
         // switch to an adjacent tab if current tab was active
@@ -537,11 +662,11 @@ function renderTab(page) {
     tabHeader.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation(); // prevent tab selection post close
-        switchTab(page.id)
+        switchTab(page.tabId)
     });
     // create tab content container
     let tabPage = document.createElement("div");
-    tabPage.id = `tabPage${page.id}`;
+    tabPage.id = `tabPage${page.tabId}`;
     // insert the tab header and content container into DOM
     $("#dynTab_tabHeaders").prepend(tabHeader);
     $("#dynTab_tabPages").append(tabPage);
@@ -552,15 +677,16 @@ function renderTab(page) {
  * @param {string} tabId - The unique identifier for the tab.
  * @param {Object} data - Data containing directories and files to be rendered.
  */
-function renderTabContent(tabId, data) {
+function renderTabPage(tabId, data) {
     // DOM Elements
     const drivesContainer = createContainer(`drivesContainer${tabId}`);
     const explorerContainer = createContainer(`explorerContainer${tabId}`, "scrollHorizontal");
     const detailsHeader = createDetailsHeader(tabId);
-    const explorer = createExplorer(tabId, data.path);
+    const explorer = createExplorer(tabId, data !== null ? data.path : null);
     const previewContainer = createContainer(`previewContainer${tabId}`);
     // populate explorer with directories and files
-    populateExplorerWithData(explorer, data);
+    if (data !== null)
+        populateExplorerWithData(explorer, data);
     // appending elements to the DOM
     explorerContainer.appendChild(detailsHeader);
     explorerContainer.appendChild(explorer);
@@ -572,10 +698,15 @@ function renderTabContent(tabId, data) {
     switchTab(tabId);
 }
 
-function updateTabContent(tabId, data) {    
+/**
+ * Updates the contents of a tab page with the provided data.
+ * @param {any} tabId - The id of the tab page for which to update the content.
+ * @param {any} data - The data to be used as the content for the tab page.
+ */
+function updateTabContent(tabId, data) {
     const explorer = getActiveExplorer();
     while (explorer.firstChild)
-        explorer.removeChild(explorer.firstChild); // clear the current content.
+        explorer.removeChild(explorer.firstChild); // clear the current content
     // populate explorer with new directories and files.
     populateExplorerWithData(explorer, data);
 }
@@ -616,6 +747,7 @@ function createDetailsHeader(tabId) {
 function createExplorer(tabId, path) {
     const explorer = createContainer(`explorer${tabId}`, "List");
     explorer.setAttribute("data-path", path);
+    explorer.setAttribute("data-environment", activeEnvironmentId);
     explorer.style.flexDirection = "column";
     return explorer;
 }
@@ -650,7 +782,7 @@ function createFileSystemEntity(entity, type) {
     const entityDiv = document.createElement("div");
     entityDiv.className = "e list-icons";
     entityDiv.dataset.path = entity.path;
-    entityDiv.dataset.type = type;        
+    entityDiv.dataset.type = type;
     // create and append child divs to the entityDiv
     entityDiv.appendChild(createIconDiv(entity.path, type));
     entityDiv.appendChild(createTextDiv(entity.name, type));
@@ -668,7 +800,7 @@ function createIconDiv(path, type) {
     const iconDiv = document.createElement("div");
     iconDiv.className = "icon";
     const fileImg = document.createElement("img");
-    fileImg.src = baseUrl + "/images/icons/" + CURRENT_ICON_THEME  + "/" + getIconPathForFile(path, type);
+    fileImg.src = baseUrl + "/images/icons/" + CURRENT_ICON_THEME + "/" + getIconPathForFile(path, type);
     iconDiv.appendChild(fileImg);
     return iconDiv;
 }
@@ -765,7 +897,7 @@ async function processItem(item, visibleItems) {
     try {
         const result = await getThumbnailApiCall(item.path);
         // update the item's thumbnail using the retrieved data
-        if (typeof result.base64Data !== "undefined") 
+        if (typeof result.base64Data !== "undefined")
             item.img.src = `data:${result.mimeType};base64,${result.base64Data}`;
         item.img.closest('.e').setAttribute('data-thumbnail-retrieved', 'true');
         // console.log(`Finished processing item: ${item.path}`);
@@ -781,9 +913,9 @@ async function processItem(item, visibleItems) {
             // on error, revert the icons to the default ones
             let itemType = item.img.closest('.e').getAttribute('data-type');
             if (itemType === 'directory')
-                item.img.src = baseUrl + "/images/icons/" + CURRENT_ICON_THEME + "/d.png";
+                item.img.src = baseUrl + "/images/icons/" + CURRENT_ICON_THEME + "/directory.svg";
             else if (itemType === 'file')
-                item.img.src = baseUrl + "/images/icons/" + CURRENT_ICON_THEME + "/f.png";
+                item.img.src = baseUrl + "/images/icons/" + CURRENT_ICON_THEME + "/file.svg";
             console.error('Error processing item:', error);
         }
     }
@@ -791,15 +923,18 @@ async function processItem(item, visibleItems) {
 
 /**
  * Makes an API call to retrieve a thumbnail for the given item.
- * @param {string} item - The item for which the thumbnail needs to be fetched.
+ * @param {string} path - The path of the item for which the thumbnail needs to be fetched.
  * @returns {Promise<object>} - Returns a Promise resolving to an object containing base64Data and mimeType.
  * @throws {Error} - Throws an error if the API call fails.
  */
-async function getThumbnailApiCall(item) {
-    // URL encode the item to ensure it's safely transmitted in the URL
-    const encodedItem = encodeURIComponent(item);
+async function getThumbnailApiCall(path) {
+    // URL encode the path to ensure it's safely transmitted in the URL
+    const encodedItem = encodeURIComponent(path);
     // fetch the thumbnail for the given item from the server
-    const response = await fetch(baseUrl + `/FileSystem/GetThumbnail/${encodedItem}`, {
+    const response = await fetch(baseUrl + '/FileSystem/GetThumbnail?path=' + encodeURIComponent(path), {
+        headers: {
+            'X-Environment-Type': activeEnvironmentId.toString()
+        },
         signal: abortController.signal // use the abort signal 
     });
     if (!response.ok)
@@ -836,24 +971,54 @@ function getIconPathForFile(filename, type) {
     // extract file extension from filename
     const fileExtension = filename.split('.').pop().toLowerCase();
     // return the appropriate SVG image path or a default one if not found
-    return FILE_ICONS[fileExtension] || (type === "file" ? "f.png" : "d.png");
+    return FILE_ICONS[fileExtension] || (type === "file" ? "file.svg" : "directory.svg");
 }
 
+/**
+ * Determines the appropriate SVG icon path based on environment type.
+ * @param {Object} type - An environment type object.
+ * @param {string} type.name - The name of the environment (e.g., "local", "gdrive").
+ * @param {string} type.platformType - The platform type, if applicable (e.g., "windows", "unix").
+ * @returns {string} The relative path to the appropriate SVG image.
+*/
+function getEnvironmentIconPath(type) {
+    if (type.name !== "local") {
+        return baseUrl + "/images/ui/" + type.name.toLowerCase() + ".svg";  // Example: "gdrive.svg"
+    } else {
+        return baseUrl + "/images/ui/" + type.platformType.toLowerCase() + ".svg"; // Example: "windows.svg" or "unix.svg"
+    }
+}
+
+/**
+ * Parses the current path
+ * @param {any} needsContentRefresh - Whether the current tab needs updating or not
+ */
 function parsePath(needsContentRefresh) {
-    const path = $('#addressBarInput').val();
+    const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+    const foundEnvironmentPlatformType = foundEnvironment.platformType;
+    const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
+    if (!addressBarInput.value.endsWith(separator))
+        addressBarInput.value = addressBarInput.value + separator;
+    const path = addressBarInput.value;
     $.ajax({
         url: baseUrl + '/FileSystem/CheckPath?path=' + encodeURIComponent(path),
         type: 'GET',
+        headers: {
+            "X-Environment-Type": activeEnvironmentId.toString()
+        },
         success: function (data) {
             if (data.success) {
                 $.ajax({
                     url: baseUrl + '/FileSystem/ParsePath?path=' + encodeURIComponent(path),
                     type: 'GET',
+                    headers: {
+                        "X-Environment-Type": activeEnvironmentId.toString()
+                    },
                     success: function (data) {
                         if (data.success) {
                             renderAddressBar(data.pathSegments);
-                            inputField.style.display = 'none'; // Hide #addressBarInput
-                            addressBar.style.display = 'block'; // Show #address-bar
+                            addressBarInput.style.display = 'none'; // Hide #addressBarInput
+                            addressBar.style.display = 'block'; // Show #addressBar
                             // find the last directory in the list of path segments
                             var lastDirectory = null;
                             for (var i = data.pathSegments.length - 1; i >= 0; i--) {
@@ -863,10 +1028,10 @@ function parsePath(needsContentRefresh) {
                                 }
                             }
                             if (needsContentRefresh)
-                                updateCurrentTab(path, lastDirectory ? lastDirectory.name : "New Tab");
+                                updateCurrentTab(path, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"));
                         }
                         else
-                            console.error(data.error);
+                            console.error(data.errorMessage);
                     },
                     error: function (error) {
                         console.error('Failed to fetch files:', error);
@@ -874,7 +1039,7 @@ function parsePath(needsContentRefresh) {
                 });
             }
             else
-                console.error(data.error);
+                console.error(data.errorMessage);
         },
         error: function (error) {
             console.error('Failed to fetch files:', error);
@@ -889,56 +1054,49 @@ function parsePath(needsContentRefresh) {
 function renderAddressBar(pathSegments) {
     pathSegmentsContainer.removeEventListener('change', handlePathSegmentComboboxChange);  // remove previous listeners
     pathSegmentsContainer.addEventListener('change', handlePathSegmentComboboxChange);  // add new listener
-
     pathSegmentsContainer.innerHTML = ""; // clear existing segments
-
-    pathSegments.forEach((segment, index) => {
-        const li = document.createElement("li");
-
-        // create the combobox
-        const combobox = document.createElement("div");
-        combobox.className = "navigator-combobox w-250px inline-block";
-        // the shine effect 
-        const shineEffect = document.createElement("div");
-        shineEffect.className = "shine-effect";
-        shineEffect.style.top = "1px";
-        combobox.appendChild(shineEffect);
-
-        const toggleCheckbox = document.createElement("input");
-        toggleCheckbox.type = "checkbox";
-        toggleCheckbox.className = "navigator-toggle-checkbox";
-        toggleCheckbox.id = `segmentToggle_${index}`;
-        combobox.appendChild(toggleCheckbox);
-
-        const toggleLabel = document.createElement("label");
-        toggleLabel.className = "navigator-toggle";
-        toggleLabel.htmlFor = `segmentToggle_${index}`;
-
-        const span = document.createElement("span");
-        span.className = "navigator-selected-text";
-        span.innerText = segment.name;
-        toggleLabel.appendChild(span);
-
-        // add the arrow element
-        const arrowSpan = document.createElement("span");
-        arrowSpan.className = "navigator-arrow";
-        toggleLabel.appendChild(arrowSpan);
-
-        combobox.appendChild(toggleLabel);
-
-        const dropdown = document.createElement("div");
-        dropdown.className = "navigator-dropdown";
-
-        
-        const concatenatedPath = pathSegments.slice(0, index + 1).map(seg => seg.name).join(PATH_CHAR_SEPARATOR); // get the segments from start to the current one. TODO: Change to the tab's platform path separator char!
-        combobox.setAttribute("data-path", concatenatedPath);
-       
-        ////dropdown.appendChild(option);
-        combobox.appendChild(dropdown);
-
-        li.appendChild(combobox);
-        pathSegmentsContainer.appendChild(li);
-    }); 
+    if (pathSegments !== null) {
+        pathSegments.forEach((segment, index) => {
+            const li = document.createElement("li");
+            // create the combobox
+            const combobox = document.createElement("div");
+            combobox.className = "navigator-combobox inline-block";
+            // the shine effect 
+            const shineEffect = document.createElement("div");
+            shineEffect.className = "shine-effect";
+            shineEffect.style.top = "1px";
+            combobox.appendChild(shineEffect);
+            const toggleCheckbox = document.createElement("input");
+            toggleCheckbox.type = "checkbox";
+            toggleCheckbox.className = "navigator-toggle-checkbox";
+            toggleCheckbox.id = `segmentToggle_${index}`;
+            combobox.appendChild(toggleCheckbox);
+            const toggleLabel = document.createElement("label");
+            toggleLabel.className = "navigator-toggle";
+            toggleLabel.htmlFor = `segmentToggle_${index}`;
+            const span = document.createElement("span");
+            span.className = "navigator-selected-text";
+            span.innerText = segment.name;
+            toggleLabel.appendChild(span);
+            // add the arrow element
+            const arrowSpan = document.createElement("span");
+            arrowSpan.className = "navigator-arrow";
+            toggleLabel.appendChild(arrowSpan);
+            combobox.appendChild(toggleLabel);
+            const dropdown = document.createElement("div");
+            dropdown.className = "navigator-dropdown";
+            dropdown.id = `navigatorDropdown_${index}`;
+            const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+            const foundEnvironmentPlatformType = foundEnvironment.platformType;
+            const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
+            // get the segments from start to the current one (on UNIX, start with path separator char!)
+            const concatenatedPath = (foundEnvironmentPlatformType === "Unix" ? '/' : '') + pathSegments.slice(0, index + 1).map(seg => seg.name).join(separator);
+            combobox.setAttribute('data-path', concatenatedPath + (!concatenatedPath.endsWith(separator) ? separator : ''));
+            combobox.appendChild(dropdown);
+            li.appendChild(combobox);
+            pathSegmentsContainer.appendChild(li);
+        });
+    }
 }
 
 /**
@@ -947,48 +1105,62 @@ function renderAddressBar(pathSegments) {
  * @param {Event} e - The change event object. 
  */
 function handlePathSegmentComboboxChange(e) {
-    // Ensure the event was triggered by an element with the 
-    // 'navigator-toggle-checkbox' class
+    // Ensure the event was triggered by an element with the 'navigator-toggle-checkbox' class
     if (e.target.classList.contains('navigator-toggle-checkbox')) {
+        const comboboxId = e.target.id;
+        const dropdownId = comboboxId.replace('segmentToggle_', 'navigatorDropdown_');
+        const dropdown = document.getElementById(dropdownId);
+        reattachDropdown();
         if (e.target.checked) {
             console.log('Dropdown opened!');
             const comboboxElement = e.target.closest('.navigator-combobox'); // get the closest parent (or self) with the specified class
-            const pathValue = comboboxElement.getAttribute("data-path");  // retrieve the data-path attribute value
-
-            const dropdown = e.target.closest('.navigator-combobox').querySelector('.navigator-dropdown');
+            const pathValue = comboboxElement.getAttribute('data-path');  // retrieve the data-path attribute value
             // clear any existing dropdown elements
             dropdown.innerHTML = "";
-
-
             // fetch directory data for the path.
             $.ajax({
                 url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(pathValue),
                 type: 'GET',
+                headers: {
+                    "X-Environment-Type": activeEnvironmentId.toString()
+                },
                 success: function (directoriesData) {
-                    if (directoriesData.success) {      
+                    if (directoriesData.success) {
                         // add combobox entry for current directory
                         const currentDirectoryDiv = document.createElement('div');
                         currentDirectoryDiv.className = "navigator-option";
                         currentDirectoryDiv.dataset.value = pathValue;
                         currentDirectoryDiv.textContent = ".";
                         currentDirectoryDiv.addEventListener('click', function (event) {
-                            $('#addressBarInput').val(pathValue); 
+                            addressBarInput.value = pathValue;
                             parsePath(true);
                             console.log('Current directory option clicked:', event.target.textContent);
                         });
-
                         dropdown.appendChild(currentDirectoryDiv);
-                        // TODO: add option for "..", after implementing "navigate up"
-
+                        // add combobox entry for parent directory
+                        const parentDirectoryDiv = document.createElement('div');
+                        parentDirectoryDiv.className = "navigator-option";
+                        parentDirectoryDiv.dataset.value = pathValue;
+                        parentDirectoryDiv.textContent = "..";
+                        parentDirectoryDiv.addEventListener('click', function (event) {
+                            addressBarInput.value = pathValue;
+                            goUpOneLevel();
+                            console.log('Current directory option clicked:', event.target.textContent);
+                        });
+                        dropdown.appendChild(parentDirectoryDiv);
+                        // add options for the rest of the directories
                         directoriesData.directories.forEach(option => {
                             const directoryDiv = document.createElement('div');
                             directoryDiv.className = "navigator-option";
                             directoryDiv.dataset.value = pathValue + option.name;
                             directoryDiv.textContent = option.name;
                             directoryDiv.addEventListener('click', function (event) {
-                                $('#addressBarInput').val(pathValue + PATH_CHAR_SEPARATOR + option.name); // TODO: replace hardcoded path separator
+                                const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+                                const foundEnvironmentPlatformType = foundEnvironment.platformType;
+                                const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
+                                addressBarInput.value = pathValue + (!pathValue.endsWith(separator) ? separator : '') + option.name + separator;
                                 parsePath(true);
-                                console.log('Current directory option clicked:', pathValue + PATH_CHAR_SEPARATOR + option.name); 
+                                console.log('Current directory option clicked:', addressBarInput.value);
                             });
                             dropdown.appendChild(directoryDiv);
                         });
@@ -998,47 +1170,142 @@ function handlePathSegmentComboboxChange(e) {
                     console.error('Failed to fetch directories:', error);
                 }
             });
-
-
-            //const options = [
-            //    { id: "test1", name: "Test Option w1" },
-            //    { id: "test2", name: "Test Option e2" }, 
-            //    { id: "test3", name: "Test Option 3t" }
-            //];
-
-            //options.forEach(option => {
-            //    const optionDiv = document.createElement('div');
-            //    optionDiv.className = "navigator-option";
-            //    optionDiv.dataset.value = option.id;
-            //    optionDiv.textContent = option.name;
-
-            //    dropdown.appendChild(optionDiv);
-            //});
-
+            // when drop down opens, need to show address bar overflow, otherwise clipping of drop down occurs
+            // store the id of the parent combobox of the dropdown - the dropdown will be reparented 
+            // because of manadatory "overflow hidden" of scrollable area and clipping isues
+            dropdown.setAttribute('data-parent', e.target.id);
+            dropdown.setAttribute('data-detached', true);
+            const position = e.target.closest('.navigator-combobox').getBoundingClientRect();
+            // Detach dropdown and reposition
+            document.body.appendChild(dropdown);
+            dropdown.style.position = 'absolute';
+            dropdown.style.top = position.bottom + 'px';
+            dropdown.style.left = position.left + 'px';
+            dropdown.style.display = 'block';
+            // handle addressBar scroll to adjust dropdown position
+            addressBar.addEventListener('scroll', adjustDropdownPosition);
+            console.log("added event");
         } else {
             console.log('Dropdown closed!');
         }
     }
 }
 
+/**
+ * Adjusts the position of a detached drop down, such that it is always just under its original 
+ * path segment combobox, even when this parent is moved through scrolling
+ */
+function adjustDropdownPosition() {
+    const dropdown = document.querySelector('.navigator-dropdown[data-detached="true"]');
+    if (dropdown) {
+        const comboboxElement = document.getElementById(dropdown.getAttribute('data-parent')); // Use this to get the related combobox
+        const position = comboboxElement.parentNode.getBoundingClientRect();
+        dropdown.style.top = position.bottom + 'px';
+        dropdown.style.left = position.left + 'px';
+    }
+}
+
+/**
+ * Re-attaches the detached visible drop down to the path segment or platform combobox it originally belonged to
+ */
+function reattachDropdown() {
+    // when the combobox closes, re-attach the detached dropdown
+    const dropdown = document.querySelector('.navigator-dropdown[data-detached="true"], .enlightenment-dropdown[data-detached="true"]');
+    if (dropdown) {
+        // reset its absolute positioning and stuff
+        dropdown.style.position = '';
+        dropdown.style.top = '';
+        dropdown.style.left = '';
+        dropdown.style.display = '';
+        // re-attach it to original parent
+        const dataParent = dropdown.getAttribute('data-parent');
+        dropdown.removeAttribute('data-detached');
+        const originalParent = document.getElementById(dataParent).parentNode;
+        if (originalParent)
+            originalParent.appendChild(dropdown);
+        // remove scroll event listener from the addressBar
+        addressBar.removeEventListener('scroll', adjustDropdownPosition);
+    }
+}
+
+/**
+ * Handle the change event for the comboboxes inside the path-segments.
+ * This function is triggered when any of the comboboxes (checkboxes) in the navigation bar is toggled.
+ * @param {Event} e - The change event object. 
+ */
+function handleEnvironemtComboboxChange(e) {
+    // Ensure the event was triggered by an element with the 
+    // 'navigator-toggle-checkbox' class
+    reattachDropdown();
+    if (e.target.checked) {
+        console.log('Environment dropdown opened!');
+        environmentDropdown.setAttribute('data-parent', e.target.id);
+        environmentDropdown.setAttribute('data-detached', true);
+        const position = e.target.closest('.enlightenment-combobox').getBoundingClientRect();
+        // detach dropdown and reposition
+        document.body.appendChild(environmentDropdown);
+        environmentDropdown.style.position = 'absolute';
+        environmentDropdown.style.top = position.bottom + 'px';
+        environmentDropdown.style.left = position.left + 'px';
+        environmentDropdown.style.display = 'block';
+        environmentDropdown.style.width = '54px';
+        // when drop down opens, need to show address bar overflow, otherwise clipping of drop down occurs
+        //handleAddressBarDropdownsOpen();
+    } else {
+        console.log('Environment dropdown closed!');
+    }
+}
+
 
 $(document).ready(function () {
 
-// ==================================
-// Combobox
-// ==================================
+    // ==================================
+    // Combobox
+    // ==================================
 
     /**
-     * Event handler for when an option in the combobox is clicked.
-     * This updates the displayed value of the combobox to the clicked option
-     * and closes the dropdown.
-     */
-    $(document).on("click", ".enlightenment-option, .navigator-option", function () {
+    * Event handler for when an option in the combobox is clicked.
+    * This updates the displayed value of the combobox to the clicked option
+    * and closes the dropdown.
+    */
+    $(document).on("click", ".enlightenment-option:not(#environmentsDropdown .enlightenment-option)", function () {
         var value = $(this).data("value");
         var text = $(this).text();
-        var combobox = $(this).closest(".enlightenment-combobox, .navigator-combobox");
-        combobox.find(".enlightenment-selected-text, .navigator-selected-text").text(text);
-        combobox.find(".enlightenment-toggle-checkbox, .navigator-toggle-checkbox").prop("checked", false);
+        var combobox = $(this).closest(".enlightenment-combobox");
+        combobox.find(".enlightenment-selected-text").text(text);
+        combobox.find(".enlightenment-toggle-checkbox").prop("checked", false);
+    });
+
+    /**
+     * Event handler for environment combobox drop down items click.
+     */
+    $(document).on("click", "#environmentsDropdown .enlightenment-option", function () {
+        reattachDropdown();
+        const clickedImage = $(this).find('img');
+        const environment = environmentTypes.find(item => item.id === clickedImage.data("environemt-id"));
+
+        var combobox = $(this).closest(".enlightenment-combobox");
+        combobox.find("label.enlightenment-toggle img").attr('src', clickedImage.attr('src'));
+        combobox.find(".enlightenment-toggle-checkbox").prop("checked", false);
+        combobox.attr('title', (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title);
+        // TODO: store the selected platform id and use it for creating new explorer tabs,  navigating current ones to default platform path, etc
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            explorer.setAttribute('data-environment', environment.id);
+        }
+
+        addressBarInput.value = environment.initialPath;
+        activeEnvironmentId = environment.id;
+        parsePath(true);
+    });
+
+    /**
+     * Event handler for navigation combobox drop down item clicks.
+     */
+    $(document).on("click", ".navigator-option", function () {
+        // the address bar drop downs may be destroyed when an option is clicked - they are regenerated each time anyway
+        addressBar.removeEventListener('scroll', adjustDropdownPosition);
+        $(this).parent().remove();
     });
 
     /**
@@ -1046,9 +1313,8 @@ $(document).ready(function () {
      * will ensure all other comboboxes are closed.
      */
     $(document).on('change', '.enlightenment-toggle-checkbox, .navigator-toggle-checkbox', function () {
-        if ($(this).prop('checked')) {
-            closeAllComboboxesExcept($(this));
-        }
+        if ($(this).prop('checked')) 
+            closeAllComboboxesExcept($(this)); 
     });
 
     /**
@@ -1056,8 +1322,17 @@ $(document).ready(function () {
      * if the clicked target is outside any combobox.
      */
     $(document).click(function (event) {
-        if (!$(event.target).closest('.enlightenment-combobox, .navigator-combobox').length) {
-            $('.enlightenment-toggle-checkbox:checked, .navigator-toggle-checkbox:checked').prop('checked', false);
+        if (!$(event.target).closest('.enlightenment-combobox').length) {
+            const checkbox = $('.enlightenment-toggle-checkbox:checked').prop('checked', false);
+            checkbox.prop('checked', false);
+        }
+        if (!$(event.target).closest('.navigator-combobox').length) {
+            const checkbox = $('.navigator-toggle-checkbox:checked').prop('checked', false);
+            checkbox.prop('checked', false);
+            // when drop down closes, hide address bar overflow
+            addressBar.style.overflowX = 'auto';
+            addressBar.style.overflowY = 'hidden';
+            reattachDropdown();
         }
     });
 
@@ -1082,14 +1357,79 @@ $(document).ready(function () {
         });
     }
 
-    document.querySelectorAll('.navigator-toggle-checkbox').forEach(function (checkbox) {
-        checkbox.addEventListener('change', function () {
-            if (this.checked) {
-                console.log('Dropdown opened1!');
-            } else {
-                console.log('Dropdown closed2!');
-            }
-        });
+    /**
+     * Event handler for the navigate button click.
+     */
+    document.getElementById('btnNavigate').addEventListener('click', function () {
+        parsePath(true);
+        addressBarInput.style.display = 'none';
+        addressBar.style.display = 'block'; 
+    });
+
+    /**
+     * Event handler for the edit path button click.
+     */
+    document.getElementById('btnEditPath').addEventListener('click', function () {
+        addressBarInput.style.display = 'block'; 
+        addressBarInput.focus(); 
+        addressBar.style.display = 'none';
+    });
+
+    /**
+     * Event handler for the navigate up one level button click.
+     */
+    document.getElementById('btnUpOneLevel').addEventListener('click', function () {
+        goUpOneLevel();
+    });
+
+    /**
+     * Event handler for the addressbar input keypress events.
+     */
+    addressBarInput.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {  // 13 is the key code for "enter"
+            event.preventDefault();  // prevent any default action
+            parsePath(true);
+        }
+    });
+
+    /**
+     * Event handler for the addressbar input keydown events.
+     */
+    addressBarInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();  // prevent any default action
+            addressBarInput.style.display = 'none'; // Hide #addressBarInput
+            addressBar.style.display = 'block'; // Show #addressBar
+        }
+    });
+
+    /**
+     * Event handler for the addressbar click events.
+     */
+    addressBar.addEventListener('click', function (e) {
+        // if the clicked element is the ul itself or one of its direct children (but not deeper nested children)
+        if (e.target === e.currentTarget || e.target.parentElement === e.currentTarget) {
+            this.style.display = 'none'; // hide #addressBar
+            addressBarInput.style.display = 'block'; // show #addressBarInput
+            addressBarInput.focus(); // focus on the input
+        }
+    });
+
+    // add the available environments to the environments combobox in the navigator
+    environmentTypes.forEach((type, index, array) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = "enlightenment-option";
+        if (index === array.length - 1)
+            optionDiv.classList.add("last-option");
+        // Create an image element and set its source to the appropriate SVG
+        const imgElement = document.createElement('img');
+        imgElement.src = getEnvironmentIconPath(type);
+        imgElement.alt = type.title; // Using the title as alt text for accessibility
+        imgElement.title = type.title;
+        imgElement.style.width = '42px';
+        imgElement.setAttribute('data-environemt-id', type.id);
+        optionDiv.appendChild(imgElement);
+        optionDiv.style.padding = '0px';
+        environmentDropdown.appendChild(optionDiv);
     });
 });
-

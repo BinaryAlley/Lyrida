@@ -22,6 +22,7 @@ internal class FtpDirectoryProviderStrategy : IFtpDirectoryProviderStrategy
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IFileSystem fileSystem;
+    private readonly IFileSystemPermissionsService fileSystemPermissionsService;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -29,9 +30,11 @@ internal class FtpDirectoryProviderStrategy : IFtpDirectoryProviderStrategy
     /// Overload C-tor
     /// </summary>
     /// <param name="fileSystem">Injected service used to interact with the local filesystem</param>
-    public FtpDirectoryProviderStrategy(IFileSystem fileSystem)
+    /// <param name="fileSystemPermissionsService">Injected service used to determine local filesystem permissions</param>
+    public FtpDirectoryProviderStrategy(IFileSystem fileSystem, IFileSystemPermissionsService fileSystemPermissionsService)
     {
         this.fileSystem = fileSystem;
+        this.fileSystemPermissionsService = fileSystemPermissionsService;
     }
     #endregion
 
@@ -44,7 +47,7 @@ internal class FtpDirectoryProviderStrategy : IFtpDirectoryProviderStrategy
     public ErrorOr<Task<IEnumerable<string>>> GetSubdirectoryPathsAsync(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ListDirectory))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ListDirectory))
             return Errors.Permission.UnauthorizedAccess;
         return Task.Run(() => fileSystem.Directory.GetDirectories(path).OrderBy(path => path).AsEnumerable());
     }
@@ -68,7 +71,7 @@ internal class FtpDirectoryProviderStrategy : IFtpDirectoryProviderStrategy
     public ErrorOr<DateTime?> GetLastWriteTime(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
         return fileSystem.Directory.GetLastWriteTime(path);
     }
@@ -81,7 +84,7 @@ internal class FtpDirectoryProviderStrategy : IFtpDirectoryProviderStrategy
     public ErrorOr<DateTime?> GetCreationTime(string path)
     {
         // check if the user has access permissions to the provided path
-        if (!FileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
         return fileSystem.Directory.GetCreationTime(path);
     }

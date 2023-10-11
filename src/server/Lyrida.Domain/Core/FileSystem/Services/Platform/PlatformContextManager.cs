@@ -18,6 +18,8 @@ public class PlatformContextManager : IPlatformContextManager
     private readonly IPlatformContextFactory platformContextFactory;
     #endregion
 
+   
+
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
     /// Overload C-tor

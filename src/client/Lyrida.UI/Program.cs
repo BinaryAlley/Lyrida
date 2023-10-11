@@ -37,6 +37,7 @@ public class Program
         {
             options.Filters.Add(typeof(ApiExceptionFilter));
             options.Filters.Add(typeof(UserTokenActionFilter));
+            options.Filters.Add(typeof(EnvironmentFilterAttribute));
         });
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {
@@ -49,6 +50,7 @@ public class Program
         // add filters for cross cutting concerns in regard to the API interaction
         builder.Services.AddScoped<ApiExceptionFilter>();
         builder.Services.AddScoped<UserTokenActionFilter>();
+        builder.Services.AddScoped<EnvironmentFilterAttribute>();
         // add session middleware
         builder.Services.AddDistributedMemoryCache();  // required for session state
         builder.Services.AddSession(options =>

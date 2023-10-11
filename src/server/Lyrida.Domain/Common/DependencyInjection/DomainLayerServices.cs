@@ -11,6 +11,7 @@ using Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Files.FileTypeStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Files.FileProviderStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Directories.DirectoryProviderStrategies;
+using Lyrida.Domain.Core.FileSystem.Services.Permissions;
 #endregion
 
 namespace Lyrida.Domain.Common.DependencyInjection;
@@ -31,9 +32,13 @@ public class DomainLayerServices : Module
     protected override void Load(ContainerBuilder builder)
     {
         // the proxy interceptors for these services are added in the infrastructure layer services registration module!
-        builder.RegisterType<LocalSystemDirectoryProviderStrategy>()
-               .As<IDirectoryProviderStrategy>()
+        builder.RegisterType<FileSystemPermissionsService>()
+               .As<IFileSystemPermissionsService>()
                .InstancePerLifetimeScope();
+
+        builder.RegisterType<LocalSystemDirectoryProviderStrategy>()
+                .As<IDirectoryProviderStrategy>()
+                .InstancePerLifetimeScope();
 
         builder.RegisterType<DirectoryService>()
                .As<IDirectoryService>()

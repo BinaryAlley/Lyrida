@@ -1,4 +1,5 @@
 ﻿#region ========================================================================= USING =====================================================================================
+using Lyrida.Domain.Common.Enums;
 using Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 #endregion
 
@@ -13,6 +14,7 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Platform;
 public class WindowsPlatformContext : IWindowsPlatformContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
+    public PlatformType Platform { get; } = PlatformType.Windows;
     public IPathStrategy PathService { get; private set; }
     #endregion
 
@@ -20,10 +22,10 @@ public class WindowsPlatformContext : IWindowsPlatformContext
     /// <summary>
     /// Overload C-tor
     /// </summary>
-    /// <param name="unixPathStrategy">Injected service for creating path strategies for Windows platforms</param>
-    public WindowsPlatformContext(IWindowsPathStrategy unixPathStrategy)
+    /// <param name="windowsPathStrategy">Injected service for creating path strategies for Windows platforms</param>
+    public WindowsPlatformContext(IWindowsPathStrategy windowsPathStrategy)
     {
-        PathService = unixPathStrategy;
+        PathService = windowsPathStrategy;
     }
     #endregion
 }
