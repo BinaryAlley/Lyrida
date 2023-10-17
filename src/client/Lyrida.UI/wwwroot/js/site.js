@@ -88,6 +88,8 @@ const FILE_ICONS = {
 // DOM Elements
 // ==================================
 
+const accountIcon = document.getElementById('accountIcon');
+const accountDropdown = document.getElementById('accountDropdown');
 const addressBarInput = document.getElementById('addressBarInput');
 const addressBar = document.getElementById('addressBar');
 const pathSegmentsContainer = document.getElementById('pathSegments');
@@ -96,6 +98,12 @@ const navigatorContainer = document.getElementById('navigator');
 const addressBarGroup = document.getElementById('addressBarGroup');
 const environmentsDropdownToggle = document.getElementById('environmentsDropdownToggle');
 const environmentsCombobox = document.getElementById('environmentsCombobox');
+const btnTreeView = document.getElementById('btnTreeView');
+const btnPreview = document.getElementById('btnPreview');
+const btnSplitView = document.getElementById('btnSplitView');
+const btnNavigate = document.getElementById('btnNavigate');
+const btnEditPath = document.getElementById('btnEditPath');
+const btnUpOneLevel = document.getElementById('btnUpOneLevel');
 
 /**
  * Retrieves the active's tab explorer container element.
@@ -233,39 +241,119 @@ function scrollHorizontally(event) {
 /** 
  * Make address bar horizontally scrollable.
  */
-addressBar.addEventListener('wheel', function (event) {
-    event.preventDefault();
-    this.scrollLeft += (event.deltaY > 0 ? 1 : -1) * 80;
-}, { passive: false });
+if (addressBar)
+    addressBar.addEventListener('wheel', function (event) {
+        event.preventDefault();
+        this.scrollLeft += (event.deltaY > 0 ? 1 : -1) * 80;
+    }, { passive: false });
 
 /**
  * Toggles the visibility of the folders treeview panel.
  */
-document.getElementById('btnTreeView').addEventListener('click', function () {
-    const treeview = getActiveTreeview();
-    const computedStyle = window.getComputedStyle(treeview);
-    // using computedStyle to check the actual styles being applied to the element
-    treeview.style.width = computedStyle.width === '0px' ? '100px' : '0px';
-    treeview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
-});
+if (btnTreeView)
+    btnTreeView.addEventListener('click', function () {
+        const treeview = getActiveTreeview();
+        const computedStyle = window.getComputedStyle(treeview);
+        // using computedStyle to check the actual styles being applied to the element
+        treeview.style.width = computedStyle.width === '0px' ? '100px' : '0px';
+        treeview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+    });
 
 /**
  * Toggles the visibility of the file preview panel.
  */
-document.getElementById('btnPreview').addEventListener('click', function () {
-    const preview = getActivePreview();
-    const computedStyle = window.getComputedStyle(preview);
-    // using computedStyle to check the actual styles being applied to the element
-    preview.style.width = computedStyle.width === '0px' ? '150px' : '0px';
-    preview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
-});
+if (btnPreview)
+    btnPreview.addEventListener('click', function () {
+        const preview = getActivePreview();
+        const computedStyle = window.getComputedStyle(preview);
+        // using computedStyle to check the actual styles being applied to the element
+        preview.style.width = computedStyle.width === '0px' ? '150px' : '0px';
+        preview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+    });
 
 /**
  * Toggles the split mode for the current tab
  */
-document.getElementById('btnSplitView').addEventListener('click', function () {
+if (btnSplitView)
+    btnSplitView.addEventListener('click', function () {
 
-});
+    });
+
+/**
+* Event handler for the navigate button click.
+*/
+if (btnNavigate)
+    btnNavigate.addEventListener('click', function () {
+        parsePath(true);
+        addressBarInput.style.display = 'none';
+        addressBar.style.display = 'block';
+    });
+
+/**
+ * Event handler for the edit path button click.
+ */
+if (btnEditPath)
+    btnEditPath.addEventListener('click', function () {
+        addressBarInput.style.display = 'block';
+        addressBarInput.focus();
+        addressBar.style.display = 'none';
+    });
+
+/**
+ * Event handler for the navigate up one level button click.
+ */
+if (btnUpOneLevel)
+    btnUpOneLevel.addEventListener('click', function () {
+        goUpOneLevel();
+    });
+
+/**
+ * Event handler for the account icon click.
+ */
+if (accountIcon)
+    accountIcon.addEventListener('click', function (event) {
+        if (accountDropdown.classList.contains('hidden'))
+            accountDropdown.classList.remove('hidden');
+        else
+            accountDropdown.classList.add('hidden');
+        event.stopPropagation(); // this is important to prevent the document click event from hiding it immediately
+    });
+
+/**
+ * Event handler for the addressbar input keypress events.
+ */
+if (addressBarInput)
+    addressBarInput.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {  // 13 is the key code for "enter"
+            event.preventDefault();  // prevent any default action
+            parsePath(true);
+        }
+    });
+
+/**
+ * Event handler for the addressbar input keydown events.
+ */
+if (addressBarInput)
+    addressBarInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();  // prevent any default action
+            addressBarInput.style.display = 'none'; // Hide #addressBarInput
+            addressBar.style.display = 'block'; // Show #addressBar
+        }
+    });
+
+/**
+ * Event handler for the addressbar click events.
+ */
+if (addressBar)
+    addressBar.addEventListener('click', function (event) {
+        // if the clicked element is the ul itself or one of its direct children (but not deeper nested children)
+        if (event.target === event.currentTarget || event.target.parentElement === event.currentTarget) {
+            this.style.display = 'none'; // hide #addressBar
+            addressBarInput.style.display = 'block'; // show #addressBarInput
+            addressBarInput.focus(); // focus on the input
+        }
+    });
 
 // ==================================
 // Event Listeners Initializations
@@ -273,7 +361,8 @@ document.getElementById('btnSplitView').addEventListener('click', function () {
 
 // adjust thumbnails upon window resizing
 window.addEventListener('resize', handleResizeEvent);
-environmentsDropdownToggle.addEventListener('change', handleEnvironemtComboboxChange);
+if (environmentsDropdownToggle)
+    environmentsDropdownToggle.addEventListener('change', handleEnvironemtComboboxChange);
 
 // button click handlers for different view modes.
 $('#detailsView').click(() => switchViewMode(setDetailsViewMode));
@@ -629,9 +718,9 @@ function renderTabHeader(page) {
     closeButton.href = "#";
     closeButton.className = "closeIcon";
     closeButton.title = "Close";
-    closeButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation(); // prevent tab selection post close
+    closeButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation(); // prevent tab selection post close
         // check if current tab is active
         const isActive = $(tabHeader).hasClass('active');
         // determine next and previous tabs
@@ -659,9 +748,9 @@ function renderTabHeader(page) {
     tabHeader.appendChild(tabLink);
     tabHeader.appendChild(closeButton);
     // switch to tab when its header is clicked
-    tabHeader.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation(); // prevent tab selection post close
+    tabHeader.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation(); // prevent tab selection post close
         switchTab(page.tabId)
     });
     // create tab content container
@@ -1102,18 +1191,18 @@ function renderAddressBar(pathSegments) {
 /**
  * Handle the change event for the comboboxes inside the path-segments.
  * This function is triggered when any of the comboboxes (checkboxes) in the navigation bar is toggled.
- * @param {Event} e - The change event object. 
+ * @param {Event} event - The change event object. 
  */
-function handlePathSegmentComboboxChange(e) {
+function handlePathSegmentComboboxChange(event) {
     // Ensure the event was triggered by an element with the 'navigator-toggle-checkbox' class
-    if (e.target.classList.contains('navigator-toggle-checkbox')) {
-        const comboboxId = e.target.id;
+    if (event.target.classList.contains('navigator-toggle-checkbox')) {
+        const comboboxId = event.target.id;
         const dropdownId = comboboxId.replace('segmentToggle_', 'navigatorDropdown_');
         const dropdown = document.getElementById(dropdownId);
         reattachDropdown();
-        if (e.target.checked) {
+        if (event.target.checked) {
             console.log('Dropdown opened!');
-            const comboboxElement = e.target.closest('.navigator-combobox'); // get the closest parent (or self) with the specified class
+            const comboboxElement = event.target.closest('.navigator-combobox'); // get the closest parent (or self) with the specified class
             const pathValue = comboboxElement.getAttribute('data-path');  // retrieve the data-path attribute value
             // clear any existing dropdown elements
             dropdown.innerHTML = "";
@@ -1173,9 +1262,9 @@ function handlePathSegmentComboboxChange(e) {
             // when drop down opens, need to show address bar overflow, otherwise clipping of drop down occurs
             // store the id of the parent combobox of the dropdown - the dropdown will be reparented 
             // because of manadatory "overflow hidden" of scrollable area and clipping isues
-            dropdown.setAttribute('data-parent', e.target.id);
+            dropdown.setAttribute('data-parent', event.target.id);
             dropdown.setAttribute('data-detached', true);
-            const position = e.target.closest('.navigator-combobox').getBoundingClientRect();
+            const position = event.target.closest('.navigator-combobox').getBoundingClientRect();
             // Detach dropdown and reposition
             document.body.appendChild(dropdown);
             dropdown.style.position = 'absolute';
@@ -1231,17 +1320,17 @@ function reattachDropdown() {
 /**
  * Handle the change event for the comboboxes inside the path-segments.
  * This function is triggered when any of the comboboxes (checkboxes) in the navigation bar is toggled.
- * @param {Event} e - The change event object. 
+ * @param {Event} event - The change event object. 
  */
-function handleEnvironemtComboboxChange(e) {
+function handleEnvironemtComboboxChange(event) {
     // Ensure the event was triggered by an element with the 
     // 'navigator-toggle-checkbox' class
     reattachDropdown();
-    if (e.target.checked) {
+    if (event.target.checked) {
         console.log('Environment dropdown opened!');
-        environmentDropdown.setAttribute('data-parent', e.target.id);
+        environmentDropdown.setAttribute('data-parent', event.target.id);
         environmentDropdown.setAttribute('data-detached', true);
-        const position = e.target.closest('.enlightenment-combobox').getBoundingClientRect();
+        const position = event.target.closest('.enlightenment-combobox').getBoundingClientRect();
         // detach dropdown and reposition
         document.body.appendChild(environmentDropdown);
         environmentDropdown.style.position = 'absolute';
@@ -1326,7 +1415,7 @@ $(document).ready(function () {
             const checkbox = $('.enlightenment-toggle-checkbox:checked').prop('checked', false);
             checkbox.prop('checked', false);
         }
-        if (!$(event.target).closest('.navigator-combobox').length) {
+        if (!$(event.target).closest('.navigator-combobox').length && addressBar) {
             const checkbox = $('.navigator-toggle-checkbox:checked').prop('checked', false);
             checkbox.prop('checked', false);
             // when drop down closes, hide address bar overflow
@@ -1334,6 +1423,7 @@ $(document).ready(function () {
             addressBar.style.overflowY = 'hidden';
             reattachDropdown();
         }
+        accountDropdown.classList.add('hidden');
     });
 
     /**
@@ -1356,80 +1446,23 @@ $(document).ready(function () {
             }
         });
     }
-
-    /**
-     * Event handler for the navigate button click.
-     */
-    document.getElementById('btnNavigate').addEventListener('click', function () {
-        parsePath(true);
-        addressBarInput.style.display = 'none';
-        addressBar.style.display = 'block'; 
-    });
-
-    /**
-     * Event handler for the edit path button click.
-     */
-    document.getElementById('btnEditPath').addEventListener('click', function () {
-        addressBarInput.style.display = 'block'; 
-        addressBarInput.focus(); 
-        addressBar.style.display = 'none';
-    });
-
-    /**
-     * Event handler for the navigate up one level button click.
-     */
-    document.getElementById('btnUpOneLevel').addEventListener('click', function () {
-        goUpOneLevel();
-    });
-
-    /**
-     * Event handler for the addressbar input keypress events.
-     */
-    addressBarInput.addEventListener('keypress', function (event) {
-        if (event.key === 'Enter') {  // 13 is the key code for "enter"
-            event.preventDefault();  // prevent any default action
-            parsePath(true);
-        }
-    });
-
-    /**
-     * Event handler for the addressbar input keydown events.
-     */
-    addressBarInput.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            event.preventDefault();  // prevent any default action
-            addressBarInput.style.display = 'none'; // Hide #addressBarInput
-            addressBar.style.display = 'block'; // Show #addressBar
-        }
-    });
-
-    /**
-     * Event handler for the addressbar click events.
-     */
-    addressBar.addEventListener('click', function (e) {
-        // if the clicked element is the ul itself or one of its direct children (but not deeper nested children)
-        if (e.target === e.currentTarget || e.target.parentElement === e.currentTarget) {
-            this.style.display = 'none'; // hide #addressBar
-            addressBarInput.style.display = 'block'; // show #addressBarInput
-            addressBarInput.focus(); // focus on the input
-        }
-    });
-
-    // add the available environments to the environments combobox in the navigator
-    environmentTypes.forEach((type, index, array) => {
-        const optionDiv = document.createElement('div');
-        optionDiv.className = "enlightenment-option";
-        if (index === array.length - 1)
-            optionDiv.classList.add("last-option");
-        // Create an image element and set its source to the appropriate SVG
-        const imgElement = document.createElement('img');
-        imgElement.src = getEnvironmentIconPath(type);
-        imgElement.alt = type.title; // Using the title as alt text for accessibility
-        imgElement.title = type.title;
-        imgElement.style.width = '42px';
-        imgElement.setAttribute('data-environemt-id', type.id);
-        optionDiv.appendChild(imgElement);
-        optionDiv.style.padding = '0px';
-        environmentDropdown.appendChild(optionDiv);
-    });
+    
+    if (environmentDropdown)
+        // add the available environments to the environments combobox in the navigator
+        environmentTypes.forEach((type, index, array) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = "enlightenment-option";
+            if (index === array.length - 1)
+                optionDiv.classList.add("last-option");
+            // Create an image element and set its source to the appropriate SVG
+            const imgElement = document.createElement('img');
+            imgElement.src = getEnvironmentIconPath(type);
+            imgElement.alt = type.title; // Using the title as alt text for accessibility
+            imgElement.title = type.title;
+            imgElement.style.width = '42px';
+            imgElement.setAttribute('data-environemt-id', type.id);
+            optionDiv.appendChild(imgElement);
+            optionDiv.style.padding = '0px';
+            environmentDropdown.appendChild(optionDiv);
+        });
 });

@@ -10,10 +10,16 @@ To explore more about Enlightenment and their contributions to the open-source c
 
 ### Icons
 
+Most icons were taken from [Lyra Icon Theme](https://github.com/yeyushengfan258/Lyra-icon-theme/tree/master/src), a beautiful icon theme for Linux desktops.
+
 Several icons used in this project were adapted from icons sourced from [OnlineWebFonts](https://www.onlinewebfonts.com/icon). These icons are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 - [`os.svg`](https://www.onlinewebfonts.com/icon/241211)
 - [`ftp.svg`](https://www.onlinewebfonts.com/icon/248291)
+
+### Notification system
+
+The notification system used in this application is provided by [SweetAlert](https://sweetalert.js.org/).
 
 I greatly appreciate the creators and contributors for providing these assets.
 

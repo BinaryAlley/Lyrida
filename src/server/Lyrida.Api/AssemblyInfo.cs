@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Lyrida.API")]
+[assembly: AssemblyTitle("Lyrida")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Lyrida")]
-[assembly: AssemblyProduct("Lyrida.Server")]
+[assembly: AssemblyProduct("Lyrida.Api")]
 [assembly: AssemblyCopyright("Copyright ©  2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,8 +20,8 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("a259c7d4-139c-4b56-aa87-bcc6541ca073")]
+[assembly: Guid("8cdca7e5-127f-488e-8391-650c80845176")]
 
 // make internal implementations visible to the testing project (circumvent inability to test private methods, without exposing them)
-[assembly: InternalsVisibleTo("Lyrida.Tests")]
+[assembly: InternalsVisibleTo("Project.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

@@ -3,39 +3,21 @@
 	<!-- variables -->
 	<PropertyGroup>
 		<TestsDirectory>..\tests\</TestsDirectory>
-		<ServerDebugDirectory>..\bin\server\Debug</ServerDebugDirectory>
-		<ClientDebugDirectory>..\bin\client\Debug</ClientDebugDirectory>
 		<ServerDeployDirectory>..\bin\server\Deploy</ServerDeployDirectory>		
 		<ClientDeployDirectory>..\bin\client\Deploy</ClientDeployDirectory>		
-		<ServerReleaseDirectory>..\bin\server\Release</ServerReleaseDirectory>
-		<ClientReleaseDirectory>..\bin\client\Release</ClientReleaseDirectory>
-		<DocumentationDirectory>..\documents</DocumentationDirectory>	
-		<NuGetPackageDirectory>$(USERPROFILE)\.nuget\packages\</NuGetPackageDirectory>	
-		<ReportGeneratorVersion>5.1.11</ReportGeneratorVersion>
-		<ReportGeneratorTargetFramework>net7.0</ReportGeneratorTargetFramework>
-		<TargetFramework>net7.0</TargetFramework>
-		<CollectCoverage>true</CollectCoverage>
-		<CoverletOutputFormat>cobertura</CoverletOutputFormat>
-		<CoverletOutput>$(TestsDirectory)\$(MSBuildProjectName).xml</CoverletOutput>
 	</PropertyGroup>	
 
 	<Target Name="Start">
 		<!-- <CallTarget Targets="RunTests"/> -->
-		<CallTarget Targets="DeleteServerReleaseDirectory"/>
-		<CallTarget Targets="DeleteClientReleaseDirectory"/>
 		<CallTarget Targets="DeleteServerDeployDirectory"/>
 		<CallTarget Targets="DeleteClientDeployDirectory"/>
 		<CallTarget Targets="CreateDirectories"/>
-		<CallTarget Targets="DeployBinaries"/>
-		<CallTarget Targets="CopyConfigurationFilesServer"/>
-		<CallTarget Targets="CopyConfigurationFilesClient"/>
-		<CallTarget Targets="DeleteUnwantedRuntimes"/>
-		<CallTarget Targets="SaveServerDockerImage"/>
-		<CallTarget Targets="SaveClientDockerImage"/>
+		<CallTarget Targets="CopyCommonAssemblyInfo"/>
+		<CallTarget Targets="BuildDockerImages"/>
+		<CallTarget Targets="SaveDockerImages"/>
 		<CallTarget Targets="ArchiveServerDeploy"/>
 		<CallTarget Targets="ArchiveClientDeploy"/>
-		<!-- <CallTarget Targets="UploadDeploy"/> -->
-		<!-- <CallTarget Targets="DeleteDeployArchive"/> -->
+		<CallTarget Targets="CleanDeployDirectory"/>
 		<Message Text="Finished deploying version $(VersionAssembly)" Importance="high"/>
 	</Target>	
 
@@ -51,15 +33,6 @@
 		<Message Text="Unused, but required by VsTest" />
 	</Target>
 	
-	<!-- delete build directory -->
-	<Target Name="DeleteServerReleaseDirectory">
-		<RemoveDir Directories="$(ServerReleaseDirectory)"/>
-	</Target>
-
-	<Target Name="DeleteClientReleaseDirectory">
-		<RemoveDir Directories="$(ClientReleaseDirectory)"/>
-	</Target>
-
 	<!-- delete deploy directory -->
 	<Target Name="DeleteServerDeployDirectory">
 		<RemoveDir Directories="$(ServerDeployDirectory)"/>
@@ -74,68 +47,37 @@
         <MakeDir Directories="$(ServerDeployDirectory)"/>
         <MakeDir Directories="$(ClientDeployDirectory)"/>
     </Target>
-		
-	<!-- deploy the web app -->
-	<Target Name="DeployBinaries">
-		<Exec Command="dotnet publish --os linux --arch x64 ..\src\server\Lyrida.Api\Lyrida.Api.csproj -c Release -o $(ServerDeployDirectory) /p:DebugType=None /p:DebugSymbols=false /p:ContainerImageTag=$(VersionAssembly)"/>
-		<Exec Command="dotnet publish --os linux --arch x64 ..\src\client\Lyrida.UI\Lyrida.UI.csproj -c Release -o $(ClientDeployDirectory) /p:DebugType=None /p:DebugSymbols=false /p:ContainerImageTag=$(VersionAssembly)"/>
-	</Target>
-	
-	<!-- copy application configuration files to the release and deploy directories -->
-	<Target Name="CopyConfigurationFilesServer">
-		<ItemGroup>
-			<ConfigurationFiles Include="$(ServerDebugDirectory)\$(TargetFramework)\appsettings.json"></ConfigurationFiles>
-		</ItemGroup>
-		<Copy SourceFiles="@(ConfigurationFiles)" DestinationFolder="$(ServerReleaseDirectory)\$(TargetFramework)"/>
-    	<Copy SourceFiles="@(ConfigurationFiles)" DestinationFolder="$(ServerDeployDirectory)"/>
-    </Target>
 
-	<Target Name="CopyConfigurationFilesClient">
-		<ItemGroup>
-			<ConfigurationFiles Include="$(ClientDebugDirectory)\$(TargetFramework)\appsettings.json"></ConfigurationFiles>
-		</ItemGroup>
-		<Copy SourceFiles="@(ConfigurationFiles)" DestinationFolder="$(ClientReleaseDirectory)\$(TargetFramework)"/>
-    	<Copy SourceFiles="@(ConfigurationFiles)" DestinationFolder="$(ClientDeployDirectory)"/>
-    </Target>
-	
-	<!-- remove unnecessary runtimes -->
-	<Target Name="DeleteUnwantedRuntimes">
-        <RemoveDir Directories="$(ServerDeployDirectory)\Runtimes\osx"/>
-		<RemoveDir Directories="$(ServerDeployDirectory)\Runtimes\win"/>
-        <RemoveDir Directories="$(ClientDeployDirectory)\Runtimes\osx"/>
-		<RemoveDir Directories="$(ClientDeployDirectory)\Runtimes\win"/>
-    </Target>
+	<Target Name="CopyCommonAssemblyInfo">
+		<Copy SourceFiles="..\src\CommonAssemblyInfo.cs" DestinationFolder="..\src\server\" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+		<Copy SourceFiles="..\src\CommonAssemblyInfo.cs" DestinationFolder="..\src\client\" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+    </Target>	
 		
-	<!-- save docker image to an archive -->
-	<Target Name="SaveServerDockerImage">
+	<!-- build the docker images -->
+	<Target Name="BuildDockerImages">
+	    <Exec Command="docker build -t lyrida-server:$(VersionAssembly) -f Lyrida.Api/Dockerfile ." WorkingDirectory="..\src\server\"/>
+	    <Exec Command="docker build -t lyrida-client:$(VersionAssembly) -f Lyrida.UI/Dockerfile ." WorkingDirectory="..\src\client\"/>
+	</Target>
+		
+	<!-- save docker images to an archive -->
+	<Target Name="SaveDockerImages">
 		<Exec Command="docker save -o $(VersionAssembly).Server.tar lyrida-server:$(VersionAssembly)" WorkingDirectory="$(ServerDeployDirectory)"/>
-	</Target>	
-	
-	<Target Name="SaveClientDockerImage">
 		<Exec Command="docker save -o $(VersionAssembly).Client.tar lyrida-client:$(VersionAssembly)" WorkingDirectory="$(ClientDeployDirectory)"/>
-	</Target>	
+	</Target>
 	
 	<!-- create the compressed archive file -->
 	<Target Name="ArchiveServerDeploy">
-		<Exec Command="tar --gzip --create --file=..\$(VersionAssembly).Server.tar.gz $(VersionAssembly).Server.tar" WorkingDirectory="$(ServerDeployDirectory)"/>
-		<Error Condition="!Exists('$(ServerDeployDirectory)\..\$(VersionAssembly).Server.tar.gz')" Text="The server zipped tar file could not be created!" />
+		<Exec Command="tar --gzip --create --file=..\..\$(VersionAssembly).Server.tar.gz $(VersionAssembly).Server.tar" WorkingDirectory="$(ServerDeployDirectory)"/>
+		<Error Condition="!Exists('$(ServerDeployDirectory)\..\..\$(VersionAssembly).Server.tar.gz')" Text="The server zipped tar file could not be created!" />
 	</Target>	
 	
 	<Target Name="ArchiveClientDeploy">
-		<Exec Command="tar --gzip --create --file=..\$(VersionAssembly).Client.tar.gz $(VersionAssembly).Client.tar" WorkingDirectory="$(ClientDeployDirectory)"/>
-		<Error Condition="!Exists('$(ClientDeployDirectory)\..\$(VersionAssembly).Client.tar.gz')" Text="The client zipped tar file could not be created!" />
+		<Exec Command="tar --gzip --create --file=..\..\$(VersionAssembly).Client.tar.gz $(VersionAssembly).Client.tar" WorkingDirectory="$(ClientDeployDirectory)"/>
+		<Error Condition="!Exists('$(ClientDeployDirectory)\..\..\$(VersionAssembly).Client.tar.gz')" Text="The client zipped tar file could not be created!" />
 	</Target>	
 	
-	<!-- upload the zipped archive file to the remote server-->
-	<Target Name="UploadDeploy">
-		<Exec Command="upload.bat" WorkingDirectory="."/>
-	</Target>	
-	
-	<!-- delete the zipped archive file -->
-	<Target Name="DeleteDeployArchive">
-		<Delete Files="$(ServerDeployDirectory)\..\$(VersionAssembly).Server.tar" />
-		<Delete Files="$(ServerDeployDirectory)\..\$(VersionAssembly).Server.tar.gz" />
-		<Delete Files="$(ClientDeployDirectory)\..\$(VersionAssembly).Client.tar" />
-		<Delete Files="$(ClientDeployDirectory)\..\$(VersionAssembly).Client.tar.gz" />
-	</Target>	
+	<Target Name="CleanDeployDirectory">
+		<RemoveDir Directories="$(ClientDeployDirectory)\..\"/>
+		<RemoveDir Directories="$(ServerDeployDirectory)\..\"/>
+	</Target>
 </Project>

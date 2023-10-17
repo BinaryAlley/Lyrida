@@ -20,6 +20,7 @@ using Lyrida.Application.Core.Authentication.Commands.ResetPassword;
 using Lyrida.Application.Core.Authentication.Commands.ChangePassword;
 using Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
 using Lyrida.Application.Core.Authentication.Queries.VerifyRegistration;
+using Lyrida.Application.Core.Authentication.Commands.GenerateTotpQr;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -57,7 +58,6 @@ public class AuthenticationController : ApiController
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// <summary>
     /// Registers a new user identified by <paramref name="entity"/>
     /// </summary>
     /// <param name="entity"></param>
@@ -84,7 +84,6 @@ public class AuthenticationController : ApiController
                 title = translationService.Translate(term);
             else
                 title = authResult.FirstError.Code;
-
             return Problem(statusCode: StatusCodes.Status401Unauthorized, title: title);
         }
         return authResult.Match(result => Ok(mapper.Map<AuthenticationResponseEntity>(result)), errors => Problem(errors));
@@ -144,5 +143,40 @@ public class AuthenticationController : ApiController
         ErrorOr<RegistrationResultEntity> recoverPasswordResult = await mediator.Send(mapper.Map<ChangePasswordCommand>(entity));
         return recoverPasswordResult.Match(result => NoContent(), errors => Problem(errors));
     }
+
+    /// <summary>
+    /// Generates a QR code for TOTP authentication setup.
+    /// </summary>
+    [Authorize] // User should be authenticated to enable 2FA
+    [HttpPost("generateTOTPQR")]
+    public async Task<IActionResult> GenerateTOTPQR()
+    {
+        ErrorOr<QrCodeResultEntity> qrResult = await mediator.Send(new GenerateTotpQrCommand(User.Identity.Name)); // Assuming the username can be identified from the user claims.
+        return qrResult.Match(result => Ok(result), errors => Problem(errors)); // QrCodeResultEntity should contain the QR code or URL.
+    }
+
+    ///// <summary>
+    ///// Verifies the provided TOTP from user's authenticator app.
+    ///// </summary>
+    ///// <param name="entity">Entity containing the user's TOTP.</param>
+    //[Authorize]
+    //[HttpPost("verifyTOTP")]
+    //public async Task<IActionResult> VerifyTOTP(VerifyTOTPRequestEntity entity)
+    //{
+    //    ErrorOr<CommandResultEntity> verifyResult = await mediator.Send(mapper.Map<VerifyTOTPCommand>(entity));
+    //    return verifyResult.Match(result => NoContent(), errors => Problem(errors));
+    //}
+
+    ///// <summary>
+    ///// Authenticates an user with TOTP after password authentication.
+    ///// </summary>
+    ///// <param name="entity">The entity containing the TOTP.</param>
+    //[Authorize]
+    //[HttpPost("loginWithTOTP")]
+    //public async Task<IActionResult> LoginWithTOTP(LoginWithTOTPRequestEntity entity)
+    //{
+    //    ErrorOr<AuthenticationResultEntity> authResult = await mediator.Send(mapper.Map<LoginWithTOTPQuery>(entity));
+    //    return authResult.Match(result => Ok(mapper.Map<AuthenticationResponseEntity>(result)), errors => Problem(errors));
+    //}
     #endregion
 }

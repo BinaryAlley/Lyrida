@@ -1,31 +1,28 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.7.34003.232
+VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Infrastructure", "Lyrida.Infrastructure\Lyrida.Infrastructure.csproj", "{A447006B-D271-44C8-A3EB-D546E99CB691}"
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{70DC2845-12F0-45D5-963C-7CEE2972CF01}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Application", "Lyrida.Application\Lyrida.Application.csproj", "{A85B889E-C417-4A4B-96BB-484D5204BB68}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Api", "Lyrida.Api\Lyrida.Api.csproj", "{4BC98D58-5E70-4C28-8E49-91713103590C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Api", "Lyrida.Api\Lyrida.Api.csproj", "{2BB8F9F8-CCEB-4790-A04F-FDAE46DD48C1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.DataAccess", "Lyrida.DataAccess\Lyrida.DataAccess.csproj", "{2359D5C4-F2D6-4C78-BA60-58132FCB877E}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{4627BACC-E21E-400E-BC15-EF67CB5EF43B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EF70A36A-09DA-401D-A542-E0FD9FB922BF}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		..\..\documents\DATABASE SCHEMA.sql = ..\..\documents\DATABASE SCHEMA.sql
 		..\..\documents\ERRORS.MD = ..\..\documents\ERRORS.MD
 		..\..\documents\LICENSE.MD = ..\..\documents\LICENSE.MD
-		..\..\README.md = ..\..\README.md
 		..\..\documents\SOURCES.MD = ..\..\documents\SOURCES.MD
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Domain", "Lyrida.Domain\Lyrida.Domain.csproj", "{49C22036-AC38-4FD8-A46C-E81DBE3131DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Infrastructure", "Lyrida.Infrastructure\Lyrida.Infrastructure.csproj", "{E3605BE7-6D35-446B-9232-E28130E01466}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A2000B14-1C3C-478E-BADC-F4024D085C3A}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.DataAccess", "Lyrida.DataAccess\Lyrida.DataAccess.csproj", "{017EBD84-A6D9-4036-AC04-F5312868EA6C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Domain", "Lyrida.Domain\Lyrida.Domain.csproj", "{B6065629-CF3B-4E94-B9B9-5CBD8A831B96}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Application", "Lyrida.Application\Lyrida.Application.csproj", "{B74AFEA6-0993-4B85-8ABA-8A3A3ABA7F62}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,31 +30,35 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A447006B-D271-44C8-A3EB-D546E99CB691}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A447006B-D271-44C8-A3EB-D546E99CB691}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A447006B-D271-44C8-A3EB-D546E99CB691}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A447006B-D271-44C8-A3EB-D546E99CB691}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A85B889E-C417-4A4B-96BB-484D5204BB68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A85B889E-C417-4A4B-96BB-484D5204BB68}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A85B889E-C417-4A4B-96BB-484D5204BB68}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A85B889E-C417-4A4B-96BB-484D5204BB68}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2BB8F9F8-CCEB-4790-A04F-FDAE46DD48C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2BB8F9F8-CCEB-4790-A04F-FDAE46DD48C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2BB8F9F8-CCEB-4790-A04F-FDAE46DD48C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2BB8F9F8-CCEB-4790-A04F-FDAE46DD48C1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2359D5C4-F2D6-4C78-BA60-58132FCB877E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2359D5C4-F2D6-4C78-BA60-58132FCB877E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2359D5C4-F2D6-4C78-BA60-58132FCB877E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2359D5C4-F2D6-4C78-BA60-58132FCB877E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{49C22036-AC38-4FD8-A46C-E81DBE3131DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{49C22036-AC38-4FD8-A46C-E81DBE3131DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{49C22036-AC38-4FD8-A46C-E81DBE3131DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{49C22036-AC38-4FD8-A46C-E81DBE3131DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70DC2845-12F0-45D5-963C-7CEE2972CF01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70DC2845-12F0-45D5-963C-7CEE2972CF01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70DC2845-12F0-45D5-963C-7CEE2972CF01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70DC2845-12F0-45D5-963C-7CEE2972CF01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BC98D58-5E70-4C28-8E49-91713103590C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BC98D58-5E70-4C28-8E49-91713103590C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BC98D58-5E70-4C28-8E49-91713103590C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BC98D58-5E70-4C28-8E49-91713103590C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3605BE7-6D35-446B-9232-E28130E01466}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3605BE7-6D35-446B-9232-E28130E01466}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3605BE7-6D35-446B-9232-E28130E01466}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3605BE7-6D35-446B-9232-E28130E01466}.Release|Any CPU.Build.0 = Release|Any CPU
+		{017EBD84-A6D9-4036-AC04-F5312868EA6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{017EBD84-A6D9-4036-AC04-F5312868EA6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{017EBD84-A6D9-4036-AC04-F5312868EA6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{017EBD84-A6D9-4036-AC04-F5312868EA6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6065629-CF3B-4E94-B9B9-5CBD8A831B96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6065629-CF3B-4E94-B9B9-5CBD8A831B96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6065629-CF3B-4E94-B9B9-5CBD8A831B96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6065629-CF3B-4E94-B9B9-5CBD8A831B96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B74AFEA6-0993-4B85-8ABA-8A3A3ABA7F62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B74AFEA6-0993-4B85-8ABA-8A3A3ABA7F62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B74AFEA6-0993-4B85-8ABA-8A3A3ABA7F62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B74AFEA6-0993-4B85-8ABA-8A3A3ABA7F62}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {F7D351B5-6384-4706-AC0A-700EF83EF7F5}
+		SolutionGuid = {10014A37-2A6F-4BB4-B983-6436ED3F0319}
 	EndGlobalSection
 EndGlobal

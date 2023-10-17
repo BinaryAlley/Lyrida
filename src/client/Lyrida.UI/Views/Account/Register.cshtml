@@ -1,0 +1,218 @@
+﻿@inject ITranslationService translationService
+@{
+    string firstNameErrorMessage = string.Empty;
+    string lastNameErrorMessage = string.Empty;
+    string emailErrorMessage = string.Empty;
+    string passwordErrorMessage = string.Empty;
+    string passwordConfirmErrorMessage = string.Empty;
+    string registerErrorMessage = string.Empty;
+    string? generalExceptionMessage = TempData["generalException"] as string;
+    string? registerSuccessMessage = TempData["registerSuccess"] as string;
+    // handle error messages sent with model validations
+    if (!ViewData.ModelState.IsValid)
+    {
+        if (ViewData.ModelState.ContainsKey("firstNameError"))
+            firstNameErrorMessage = ViewData.ModelState["firstNameError"]!.Errors[0].ErrorMessage;
+        if (ViewData.ModelState.ContainsKey("lastNameError"))
+            lastNameErrorMessage = ViewData.ModelState["lastNameError"]!.Errors[0].ErrorMessage;
+        if (ViewData.ModelState.ContainsKey("emailError"))
+            emailErrorMessage = ViewData.ModelState["emailError"]!.Errors[0].ErrorMessage;
+        if (ViewData.ModelState.ContainsKey("passwordError"))
+            passwordErrorMessage = ViewData.ModelState["passwordError"]!.Errors[0].ErrorMessage;
+        if (ViewData.ModelState.ContainsKey("passwordConfirmError"))
+            passwordConfirmErrorMessage = ViewData.ModelState["passwordConfirmError"]!.Errors[0].ErrorMessage;
+    }
+    // handle cases when model state is valid, but the registration business rules are still not met
+    if (ViewData.ModelState.ContainsKey("registerError"))
+        registerErrorMessage = ViewData.ModelState["registerError"]!.Errors[0].ErrorMessage;
+    // when there are no errors, show the button to go to the login page
+    if (ViewData.ModelState.IsValid && string.IsNullOrEmpty(registerErrorMessage) && !string.IsNullOrEmpty(registerSuccessMessage))
+    {
+        <a asp-controller="Account" asp-action="Login" class="btn btn-blue">@translationService.Translate(Terms.Login)</a>
+    }
+}
+
+<div class="enlightenment-panel shadow-effect p-2 mx-auto panel w-30 mt-10" style="min-width: 320px;">
+    <div class="shine-effect"></div>
+    @if (string.IsNullOrEmpty(registerSuccessMessage))
+    {
+        <form id="registerForm" method="post" action="@(!string.IsNullOrEmpty(Configuration["BASE_URL"]) ? Configuration["BASE_URL"] : string.Empty)/Account/Register">
+            <table class="w-100">
+                <!-- section for determining registration type (regular user/admin) -->
+                <input type="hidden" id="registrationType" name="registrationType" value="@ViewData["RegistrationType"]">
+                @if (@ViewData["RegistrationType"] as string == "Admin")
+                {
+                    <tr>
+                        <td colspan="2">
+                            <p class="invalid-feedback w-95 text-center f-18">@translationService.Translate(Terms.RegisterAdminAccount)</p>
+                        </td>
+                    </tr>
+                }
+                <!-- section first name -->
+                <tr>
+                    <td class="w-25">
+                        <label for="registerFirstName" class="text-light-one">@translationService.Translate(Terms.FirstName)</label>
+                    </td>
+                    <td class="w-75">
+                        <input type="text" class="w-95 enlightenment-input" id="registerFirstName" name="firstName" value="@Model.FirstName">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span id="registerFirstNameError" class="invalid-feedback @(!string.IsNullOrEmpty(firstNameErrorMessage) ? "inline" : "hidden")">@firstNameErrorMessage</span>
+                    </td>
+                </tr>
+                <!-- section last name -->
+                <tr>
+                    <td class="w-25">
+                        <label for="registerLastName" class="text-light-one">@translationService.Translate(Terms.LastName)</label>
+                    </td>
+                    <td class="w-75">
+                        <input type="text" class="w-95 enlightenment-input" id="registerLastName" name="lastName" value="@Model.LastName">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span id="registerLastNameError" class="invalid-feedback @(!string.IsNullOrEmpty(lastNameErrorMessage) ? "inline" : "hidden")">@lastNameErrorMessage</span>
+                    </td>
+                </tr>
+                <!-- section email -->
+                <tr>
+                    <td class="w-25">
+                        <label for="registerEmail" class="text-light-one">Email</label>
+                    </td>
+                    <td class="w-75">
+                        <input type="email" class="w-95 enlightenment-input" id="registerEmail" name="email" value="@Model.Email" autocomplete="email">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span id="registerEmailError" class="invalid-feedback @(!string.IsNullOrEmpty(emailErrorMessage) ? "inline" : "hidden")">@emailErrorMessage</span>
+                    </td>
+                </tr>
+                <!-- section password -->
+                <tr>
+                    <td class="w-25">
+                        <label for="registerPassword" class="text-light-one">@translationService.Translate(Terms.Password)</label>
+                    </td>
+                    <td class="w-75">
+                        <input type="password" class="w-95 enlightenment-input" id="registerPassword" name="password" value="@Model.Password" autocomplete="new-password">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span id="registerPasswordError" class="invalid-feedback @(!string.IsNullOrEmpty(passwordErrorMessage) ? "inline" : "hidden")">@passwordErrorMessage</span>
+                    </td>
+                </tr>
+                <!-- section password confirm -->
+                <tr>
+                    <td class="w-25">
+                        <label for="registerPasswordConfirm" class="text-light-one">@translationService.Translate(Terms.PasswordConfirm)</label>
+                    </td>
+                    <td class="w-75">
+                        <input type="password" class="w-95 enlightenment-input" id="registerPasswordConfirm" name="passwordConfirm" value="@Model.PasswordConfirm" autocomplete="new-password">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <span id="registerPasswordConfirmError" class="invalid-feedback @(!string.IsNullOrEmpty(passwordConfirmErrorMessage) ? "inline" : "hidden")">@passwordConfirmErrorMessage</span>
+                    </td>
+                </tr>
+                <!-- section generic registration errors -->
+                <tr>
+                    <td colspan="2" class="w-100">
+                        <span id="registerError" class="invalid-feedback @(!string.IsNullOrEmpty(registerErrorMessage) ? "inline" : "hidden")">@registerErrorMessage</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="w-100 text-center">
+                        <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Registration)</button>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    }
+    <!-- section registration success -->
+    <div class="text-center w-100">
+        <p id="registerSuccess" class="text-light-one w-100 @(!string.IsNullOrEmpty(registerSuccessMessage) ? "inline" : "hidden")">@translationService.Translate(ViewData["RegistrationType"] as string == "Admin" ? Terms.AccountCreated : Terms.RegistrationEmailSent)</p>
+        <a id="redirectButton" asp-controller="Account" asp-action="Login" class="confirm-button f-14 pt-0 pb-0 h-22px w-80px mt-10 mb-10 mx-auto @(!string.IsNullOrEmpty(registerSuccessMessage) ? "inline-block" : "hidden")">@translationService.Translate(Terms.Login)</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        @{
+            if (!string.IsNullOrEmpty(generalExceptionMessage))
+            {
+                <text>
+                    swal("Error!", "@Html.Raw(generalExceptionMessage)", "error", { button: { 
+                        text: "OK",
+                        className: "confirm-button",
+                    } });
+                </text>
+            }
+        }
+        $(document).ready(function () {
+            $('#registerForm').on('submit', function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: form.serialize(),
+                    success: function (data) {
+                        const registerForm = $('#registerForm');
+                        const registerFirstNameError = $('#registerFirstNameError');
+                        const registerLastNameError = $('#registerLastNameError');
+                        const registerEmailError = $('#registerEmailError');
+                        const registerPasswordError = $('#registerPasswordError');
+                        const registerPasswordConfirmError = $('#registerPasswordConfirmError');
+                        const registerSuccess = $('#registerSuccess');
+                        const redirectButton = $('#redirectButton');
+                        const registerError = $('#registerError');
+                        registerFirstNameError.removeClass('inline').addClass('hidden');
+                        registerLastNameError.removeClass('inline').addClass('hidden');
+                        registerEmailError.removeClass('inline').addClass('hidden');
+                        registerPasswordError.removeClass('inline').addClass('hidden');
+                        registerPasswordConfirmError.removeClass('inline').addClass('hidden');
+                        registerSuccess.removeClass('inline').addClass('hidden');
+                        redirectButton.removeClass('block').addClass('hidden');
+                        registerError.removeClass('inline').addClass('hidden');
+                        if (data.success) {
+                            $('#registerFirstName').val('');
+                            $('#registerLastName').val('');
+                            $('#registerEmail').val('');
+                            $('#registerPassword').val('');
+                            $('#registerPasswordConfirm').val('');
+                            registerForm.removeClass('inline').addClass('hidden');
+                            registerSuccess.removeClass('hidden').addClass('inline');
+                            redirectButton.removeClass('hidden').addClass('block');
+                        } else {
+                            if (data.firstNameError)
+                                registerFirstNameError.text(data.firstNameError).removeClass('hidden').addClass('inline');
+                            if (data.lastNameError)
+                                registerLastNameError.text(data.lastNameError).removeClass('hidden').addClass('inline');
+                            if (data.emailError)
+                                registerEmailError.text(data.emailError).removeClass('hidden').addClass('inline');
+                            if (data.passwordError)
+                                registerPasswordError.text(data.passwordError).removeClass('hidden').addClass('inline');
+                            if (data.passwordConfirmError)
+                                registerPasswordConfirmError.text(data.passwordConfirmError).removeClass('hidden').addClass('inline');
+                            if (data.errorMessage)
+                                registerError.text(data.errorMessage).removeClass('hidden').addClass('inline');
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                            swal("STOP!", textStatus + " " + errorThrown, "error", {
+                            button: {
+                                text: "OK",
+                                className: "confirm-button",
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,17 @@
+﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject ITranslationService translationService
+
+
+<div class="rounded p-2 mx-auto panel w-50">
+    @if (User?.Identity?.IsAuthenticated == true)
+    {
+        <p>@translationService.Translate(Terms.Welcome) @User.Identity.Name!</p>
+        <a asp-controller="Account" asp-action="Logout">@translationService.Translate(Terms.Logout)</a>
+        <a asp-controller="Account" asp-action="ChangePassword">@translationService.Translate(Terms.ChangePassword)</a>
+    }
+    else
+    {
+        <span class="invalid-feedback">@translationService.Translate(Terms.AuthenticationRequired)</span>
+    }
+</div>

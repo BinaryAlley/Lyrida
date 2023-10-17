@@ -19,7 +19,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Lyrida.Infrastructure.Common.DependencyInjection;
 #endregion
 
-namespace Lyrida.Server;
+namespace Lyrida.Api;
 
 /// <summary>
 /// Application entry point, contains the composition root module, wires up all dependencies of the application
@@ -36,63 +36,69 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        {
-            builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
-
-            builder.Services.AddControllers();
-
-            // add authentication and authorization
-            builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
-            // add authentication and specify the JWT scheme to check tokens against
-            builder.Services
-                   .AddAuthentication(defaultScheme: JwtBearerDefaults.AuthenticationScheme)
-                   .AddJwtBearer(options =>
+        builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+        // add services to the container
+        builder.Services.AddControllers();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        // add authentication and authorization
+        builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        // add authentication and specify the JWT scheme to check tokens against
+        builder.Services
+               .AddAuthentication(defaultScheme: JwtBearerDefaults.AuthenticationScheme)
+               .AddJwtBearer(options =>
+               {
+                   options.TokenValidationParameters = new TokenValidationParameters()
                    {
-                       options.TokenValidationParameters = new TokenValidationParameters()
-                       {
-                           ValidateIssuer = true,
-                           ValidateAudience = true,
-                           ValidateLifetime = true,
-                           ValidateIssuerSigningKey = true,
-                           ValidIssuer = "Lyrida",
-                           ValidAudience = "Lyrida",
-                           IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ds1/L-$#FHj4-}rs^Qq.M/@sP90%j#Ma")), // TODO: remove from code! appConfig.JwtSettings!.SecretKey!
-                       };
+                       ValidateIssuer = true,
+                       ValidateAudience = true,
+                       ValidateLifetime = true,
+                       ValidateIssuerSigningKey = true,
+                       ValidIssuer = "Lyrida",
+                       ValidAudience = "Lyrida",
+                       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ds1/L-$#FHj4-}rs^Qq.M/@sP90%j#Ma")), // TODO: remove from code! appConfig.JwtSettings!.SecretKey!
+                   };
 
-                       options.Events = new JwtBearerEvents
+                   options.Events = new JwtBearerEvents
+                   {
+                       OnChallenge = context => // event triggered when authentication is not successful for whatever reason
                        {
-                           OnChallenge = context => // event triggered when authentication is not successful for whatever reason
-                           {
-                               context.HandleResponse(); // prevent the default 401 response
-                               // set the response status code to 401 Unauthorized
-                               context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                               var problemDetailsFactory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-                               var problemDetails = problemDetailsFactory.CreateProblemDetails(
-                                   context.HttpContext,
-                                   statusCode: StatusCodes.Status401Unauthorized,
-                                   detail: "You are not authorized"
-                               // additional properties as needed
-                               );
-                               var problemDetailsJson = JsonConvert.SerializeObject(problemDetails);
-                               context.Response.ContentType = "application/problem+json";
-                               return context.Response.WriteAsync(problemDetailsJson);
-                           }
-                       };
-                   });
+                           context.HandleResponse(); // prevent the default 401 response
+                                                     // set the response status code to 401 Unauthorized
+                           context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                           var problemDetailsFactory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                           var problemDetails = problemDetailsFactory.CreateProblemDetails(
+                               context.HttpContext,
+                               statusCode: StatusCodes.Status401Unauthorized,
+                               detail: "You are not authorized"
+                           // additional properties as needed
+                           );
+                           var problemDetailsJson = JsonConvert.SerializeObject(problemDetails);
+                           context.Response.ContentType = "application/problem+json";
+                           return context.Response.WriteAsync(problemDetailsJson);
+                       }
+                   };
+               });
 
-            builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
-            {
-                // register dependencies of the application layers
-                containerBuilder.RegisterModule(new ApiLayerServices());
-                containerBuilder.RegisterModule(new DomainLayerServices());
-                containerBuilder.RegisterModule(new DataAccessLayerServices());
-                containerBuilder.RegisterModule(new ApplicationLayerServices());
-                containerBuilder.RegisterModule(new InfrastructureLayerServices());
-            });
-        }
+        builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+        {
+            // register dependencies of the application layers
+            containerBuilder.RegisterModule(new ApiLayerServices());
+            containerBuilder.RegisterModule(new DomainLayerServices());
+            containerBuilder.RegisterModule(new DataAccessLayerServices());
+            containerBuilder.RegisterModule(new ApplicationLayerServices());
+            containerBuilder.RegisterModule(new InfrastructureLayerServices());
+        });
         var app = builder.Build();
         app.UseExceptionHandler("/error"); // uses a middleware which reexecutes the request to the  error path
-        app.UseHttpsRedirection();
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        //app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseMiddleware<EnvironmentMiddleware>();

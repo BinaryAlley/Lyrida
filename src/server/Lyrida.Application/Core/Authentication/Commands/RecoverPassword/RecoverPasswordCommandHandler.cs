@@ -17,7 +17,7 @@ using Lyrida.Application.Common.Entities.Common;
 namespace Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
 
 /// <summary>
-/// Recover password query handler
+/// Recover password command handler
 /// </summary>
 /// <remarks>
 /// Creation Date: 01st of August, 2023

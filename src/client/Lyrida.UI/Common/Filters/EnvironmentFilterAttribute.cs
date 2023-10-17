@@ -21,7 +21,6 @@ public class EnvironmentFilterAttribute : ActionFilterAttribute
     public override void OnActionExecuting(ActionExecutingContext context)
     {      
         // try to get the value of environmentId and ensure it can be cast to an integer
-        //if (context.ActionArguments.TryGetValue("environmentId", out var environmentIdObj) && environmentIdObj is int environmentId)
         if (context.HttpContext.Request.Headers.TryGetValue("X-Environment-Type", out var environmentIdValue) && int.TryParse(environmentIdValue, out int environmentId))
         {
             // default values for the environment and platform

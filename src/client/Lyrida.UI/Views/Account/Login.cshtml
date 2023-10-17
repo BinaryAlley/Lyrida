@@ -1,0 +1,112 @@
+﻿@inject ITranslationService translationService
+@{
+    string loginErrorMessage = string.Empty;
+    string emailErrorMessage = string.Empty;
+    string passwordErrorMessage = string.Empty;
+    // handle error messages sent with model validations
+    if (!ViewData.ModelState.IsValid)
+    {
+        if (ViewData.ModelState.ContainsKey("emailError"))
+            emailErrorMessage = ViewData.ModelState["emailError"]!.Errors[0].ErrorMessage;
+        if (ViewData.ModelState.ContainsKey("passwordError"))
+            passwordErrorMessage = ViewData.ModelState["passwordError"]!.Errors[0].ErrorMessage;
+    }
+    // handle cases when model state is valid, but the login business rules are still not met
+    if (ViewData.ModelState.ContainsKey("loginError"))
+        loginErrorMessage = ViewData.ModelState["loginError"]!.Errors[0].ErrorMessage;
+    if (TempData.ContainsKey("loginError"))
+        loginErrorMessage = TempData["loginError"]?.ToString()!;
+}
+
+<div class="enlightenment-panel shadow-effect p-2 mx-auto panel w-30" style="min-width: 422px;">
+    <div class="shine-effect"></div>
+    <form id="loginForm" method="post" action="@(!string.IsNullOrEmpty(Configuration["BASE_URL"]) ? Configuration["BASE_URL"] : string.Empty)/Account/Login">
+        <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
+        <table class="w-100">
+            <!-- section email -->
+            <tr>
+                <td class="w-25">
+                    <label for="loginEmail" class="text-light-one">@translationService.Translate(Terms.Username)</label>
+                </td>
+                <td class="w-75">
+                    <input type="email" class="w-100 enlightenment-input" id="loginEmail" name="email" value="@Model.Email">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="loginEmailError" class="invalid-feedback @(!string.IsNullOrEmpty(emailErrorMessage) ? "inline" : "hidden")">@emailErrorMessage</span>
+                </td>
+            </tr>
+            <!-- section password -->
+            <tr>
+                <td class="w-25">
+                    <label for="loginPassword" class="text-light-one">@translationService.Translate(Terms.Password)</label>
+                </td>
+                <td class="w-75">
+                    <input type="password" class="w-100 enlightenment-input" id="loginPassword" name="password" value="@Model.Password">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="loginPasswordError" class="invalid-feedback @(!string.IsNullOrEmpty(passwordErrorMessage) ? "inline" : "hidden")">@passwordErrorMessage</span>
+                </td>
+            </tr>
+            <!-- section generic login errors -->
+            <tr>
+                <td colspan="2" class="w-100">
+                    <span id="loginError" class="invalid-feedback @(!string.IsNullOrEmpty(loginErrorMessage) ? "inline" : "hidden")">@loginErrorMessage</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="w-100 text-end">
+                    <a asp-controller="Account" asp-action="RecoverPassword" class="abort-button f-14 pt-0 pb-0 pl-5 pr-5 h-22px mt-0 mb-0 mx-auto inline-block">@translationService.Translate(Terms.RecoverPassword)</a>
+                    <button type="submit" class="confirm-button f-14 h-24px pt-2 pl-5 pr-5 v-align-t">@translationService.Translate(Terms.Login)</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#loginForm').on('submit', function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: form.serialize(),
+                    success: function (data) {
+                        const loginError = $('#loginError');
+                        const loginEmailError = $('#loginEmailError');
+                        const loginPasswordError = $('#loginPasswordError');
+                        loginError.removeClass('inline').addClass('hidden');
+                        loginEmailError.removeClass('inline').addClass('hidden');
+                        loginPasswordError.removeClass('inline').addClass('hidden');
+                        if (data.success) {
+                            getUserPermissions();
+                            window.location.href = data.redirectUrl;
+                        } else {
+                            if (data.emailError)
+                                loginEmailError.text(data.emailError).removeClass('hidden').addClass('inline');
+                            if (data.passwordError)
+                                loginPasswordError.text(data.passwordError).removeClass('hidden').addClass('inline');
+                            if (data.errorMessage)
+                                loginError.text(data.errorMessage).removeClass('hidden').addClass('inline');
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        swal("STOP!", textStatus + " " + errorThrown, "error", {
+                            button: {
+                                text: "OK",
+                                className: "confirm-button",
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

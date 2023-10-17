@@ -1,7 +1,7 @@
 ﻿namespace Lyrida.Infrastructure.Core.Authentication;
 
 /// <summary>
-/// Interface for the generating secure tokens
+/// Interface for the generating secure tokens for accounts confirmation or recovery
 /// </summary>
 /// <remarks>
 /// Creation Date: 20th of June, 2023

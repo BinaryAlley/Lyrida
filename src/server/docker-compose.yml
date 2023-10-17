@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  lyrida-server:
+    image: ${DOCKER_REGISTRY-}lyrida-server
+    build:
+      context: .
+      dockerfile: Lyrida.Api/Dockerfile

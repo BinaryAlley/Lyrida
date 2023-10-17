@@ -14,6 +14,12 @@ namespace Lyrida.Api.Controllers;
 /// </remarks>
 public class ErrorsController : ControllerBase
 {
+    [HttpGet]
+    [HttpPost]
+    [HttpPut]
+    [HttpDelete]
+    [HttpPatch]
+    [HttpOptions]
     [Route("/error")]
     public IActionResult Error()
     {

@@ -1,26 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <BaseOutputPath>..\..\..\bin\server\</BaseOutputPath>
-    <LangVersion>10.0</LangVersion>
-    <PublishProfile>DefaultContainer</PublishProfile>
-    <!--force usage of AssemblyInfo.cs-->
+    <!--force usage of CommonAssemblyInfo.cs-->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <!--docker stuff-->
-    <ContainerImageName>lyrida-server</ContainerImageName>
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:7.0</ContainerBaseImage>
-    <ContainerWorkingDirectory>/app</ContainerWorkingDirectory>
+    <UserSecretsId>a1588120-0ee6-41a2-920f-4d425deb939f</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileTag>lyrida-server</DockerfileTag>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ContainerPort Include="18137" Type="tcp" />
+    <Compile Include="..\CommonAssemblyInfo.cs" Link="CommonAssemblyInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\CommonAssemblyInfo.cs" Link="CommonAssemblyInfo.cs" />
+    <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
   
   <ItemGroup>
@@ -28,14 +25,15 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\Lyrida.Application\Lyrida.Application.csproj" />
   </ItemGroup>
-  
+
   <Target Name="RemoveSatelliteAssemblies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="@(ReferenceSatellitePaths)" />

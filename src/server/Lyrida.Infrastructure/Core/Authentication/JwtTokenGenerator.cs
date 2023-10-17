@@ -26,9 +26,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="dateTimeProviderService">Injected service for time related functionality</param>
+    /// <param name="dateTimeProviderService">Injected service for time related functionality.</param>
     public JwtTokenGenerator(IDateTimeProvider dateTimeProviderService, IAppConfig appConfig, ICryptography cryptographyService)
     {
         this.appConfig = appConfig;
@@ -39,13 +39,13 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Generates a new JWT token
+    /// Generates a new JWT token.
     /// </summary>
-    /// <param name="id">The id of the user for which to generate the token</param>
-    /// <param name="firstName">The first name of the user for which to generate the token</param>
-    /// <param name="lastName">The last name of the user for which to generate the token</param>
-    /// <param name="email">The email of the user for which to generate the token</param>
-    /// <returns>The generated JWT token</returns>
+    /// <param name="id">The id of the user for which to generate the token.</param>
+    /// <param name="firstName">The first name of the user for which to generate the token.</param>
+    /// <param name="lastName">The last name of the user for which to generate the token.</param>
+    /// <param name="email">The email of the user for which to generate the token.</param>
+    /// <returns>The generated JWT token.</returns>
     public string GenerateToken(string id, string firstName, string lastName, string email)
     {
         // use a symmetric key approach

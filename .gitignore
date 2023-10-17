@@ -9,6 +9,9 @@ src/server/.editorconfig
 src/client/Lyrida.Infrastructure/obj/*
 src/client/Lyrida.UI/obj/*
 src/client/Lyrida.UI/wwwroot/lib/*
+src/client/Lyrida.Infrastructure/bin/*
+src/client/Lyrida.UI/bin/*
+src/client/Lyrida.UI/wwwroot/bin/*
 
 src/server/Lyrida.Api/appsettings.json
 src/server/Lyrida.Api/obj/*
@@ -16,12 +19,17 @@ src/server/Lyrida.Application/obj/*
 src/server/Lyrida.DataAccess/obj/*
 src/server/Lyrida.Domain/obj/*
 src/server/Lyrida.Infrastructure/obj/*
+src/server/Lyrida.Api/bin/*
+src/server/Lyrida.Application/bin/*
+src/server/Lyrida.DataAccess/bin/*
+src/server/Lyrida.Domain/bin/*
+src/server/Lyrida.Infrastructure/bin/*
 
 tests/Lyrida.Tests/obj/*
 tests/Lyrida.Tests/bin/*
 tests/GeneratedReports/*
-bin/*
 build/credentials.txt
+bin/*
 .git/*
 lyrida.key
 lyrida.key.pub

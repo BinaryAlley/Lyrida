@@ -84,8 +84,7 @@ public class Program
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
-
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
         string? baseUrl = builder.Configuration["BASE_URL"];
         if (!string.IsNullOrWhiteSpace(baseUrl))
         {

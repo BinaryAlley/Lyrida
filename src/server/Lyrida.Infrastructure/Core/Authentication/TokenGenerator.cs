@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 namespace Lyrida.Infrastructure.Core.Authentication;
 
 /// <summary>
-/// Service for the generating secure tokens
+/// Service for the generating secure tokens for accounts confirmation or recovery
 /// </summary>
 /// <remarks>
 /// Creation Date: 20th of June, 2023

@@ -2,41 +2,36 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
-    <BaseOutputPath>..\..\..\bin\client\</BaseOutputPath>
-    <LangVersion>10.0</LangVersion>
-    <PublishProfile>DefaultContainer</PublishProfile>
-    <!--force usage of AssemblyInfo.cs-->
+    <!--force usage of CommonAssemblyInfo.cs-->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <!--docker stuff-->
-    <ContainerImageName>lyrida-client</ContainerImageName>
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:7.0</ContainerBaseImage>
-    <ContainerWorkingDirectory>/app</ContainerWorkingDirectory>
+    <UserSecretsId>022d432d-948c-4f80-9aed-c7d6dc449601</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileTag>lyrida-client</DockerfileTag>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ContainerPort Include="18138" Type="tcp" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\CommonAssemblyInfo.cs" Link="CommonAssemblyInfo.cs" />
+    <Compile Include="..\CommonAssemblyInfo.cs" Link="CommonAssemblyInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Autofac" Version="7.0.1" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="7.0.10" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Lyrida.Infrastructure\Lyrida.Infrastructure.csproj" />
   </ItemGroup>
-
+  
   <Target Name="RemoveSatelliteAssemblies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="@(ReferenceSatellitePaths)" />
     </ItemGroup>
   </Target>
-
 </Project>

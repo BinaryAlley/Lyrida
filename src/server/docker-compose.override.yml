@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  lyrida-server:
+    container_name: lyrida-server
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:18137
+    ports:
+      - "18137:18137"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

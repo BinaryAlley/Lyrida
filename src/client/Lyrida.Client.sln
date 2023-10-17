@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.7.34003.232
+VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.UI", "Lyrida.UI\Lyrida.UI.csproj", "{F95F56EA-85DE-48DB-8B85-A6105A863FC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.UI", "Lyrida.UI\Lyrida.UI.csproj", "{A5D318B1-7875-48FE-8BD7-E5B14449F65F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Infrastructure", "Lyrida.Infrastructure\Lyrida.Infrastructure.csproj", "{3C60CF14-E49B-4601-A015-C1674EC56316}"
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4693661C-7A90-4182-AE56-180B29AC0A8E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B946D0D3-73E9-4F4F-AE09-F06DE895595B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Infrastructure", "Lyrida.Infrastructure\Lyrida.Infrastructure.csproj", "{E60285A6-BBFF-465C-AD23-BD6D81FA09A3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{969BD3BC-DF5E-4569-9642-93D8B39D0777}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\documents\LICENSE.MD = ..\..\documents\LICENSE.MD
 		..\..\README.md = ..\..\README.md
@@ -19,19 +21,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F95F56EA-85DE-48DB-8B85-A6105A863FC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F95F56EA-85DE-48DB-8B85-A6105A863FC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F95F56EA-85DE-48DB-8B85-A6105A863FC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F95F56EA-85DE-48DB-8B85-A6105A863FC5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3C60CF14-E49B-4601-A015-C1674EC56316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C60CF14-E49B-4601-A015-C1674EC56316}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C60CF14-E49B-4601-A015-C1674EC56316}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C60CF14-E49B-4601-A015-C1674EC56316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5D318B1-7875-48FE-8BD7-E5B14449F65F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5D318B1-7875-48FE-8BD7-E5B14449F65F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5D318B1-7875-48FE-8BD7-E5B14449F65F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5D318B1-7875-48FE-8BD7-E5B14449F65F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4693661C-7A90-4182-AE56-180B29AC0A8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4693661C-7A90-4182-AE56-180B29AC0A8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4693661C-7A90-4182-AE56-180B29AC0A8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4693661C-7A90-4182-AE56-180B29AC0A8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E60285A6-BBFF-465C-AD23-BD6D81FA09A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E60285A6-BBFF-465C-AD23-BD6D81FA09A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E60285A6-BBFF-465C-AD23-BD6D81FA09A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E60285A6-BBFF-465C-AD23-BD6D81FA09A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {9B34CE28-C947-4ECC-88A7-39FE86B3B9B7}
+		SolutionGuid = {D98A1FC9-8381-4850-9F5F-B902E3089B8C}
 	EndGlobalSection
 EndGlobal

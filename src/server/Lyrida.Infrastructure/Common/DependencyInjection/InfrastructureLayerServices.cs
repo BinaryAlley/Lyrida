@@ -58,6 +58,7 @@ public class InfrastructureLayerServices : Module
         builder.RegisterType<Cryptography>().As<ICryptography>().InstancePerLifetimeScope();
         builder.RegisterType<TokenGenerator>().As<ITokenGenerator>().InstancePerLifetimeScope();
         builder.RegisterType<InfrastructureService>().As<IInfrastructure>().InstancePerLifetimeScope();
+        builder.RegisterType<TotpTokenGenerator>().As<ITotpTokenGenerator>().InstancePerLifetimeScope();
         builder.RegisterType<TranslationService>().As<ITranslationService>().InstancePerLifetimeScope();
 
         // dynamically apply the proxy interceptor for the domain layer (it has no dependency on infrastructure)

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Project.Infrastructure")]
+[assembly: AssemblyTitle("Lyrida.Infrastructure")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("The Fibre Manager")]
-[assembly: AssemblyProduct("Project.Client")]
+[assembly: AssemblyCompany("Lyrida")]
+[assembly: AssemblyProduct("Lyrida.Infrastructure")]
 [assembly: AssemblyCopyright("Copyright ©  2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
