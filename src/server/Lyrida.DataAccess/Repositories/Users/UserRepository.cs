@@ -3,8 +3,8 @@ using System;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.Common.Enums;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
-using Lyrida.DataAccess.Common.Entities.Authentication;
+using Lyrida.DataAccess.Common.DTO.Authentication;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Users;
@@ -50,13 +50,13 @@ internal sealed class UserRepository : IUserRepository
     }
 
     /// <summary>
-    /// Updates the password for <paramref name="entity"/> in the storage medium
+    /// Updates the password for <paramref name="data"/> in the storage medium
     /// </summary>
-    /// <param name="entity">The user whose password will be updated</param>
-    /// <returns>The result of updating the password of <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
-    public async Task<ApiResponse> ChangePasswordAsync(UserEntity entity)
+    /// <param name="data">The user whose password will be updated</param>
+    /// <returns>The result of updating the password of <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
+    public async Task<ApiResponse> ChangePasswordAsync(UserDto data)
     {
-        return await dataAccess.UpdateAsync(EntityContainers.Users, new { entity.Password }, new { entity.Email });
+        return await dataAccess.UpdateAsync(DataContainers.Users, new { data.Password }, new { data.Email });
     }
 
     /// <summary>
@@ -68,9 +68,9 @@ internal sealed class UserRepository : IUserRepository
     {
         OpenTransaction();
         // delete not just the user, but its role(s) and permission(s)
-        ApiResponse response = await dataAccess.DeleteAsync(EntityContainers.Users, new { id });
-        response.Error = (await dataAccess.DeleteAsync(EntityContainers.UserRoles, new { user_id = id }))?.Error ?? response.Error;
-        response.Error = (await dataAccess.DeleteAsync(EntityContainers.UserPermissions, new { user_id = id }))?.Error ?? response.Error;
+        ApiResponse response = await dataAccess.DeleteAsync(DataContainers.Users, new { id });
+        response.Error = (await dataAccess.DeleteAsync(DataContainers.UserRoles, new { user_id = id }))?.Error ?? response.Error;
+        response.Error = (await dataAccess.DeleteAsync(DataContainers.UserPermissions, new { user_id = id }))?.Error ?? response.Error;
         CloseTransaction();
         return response;
     }
@@ -78,60 +78,60 @@ internal sealed class UserRepository : IUserRepository
     /// <summary>
     /// Gets all users from the storage medium
     /// </summary>
-    /// <returns>A list of users, wrapped in a generic API container of type <see cref="ApiResponse{UserEntity}"/></returns>
-    public async Task<ApiResponse<UserEntity>> GetAllAsync()
+    /// <returns>A list of users, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
+    public async Task<ApiResponse<UserDto>> GetAllAsync()
     {
-        return await dataAccess.SelectAsync<UserEntity>(EntityContainers.Users);
+        return await dataAccess.SelectAsync<UserDto>(DataContainers.Users);
     }
 
     /// <summary>
     /// Gets the user identified by <paramref name="id"/> from the storage medium
     /// </summary>
     /// <param name="id">The Id of the user to get</param>
-    /// <returns>A user identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserEntity}"/></returns>
-    public async Task<ApiResponse<UserEntity>> GetByIdAsync(string id)
+    /// <returns>A user identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
+    public async Task<ApiResponse<UserDto>> GetByIdAsync(string id)
     {
-        return await dataAccess.SelectAsync<UserEntity>(EntityContainers.Users, new { id });
+        return await dataAccess.SelectAsync<UserDto>(DataContainers.Users, new { id });
     }
 
     /// <summary>
     /// Gets the user identified by <paramref name="email"/> from the storage medium
     /// </summary>
     /// <param name="email">The email of the user to get</param>
-    /// <returns>A user identified by <paramref name="email"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserEntity}"/></returns>
-    public async Task<ApiResponse<UserEntity>> GetByEmailAsync(string email)
+    /// <returns>A user identified by <paramref name="email"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
+    public async Task<ApiResponse<UserDto>> GetByEmailAsync(string email)
     {
-        return await dataAccess.SelectAsync<UserEntity>(EntityContainers.Users, new { email });
+        return await dataAccess.SelectAsync<UserDto>(DataContainers.Users, new { email });
     }
 
     /// <summary>
     /// Gets the user with the <paramref name="token"/> registration token from the storage medium
     /// </summary>
     /// <param name="token">The registration validation token of the user to get</param>
-    /// <returns>A user with the <paramref name="token"/> registration token, wrapped in a generic API container of type <see cref="ApiResponse{UserEntity}"/></returns>
-    public async Task<ApiResponse<UserEntity>> GetByValidationTokenAsync(string token)
+    /// <returns>A user with the <paramref name="token"/> registration token, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
+    public async Task<ApiResponse<UserDto>> GetByValidationTokenAsync(string token)
     {
-        return await dataAccess.SelectAsync<UserEntity>(EntityContainers.Users, new { verification_token = token });
+        return await dataAccess.SelectAsync<UserDto>(DataContainers.Users, new { verification_token = token });
     }
 
     /// <summary>
     /// Saves a user in the storage medium
     /// </summary>
-    /// <param name="entity">The user to be saved</param>
-    /// <returns>The result of saving <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserEntity}"/></returns>
-    public async Task<ApiResponse<UserEntity>> InsertAsync(UserEntity entity)
+    /// <param name="data">The user to be saved</param>
+    /// <returns>The result of saving <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
+    public async Task<ApiResponse<UserDto>> InsertAsync(UserDto data)
     {
-        return await dataAccess.InsertAsync(EntityContainers.Users, entity);
+        return await dataAccess.InsertAsync(DataContainers.Users, data);
     }
 
     /// <summary>
-    /// Updates <paramref name="entity"/> in the storage medium
+    /// Updates <paramref name="data"/> in the storage medium
     /// </summary>
-    /// <param name="entity">The entity that will be updated</param>
-    /// <returns>The result of updating <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
-    public async Task<ApiResponse> UpdateAsync(UserEntity entity)
+    /// <param name="data">The element that will be updated</param>
+    /// <returns>The result of updating <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
+    public async Task<ApiResponse> UpdateAsync(UserDto data)
     {
-        return await dataAccess.UpdateAsync(EntityContainers.Users, entity, new { id = entity.Id });
+        return await dataAccess.UpdateAsync(DataContainers.Users, data, new { id = data.Id });
     }
     #endregion
 }

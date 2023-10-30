@@ -2,10 +2,10 @@
 using MediatR;
 using ErrorOr;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
 using Lyrida.DataAccess.Repositories.UserPermissions;
 #endregion
 
@@ -52,13 +52,13 @@ public class SetUserPermissionsCommandHandler : IRequestHandler<SetUserPermissio
             else
             {
                 if (resultUpdateUserRole.Error == "Cannot update admin permissions!")
-                    return Errors.Authorization.CannotUpdateAdminRole;
+                    return Errors.Authorization.UpdateAdminRoleError;
                 else
                     return Errors.DataAccess.UpdateUserPermissionsError;
             }
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

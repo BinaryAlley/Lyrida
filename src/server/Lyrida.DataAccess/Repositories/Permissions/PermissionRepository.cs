@@ -3,8 +3,8 @@ using System;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.Common.Enums;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Permissions;
@@ -52,20 +52,20 @@ internal sealed class PermissionRepository : IPermissionRepository
     /// <summary>
     /// Gets all permissions from the storage medium
     /// </summary>
-    /// <returns>A list of permissions, wrapped in a generic API container of type <see cref="ApiResponse{PermissionEntity}"/></returns>
-    public async Task<ApiResponse<PermissionEntity>> GetAllAsync()
+    /// <returns>A list of permissions, wrapped in a generic API container of type <see cref="ApiResponse{PermissionDto}"/></returns>
+    public async Task<ApiResponse<PermissionDto>> GetAllAsync()
     {
-        return await dataAccess.SelectAsync<PermissionEntity>(EntityContainers.Permissions);
+        return await dataAccess.SelectAsync<PermissionDto>(DataContainers.Permissions);
     }
 
     /// <summary>
     /// Gets the permissions of the user identified by <paramref name="userId"/> from the storage medium
     /// </summary>
     /// <param name="userId">The id of the user whose permissions to get</param>
-    /// <returns>A list of permissions of a user identified by <paramref name="userId"/>, wrapped in a generic API container of type <see cref="ApiResponse{PermissionEntity}"/></returns>
-    public async Task<ApiResponse<PermissionEntity>> GetAllByUserIdAsync(int userId)
+    /// <returns>A list of permissions of a user identified by <paramref name="userId"/>, wrapped in a generic API container of type <see cref="ApiResponse{PermissionDto}"/></returns>
+    public async Task<ApiResponse<PermissionDto>> GetAllByUserIdAsync(int userId)
     {
-        return await dataAccess.ExecuteAsync<PermissionEntity>("SELECT p.id, p.permission_name AS PermissionName " +
+        return await dataAccess.ExecuteAsync<PermissionDto>("SELECT p.id, p.permission_name AS PermissionName " +
             "FROM (SELECT rp.permission_id " +
             "      FROM UserRoles AS ur " +
             "      JOIN RolePermissions AS rp ON ur.role_id = rp.role_id " +
@@ -80,11 +80,11 @@ internal sealed class PermissionRepository : IPermissionRepository
     /// <summary>
     /// Saves a permission in the storage medium
     /// </summary>
-    /// <param name="entity">The permission to be saved</param>
-    /// <returns>The result of saving <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse{PermissionEntity}"/></returns>
-    public async Task<ApiResponse<PermissionEntity>> InsertAsync(PermissionEntity entity)
+    /// <param name="data">The permission to be saved</param>
+    /// <returns>The result of saving <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse{PermissionDto}"/></returns>
+    public async Task<ApiResponse<PermissionDto>> InsertAsync(PermissionDto data)
     {
-        return await dataAccess.InsertAsync(EntityContainers.Permissions, entity);
+        return await dataAccess.InsertAsync(DataContainers.Permissions, data);
     }
     #endregion
 }

@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using MediatR;
 using ErrorOr;
-using Lyrida.Application.Common.Entities.Common;
+using Lyrida.Application.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
@@ -12,4 +12,4 @@ namespace Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
 /// <remarks>
 /// Creation Date: 01st of August, 2023
 /// </remarks>
-public record RecoverPasswordCommand(string Email) : IRequest<ErrorOr<CommandResultEntity>>;
+public record RecoverPasswordCommand(string Email, string TotpCode) : IRequest<ErrorOr<CommandResultDto>>;

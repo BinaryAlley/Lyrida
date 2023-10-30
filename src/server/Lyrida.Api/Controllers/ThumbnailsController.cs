@@ -9,6 +9,9 @@ using Lyrida.Api.Common.ModelBinders;
 using Lyrida.Infrastructure.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Lyrida.Application.Core.FileSystem.Thumbnails.Queries.Read;
+using System.Security.Claims;
+using Lyrida.Infrastructure.Common.Enums;
+using Microsoft.AspNetCore.Http;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -24,6 +27,7 @@ public class ThumbnailsController : ApiController
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly ISender mediator;
+    private readonly ITranslationService translationService;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -35,6 +39,7 @@ public class ThumbnailsController : ApiController
     public ThumbnailsController(ISender mediator, ITranslationService translationService) : base(translationService)
     {
         this.mediator = mediator;
+        this.translationService = translationService;
     }
     #endregion
 
@@ -42,12 +47,26 @@ public class ThumbnailsController : ApiController
     /// <summary>
     /// Gets the thumbnail of a file identified by of <paramref name="path"/>
     /// </summary>
+    /// <param name="path">The path of the file for which to get the thumbnail.</param>
+    /// <param name="quality">The quality to use for the thumbnail.</param>
     [HttpGet()]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetThumbnail([FromQuery, ModelBinder(typeof(UrlStringBinder))] string path)
+    public async Task<IActionResult> GetThumbnail([FromQuery, ModelBinder(typeof(UrlStringBinder))] string path, [FromQuery] int quality)
     {
-        ErrorOr<ThumbnailDto> getResult = await mediator.Send(new GetThumbnailQuery(path));
+        if (!TryGetUserId(out int userId))
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: translationService.Translate(Terms.InvalidUserId));
+        ErrorOr<ThumbnailDto> getResult = await mediator.Send(new GetThumbnailQuery(path, quality, userId));
         return getResult.Match(result => File(result.Bytes, MimeTypes.GetMimeType(result.Type)), errors => Problem(errors));
+    }
+
+    /// <summary>
+    /// Gets the id of the user currently making requests
+    /// </summary>
+    /// <param name="userId">The id of the user currently making requests</param>
+    /// <returns>True if the id of the user currently making requests could be parsed, False otherwise</returns>
+    private bool TryGetUserId(out int userId)
+    {
+        var userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(userIdClaim, out userId);
     }
     #endregion
 }

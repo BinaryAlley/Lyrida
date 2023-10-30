@@ -5,12 +5,12 @@ using ErrorOr;
 using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.Infrastructure.Common.Time;
 using Lyrida.DataAccess.Repositories.Users;
 using Lyrida.Infrastructure.Common.Security;
-using Lyrida.Application.Common.Errors.Types;
 using Lyrida.Infrastructure.Core.Authentication;
-using Lyrida.Application.Common.Entities.Authentication;
+using Lyrida.Application.Common.DTO.Authentication;
 #endregion
 
 namespace Lyrida.Application.Core.Authentication.Commands.ChangePassword;
@@ -21,42 +21,33 @@ namespace Lyrida.Application.Core.Authentication.Commands.ChangePassword;
 /// <remarks>
 /// Creation Date: 01st of August, 2023
 /// </remarks>
-public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, ErrorOr<RegistrationResultEntity>>
+public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, ErrorOr<RegistrationResultDto>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IHash hashService;
-    private readonly ITimeService timeService;
     private readonly IUserRepository userRepository;
-    private readonly ITokenGenerator tokenGenerator;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
     /// Overload C-tor
     /// </summary>
-    /// <param name="tokenGenerator">Injected service for generating authentication tokens</param>
     /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
     /// <param name="hashService">Injected service for credentials hashing</param>
-    /// <param name="timeService">Injected service for time related functionality</param>
-    public ChangePasswordCommandHandler(IUnitOfWork unitOfWork, ITokenGenerator tokenGenerator, IHash hashService, ITimeService timeService)
+    public ChangePasswordCommandHandler(IUnitOfWork unitOfWork, IHash hashService)
     {
         this.hashService = hashService;
-        this.timeService = timeService;
-        this.tokenGenerator = tokenGenerator;
         userRepository = unitOfWork.GetRepository<IUserRepository>();
     }
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Registers a new account in the repository
+    /// Changes the password of an account in the repository
     /// </summary>
-    /// <param name="command">The account to be registered</param>
-    /// <param name="lastName">The last name of the account to be registered</param>
-    /// <param name="email">The email of the account to be registered</param>
-    /// <param name="password">The password of the account to be registered</param>
-    /// <returns>An entity containing the register result</returns>
-    public async Task<ErrorOr<RegistrationResultEntity>> Handle(ChangePasswordCommand command, CancellationToken cancellationToken)
+    /// <param name="command">The account whose password is changed</param>
+    /// <returns>A DTO containing the password change result</returns>
+    public async Task<ErrorOr<RegistrationResultDto>> Handle(ChangePasswordCommand command, CancellationToken cancellationToken)
     {
         // check if the user already exists
         var resultSelectUser = await userRepository.GetByEmailAsync(command.Email);
@@ -69,19 +60,17 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
                     return Errors.Authentication.InvalidUsername;
                 // hash the new password and assign it
                 resultSelectUser.Data[0].Password = Uri.EscapeDataString(hashService.HashString(command.NewPassword));
-                var user = new UserEntity
+                var user = new UserDto
                 {
                     Email = command.Email,
                     LastName = resultSelectUser.Data[0].LastName,
                     FirstName = resultSelectUser.Data[0].FirstName,
-                    VerificationTokenCreated = timeService.Now,
-                    VerificationToken = tokenGenerator.GenerateToken()
                 };
                 // update the user
                 var resultUpdateUser = await userRepository.UpdateAsync(resultSelectUser.Data[0]);
                 if (!string.IsNullOrEmpty(resultUpdateUser.Error) || resultUpdateUser.Count == 0)
                     return Errors.DataAccess.UpdateUserError;
-                return new RegistrationResultEntity(user);
+                return new RegistrationResultDto(user);
             }
             else
                 return Errors.Authentication.InvalidUsername;

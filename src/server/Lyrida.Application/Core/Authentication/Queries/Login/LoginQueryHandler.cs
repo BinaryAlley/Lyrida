@@ -6,11 +6,11 @@ using ErrorOr;
 using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Users;
 using Lyrida.Infrastructure.Common.Security;
-using Lyrida.Application.Common.Errors.Types;
 using Lyrida.Infrastructure.Core.Authentication;
-using Lyrida.Application.Common.Entities.Authentication;
+using Lyrida.Application.Common.DTO.Authentication;
 #endregion
 
 namespace Lyrida.Application.Core.Authentication.Queries.Login;
@@ -21,25 +21,28 @@ namespace Lyrida.Application.Core.Authentication.Queries.Login;
 /// <remarks>
 /// Creation Date: 18th of July, 2023
 /// </remarks>
-public class LoginCommandHandler : IRequestHandler<LoginQuery, ErrorOr<AuthenticationResultEntity>>
+public class LoginCommandHandler : IRequestHandler<LoginQuery, ErrorOr<AuthenticationResultDto>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
-    private readonly IHash hashService;
+    private readonly ISecurity securityService;
     private readonly IUserRepository userRepository;
     private readonly IJwtTokenGenerator jwtTokenGenerator;
+    private readonly ITotpTokenGenerator totpTokenGenerator;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
     /// Overload C-tor
     /// </summary>
-    /// <param name="jwtTokenGenerator">Injected service for generating JWT tokens</param>
     /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
-    /// <param name="hashService">Injected service for credentials hashing</param>
-    public LoginCommandHandler(IUnitOfWork unitOfWork, IJwtTokenGenerator jwtTokenGenerator, IHash hashService)
+    /// <param name="jwtTokenGenerator">Injected service for generating JWT tokens</param>
+    /// <param name="totpTokenGenerator">Injected service for generating TOTP tokens</param>
+    /// <param name="securityService">Injected service for security related functionality</param>
+    public LoginCommandHandler(IUnitOfWork unitOfWork, IJwtTokenGenerator jwtTokenGenerator, ITotpTokenGenerator totpTokenGenerator, ISecurity securityService)
     {
-        this.hashService = hashService;
+        this.securityService = securityService;
         this.jwtTokenGenerator = jwtTokenGenerator;
+        this.totpTokenGenerator = totpTokenGenerator;
         userRepository = unitOfWork.GetRepository<IUserRepository>();
     }
     #endregion
@@ -48,10 +51,9 @@ public class LoginCommandHandler : IRequestHandler<LoginQuery, ErrorOr<Authentic
     /// <summary>
     /// Verifies the provided credentials against the credentials stored in the repository
     /// </summary>
-    /// <param name="email">The email to verify</param>
-    /// <param name="password">The password to verify</param>
-    /// <returns>An entity containing the login result</returns>
-    public async Task<ErrorOr<AuthenticationResultEntity>> Handle(LoginQuery query, CancellationToken cancellationToken)
+    /// <param name="query">DTO containing the credentials to be verified</param>
+    /// <returns>A DTO containing the login result</returns>
+    public async Task<ErrorOr<AuthenticationResultDto>> Handle(LoginQuery query, CancellationToken cancellationToken)
     {
         // validate that the user exists
         var resultSelectUser = await userRepository.GetByEmailAsync(query.Email);
@@ -60,15 +62,22 @@ public class LoginCommandHandler : IRequestHandler<LoginQuery, ErrorOr<Authentic
             if (resultSelectUser.Data is not null)
             {
                 // validate the password is correct
-                if (!hashService.CheckStringAgainstHash(query.Password, Uri.UnescapeDataString(resultSelectUser.Data[0].Password!)))
+                if (!securityService.HashService.CheckStringAgainstHash(query.Password, Uri.UnescapeDataString(resultSelectUser.Data[0].Password!)))
                     return Errors.Authentication.InvalidUsername;
-                // validate the account si activated
-                if (!resultSelectUser.Data[0].IsVerified)
-                    return Errors.Authentication.UnverifiedAccount;
-                resultSelectUser.Data[0].Password = string.Empty; // do not include the password in the returned result
                 // create the JWT token
                 var token = jwtTokenGenerator.GenerateToken(resultSelectUser.Data[0].Id.ToString(), resultSelectUser.Data[0].FirstName, resultSelectUser.Data[0].LastName, resultSelectUser.Data[0].Email);
-                return new AuthenticationResultEntity(resultSelectUser.Data[0].Adapt<UserEntity>(), token);
+                // convert the user, and see if they use TOTP
+                var convertedUser = resultSelectUser.Data[0].Adapt<UserDto>();
+                bool usesTotp = resultSelectUser.Data[0].TotpSecret != null;
+                if (usesTotp && query.TotpCode is not null)
+                {
+                    if (!totpTokenGenerator.ValidateToken(Convert.FromBase64String(securityService.CryptographyService.Decrypt(resultSelectUser.Data[0].TotpSecret!)), query.TotpCode))
+                        return Errors.Authentication.InvalidTotpCode;
+                }
+                convertedUser.UsesTotp = usesTotp;
+                convertedUser.Password = string.Empty; // do not include the password in the returned result
+                convertedUser.TotpSecret = string.Empty;
+                return new AuthenticationResultDto(convertedUser, token);
             }
             else
                 return Errors.Authentication.InvalidUsername;

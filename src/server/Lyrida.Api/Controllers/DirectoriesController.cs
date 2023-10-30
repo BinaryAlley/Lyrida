@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using Lyrida.Api.Common.ModelBinders;
 using Lyrida.Infrastructure.Localization;
 using Microsoft.AspNetCore.Authorization;
-using Lyrida.Application.Common.Entities.FileSystem;
 using Lyrida.Application.Core.FileSystem.Directories.Queries.Read;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.API.Controllers;
@@ -45,10 +45,9 @@ public class DirectoriesController : ApiController
     /// Gets the directories of <paramref name="path"/>
     /// </summary>
     [HttpGet()]
-    [AllowAnonymous]
     public async Task<IActionResult> GetDirectories([FromQuery, ModelBinder(typeof(UrlStringBinder))] string path)
     {
-        ErrorOr<IEnumerable<DirectoryEntity>> getResult = await mediator.Send(new GetFoldersQuery(path));
+        ErrorOr<IEnumerable<DirectoryDto>> getResult = await mediator.Send(new GetFoldersQuery(path));
         return getResult.Match(result => Ok(result), errors => Problem(errors));
     }
     #endregion

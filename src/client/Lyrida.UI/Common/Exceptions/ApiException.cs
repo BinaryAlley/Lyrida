@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System;
 using System.Net;
-using Lyrida.UI.Common.Entities.Common;
+using Lyrida.UI.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.UI.Common.Exceptions;
@@ -16,7 +16,7 @@ public class ApiException : Exception
 {
     #region ==================================================================== PROPERTIES =================================================================================
     public HttpStatusCode HttpStatusCode { get; set; }
-    public ApiErrorResponseEntity? Error { get; }
+    public ApiErrorResponseDto? Error { get; }
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -25,7 +25,7 @@ public class ApiException : Exception
     /// </summary>
     /// <param name="error">The problem details object returned by the API</param>
     /// <param name="httpStatusCode">The HTTP status code returned by the API</param>
-    public ApiException(ApiErrorResponseEntity? error, HttpStatusCode httpStatusCode) : base(error?.Title)
+    public ApiException(ApiErrorResponseDto? error, HttpStatusCode httpStatusCode) : base(error?.Title)
     {
         Error = error;
         HttpStatusCode = httpStatusCode;

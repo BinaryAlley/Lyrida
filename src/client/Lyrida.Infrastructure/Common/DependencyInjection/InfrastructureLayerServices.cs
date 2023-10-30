@@ -44,8 +44,6 @@ public class InfrastructureLayerServices : Module
         builder.RegisterType<Hash>().As<IHash>().InstancePerLifetimeScope();
         builder.RegisterType<ProxyInterceptor>().InstancePerLifetimeScope();
         builder.RegisterType<AsyncProxyInterceptor>().InstancePerLifetimeScope();
-        builder.RegisterType<DatabaseProxyInterceptor>().InstancePerLifetimeScope();
-        builder.RegisterType<DatabaseAsyncProxyInterceptor>().InstancePerLifetimeScope();
         builder.RegisterType<DateTimeProvider>().As<IDateTimeProvider>().SingleInstance();
         builder.RegisterType<NLogLogger>().As<ILoggerManager>().InstancePerLifetimeScope();
         builder.RegisterType<SecurityService>().As<ISecurity>().InstancePerLifetimeScope();

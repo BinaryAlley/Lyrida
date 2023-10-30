@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Common.Actions;
@@ -12,15 +12,15 @@ namespace Lyrida.DataAccess.Repositories.Common.Actions;
 /// <remarks>
 /// Creation Date: 10th of March, 2022
 /// </remarks>
-/// <typeparam name="TEntity">The type used for the insert action. It should implement <see cref="IStorageEntity"/></typeparam>
-public interface IInsertRepositoryAction<TEntity> where TEntity : IStorageEntity
+/// <typeparam name="TDto">The type used for the insert action. It should implement <see cref="IStorageDto"/></typeparam>
+public interface IInsertRepositoryAction<TDto> where TDto : IStorageDto
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Saves an entity of type <typeparamref name="TEntity"/> in the storage medium
+    /// Saves an element of type <typeparamref name="TDto"/> in the storage medium
     /// </summary>
-    /// <param name="entity">The entity to be saved</param>
-    /// <returns>The result of saving <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse{TEntity}"/></returns>
-    Task<ApiResponse<TEntity>> InsertAsync(TEntity entity);
+    /// <param name="data">The element to be saved</param>
+    /// <returns>The result of saving <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse{TDto}"/></returns>
+    Task<ApiResponse<TDto>> InsertAsync(TDto data);
     #endregion
 }

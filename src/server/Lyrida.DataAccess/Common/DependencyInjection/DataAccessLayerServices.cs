@@ -54,6 +54,7 @@ public class DataAccessLayerServices : Autofac.Module
                        Type? instanceType = e.Instance?.GetType();
                        IAppConfig? configService = e.Context.Resolve<IAppConfig>();
                        ICryptography? cryptographyService = e.Context.Resolve<ICryptography>();
+                       var a = cryptographyService.Decrypt(configService.DatabaseConnectionStrings!["test"]);
                        instanceType?.GetProperty("ConnectionStringFactory")
                                    ?.SetValue(e.Instance,
                                          () => cryptographyService.Decrypt(configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"]!));
@@ -61,7 +62,6 @@ public class DataAccessLayerServices : Autofac.Module
                    .EnableInterfaceInterceptors()
                    .InterceptedBy(typeof(DatabaseProxyInterceptor))
                    .InstancePerDependency();
-            //.SingleInstance();
         }
         else
             throw new InvalidOperationException("Cannot register data access type!");
@@ -71,7 +71,6 @@ public class DataAccessLayerServices : Autofac.Module
         builder.RegisterType(repositoryFactoryType!)
                .As(iRepositoryFactoryType!)
                .InstancePerLifetimeScope();
-        //.SingleInstance();
         // get all classes implementing IRepository (all repository classes) and register them as their corresponding repository interface
         IEnumerable<Type> repositoryTypes = dataAccessLayerTypes.Where(t => !t.IsInterface &&
                                                                              t.GetInterfaces()

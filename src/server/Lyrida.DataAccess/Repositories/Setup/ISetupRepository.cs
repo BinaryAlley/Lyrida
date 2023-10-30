@@ -1,8 +1,8 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
-using Lyrida.DataAccess.Common.Entities.Common;
 using Lyrida.DataAccess.Repositories.Common.Base;
-using Lyrida.DataAccess.Common.Entities.Authentication;
+using Lyrida.DataAccess.Common.DTO.Authentication;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Setup;
@@ -13,7 +13,7 @@ namespace Lyrida.DataAccess.Repositories.Setup;
 /// <remarks>
 /// Creation Date: 15th of August, 2023
 /// </remarks>
-public interface ISetupRepository : IRepository<UserEntity>
+public interface ISetupRepository : IRepository<UserDto>
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>

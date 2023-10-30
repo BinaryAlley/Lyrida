@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Lyrida.Application.Core.Authorization;
 using Lyrida.Domain.Core.FileSystem.Entities;
 using Lyrida.Domain.Core.FileSystem.Services.Files;
-using Lyrida.Application.Common.Entities.FileSystem;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.Application.Core.FileSystem.Files.Queries.Read;
@@ -19,7 +19,7 @@ namespace Lyrida.Application.Core.FileSystem.Files.Queries.Read;
 /// <remarks>
 /// Creation Date: 25th of September, 2023
 /// </remarks>
-public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, ErrorOr<IEnumerable<FileEntity>>>
+public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, ErrorOr<IEnumerable<FileDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IFileService fileService;
@@ -44,10 +44,10 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, ErrorOr<IEnum
     /// Gets the list of files at the specified path
     /// </summary>
     /// <returns>A list of files</returns>
-    public async Task<ErrorOr<IEnumerable<FileEntity>>> Handle(GetFilesQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<FileDto>>> Handle(GetFilesQuery request, CancellationToken cancellationToken)
     {
         ErrorOr<IEnumerable<File>> result = await fileService.GetFilesAsync(request.Path);
-        return result.Match(values => ErrorOrFactory.From(values.Adapt<IEnumerable<FileEntity>>()), errors => errors);
+        return result.Match(values => ErrorOrFactory.From(values.Adapt<IEnumerable<FileDto>>()), errors => errors);
     }
     #endregion
 }

@@ -1,27 +1,32 @@
-﻿/// Written by: Ciprian Horeanu
-/// Creation Date: 28th of September, 2023
-/// Purpose: Get thumbnail query handler
-#region ========================================================================= USING =====================================================================================
-using System;
+﻿#region ========================================================================= USING =====================================================================================
 using MediatR;
-using ErrorOr;
-using System.Collections.Generic;
-using Lyrida.Application.Core.Authorization;
-using System.Threading.Tasks;
-using System.Threading;
 using Mapster;
-using Lyrida.Domain.Core.FileSystem.Services.Thumbnails;
+using ErrorOr;
+using System.Threading;
+using System.Threading.Tasks;
 using Lyrida.Domain.Common.DTO;
-//using Lyrida.Domain.Core.FileSystem.Services.Thumbnails;
+using Lyrida.Domain.Common.Errors;
+using Lyrida.Application.Core.Authorization;
+using Lyrida.DataAccess.Repositories.Configuration;
+using Lyrida.Domain.Core.FileSystem.Services.Thumbnails;
+using Lyrida.DataAccess.UoW;
+using Lyrida.Application.Common.DTO.Configuration;
 #endregion
 
 namespace Lyrida.Application.Core.FileSystem.Thumbnails.Queries.Read;
 
+/// <summary>
+/// Get thumbnail query handler
+/// </summary>
+/// <remarks>
+/// Creation Date: 28th of September, 2023
+/// </remarks>
 public class GetThumbnailQueryHandler : IRequestHandler<GetThumbnailQuery, ErrorOr<ThumbnailDto>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IThumbnailService thumbnailsService;
     private readonly IAuthorizationService authorizationService;
+    private readonly IUserPreferenceRepository userPreferenceRepository;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -30,10 +35,11 @@ public class GetThumbnailQueryHandler : IRequestHandler<GetThumbnailQuery, Error
     /// </summary>
     /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
     /// <param name="authorizationService">Injected service for permissions</param>
-    public GetThumbnailQueryHandler(IAuthorizationService authorizationService, IThumbnailService thumbnailsService)
+    public GetThumbnailQueryHandler(IUnitOfWork unitOfWork, IAuthorizationService authorizationService, IThumbnailService thumbnailsService)
     {
-        this.authorizationService = authorizationService;
         this.thumbnailsService = thumbnailsService;
+        this.authorizationService = authorizationService;
+        userPreferenceRepository = unitOfWork.GetRepository<IUserPreferenceRepository>();
     }
     #endregion
 
@@ -47,25 +53,8 @@ public class GetThumbnailQueryHandler : IRequestHandler<GetThumbnailQuery, Error
         // check if the user has the permission to perform the action
         //if (authorizationService.UserPermissions.CanViewPermissions)
         {
-            return await thumbnailsService.GetThumbnailAsync(request.Path);
-            //return new ThumbnailDto( Domain.Common.Enums.ImageType.JPEG, System.IO.File.ReadAllBytes("A:\\Tigernails DDD\\Code\\TigerNails.Views\\Resources\\Images\\logo GN.jpg"));
-            //return System.IO.File.ReadAllBytes(request.Path);
-            //return result.Match(values => ErrorOrFactory.From(values.Adapt<byte[]>()), errors => errors);
-            //return directories;
-            //return ErrorOrFactory.From(result.Adapt<IEnumerable<DirectoryEntity>>());
-            //return ErrorOr<IEnumerable<DirectoryEntity>>.From(result.Adapt<DirectoryEntity[]>());
-            //return Array.Empty<Directory>();
-            //// get the list of permissions from the repository
-            //var resultSelectPermissions = await permissionRepository.GetAllAsync();
-            //if (resultSelectPermissions.Error is null)
-            //{
-            //    //if (resultSelectPermissions.Data is not null)
-            //    //    return resultSelectPermissions.Data.Adapt<PermissionEntity[]>();
-            //    //else
-            //        return Array.Empty<FileSystemItem>();
-            //}
-            //else
-            //    return Errors.DataAccess.GetUserPermissionsError;
+            
+            return await thumbnailsService.GetThumbnailAsync(request.Path, request.Quality);   
         }
         //else
         //return Errors.Authorization.InvalidPermission;

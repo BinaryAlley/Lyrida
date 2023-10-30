@@ -2,7 +2,7 @@
 using Mapster;
 using System.Collections.Generic;
 using Lyrida.Domain.Core.FileSystem.Entities;
-using Lyrida.Application.Common.Entities.FileSystem;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.Application.Common.Mapping;
@@ -22,14 +22,14 @@ public class MappingConfig : IRegister
     /// <param name="config">The configuration to be configured</param>
     public void Register(TypeAdapterConfig config)
     {
-        TypeAdapterConfig<Directory, DirectoryEntity>.NewConfig()
+        TypeAdapterConfig<Directory, DirectoryDto>.NewConfig()
             .Map(dest => dest.Path, src => src.Id.Path)
             .Map(dest => dest.Name, src => src.Name)
             .Map(dest => dest.DateCreated, src => src.DateCreated)
             .Map(dest => dest.DateModified, src => src.DateModified)
-            .Map(dest => dest.Items, src => src.Items.Adapt<List<FileSystemItemEntity>>());
+            .Map(dest => dest.Items, src => src.Items.Adapt<List<FileSystemItemDto>>());
 
-        TypeAdapterConfig<File, FileEntity>.NewConfig()
+        TypeAdapterConfig<File, FileDto>.NewConfig()
             .Map(dest => dest.Path, src => src.Id.Path)
             .Map(dest => dest.Name, src => src.Name)
             .Map(dest => dest.DateModified, src => src.DateModified)

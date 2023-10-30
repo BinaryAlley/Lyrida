@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Lyrida.DataAccess.Common.Enums;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.UserPermissions;
@@ -54,10 +54,10 @@ internal sealed class UserPermissionRepository : IUserPermissionRepository
     /// Gets the permissions of the user identified by <paramref name="id"/> from the storage medium
     /// </summary>
     /// <param name="id">The Id of the user whose permissions to get</param>
-    /// <returns>The permssions of a user identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserPermissionEntity}"/></returns>
-    public async Task<ApiResponse<UserPermissionEntity>> GetByIdAsync(string id)
+    /// <returns>The permssions of a user identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserPermissionDto}"/></returns>
+    public async Task<ApiResponse<UserPermissionDto>> GetByIdAsync(string id)
     {
-        return await dataAccess.ExecuteAsync<UserPermissionEntity>("SELECT up.id, up.user_id AS UserId, up.permission_id AS PermissionId, p.permission_name AS PermissionName " +
+        return await dataAccess.ExecuteAsync<UserPermissionDto>("SELECT up.id, up.user_id AS UserId, up.permission_id AS PermissionId, p.permission_name AS PermissionName " +
             "FROM Users AS u " +
             "JOIN UserPermissions AS up ON u.id = up.user_id " +
             "JOIN Permissions AS p ON up.permission_id = p.id " +
@@ -68,8 +68,8 @@ internal sealed class UserPermissionRepository : IUserPermissionRepository
     /// Adds the <paramref name="permissions"/> list to a user identified by <paramref name="userId"/> in the storage medium
     /// </summary>
     /// <param name="userId">The id of the user whose permissions are added</param>
-    /// <param name="permissions">The list of permissions of the role that is created</param>
-    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleEntity}"/></returns>
+    /// <param name="permissions">The list of permissions to be added</param>
+    /// <returns>The result of inserting the list of permissions, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
     public async Task<ApiResponse> InsertAsync(string userId, List<int> permissions)
     {
         // check if the user is the admin account
@@ -85,7 +85,7 @@ internal sealed class UserPermissionRepository : IUserPermissionRepository
         {
             OpenTransaction();
             // delete all the user permissions
-            ApiResponse response = await dataAccess.DeleteAsync(EntityContainers.UserPermissions, new { user_id = userId });
+            ApiResponse response = await dataAccess.DeleteAsync(DataContainers.UserPermissions, new { user_id = userId });
             // add the permissions of the role
             foreach (int permissionId in permissions)
                 response.Error = (await dataAccess.ExecuteAsync("INSERT INTO UserPermissions (user_id, permission_id) VALUES (@user_id, @permission_id)",

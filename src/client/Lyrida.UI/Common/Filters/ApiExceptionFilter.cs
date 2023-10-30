@@ -1,12 +1,12 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Lyrida.UI.Common.Exceptions;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Lyrida.Infrastructure.Common.Enums;
-using Lyrida.Infrastructure.Localization;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Authentication.Cookies;
 #endregion
 
 namespace Lyrida.UI.Common.Filters;
@@ -19,21 +19,6 @@ namespace Lyrida.UI.Common.Filters;
 /// </remarks>
 public class ApiExceptionFilter : IExceptionFilter
 {
-    #region ================================================================== FIELD MEMBERS ================================================================================
-    private readonly ITranslationService translationService;
-    #endregion
-
-    #region ====================================================================== CTOR =====================================================================================
-    /// <summary>
-    /// Overload C-tor
-    /// </summary>
-    /// <param name="translationService">Injected service for translations</param>
-    public ApiExceptionFilter(ITranslationService translationService)
-    {
-        this.translationService = translationService;
-    }
-    #endregion
-
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
     /// Called after an action has thrown an Exception
@@ -42,20 +27,14 @@ public class ApiExceptionFilter : IExceptionFilter
     public void OnException(ExceptionContext context)
     {
         // check if the exception is an ApiException
-       if (context.Exception is ApiException apiException)
+        if (context.Exception is ApiException apiException)
         {
             // handle unauthorized errors by prompting the user to re-login
             if (apiException.Error?.Status == 401)
             {
-                context.Result = new PartialViewResult
-                {
-                    ViewName = "_LoginPartial",
-                    ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-                    {
-                        { "loginError", translationService.Translate(Terms.SessionExpired) },
-                        { "ReturnUrl", context.HttpContext.Request.Path }
-                    }
-                };
+                SignOutSynchronously(context.HttpContext);
+                var currentUrl = context.HttpContext.Request.GetDisplayUrl();
+                context.HttpContext.Response.Redirect(currentUrl); // force an entire refresh of the current location, so that header and footer are re-rendered too
             }
             else
             {
@@ -69,6 +48,17 @@ public class ApiExceptionFilter : IExceptionFilter
             // mark the exception as handled to prevent propagation
             context.ExceptionHandled = true;
         }
+    }
+
+    /// <summary>
+    /// Signs out the user synchronously by deleting the authentication cookie and token.
+    /// </summary>
+    /// <param name="httpContext">The HttpContext for the current request.</param>
+    private static void SignOutSynchronously(HttpContext httpContext)
+    {
+        var task = httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        task.Wait();  // run the task synchronously
+        httpContext.Response.Cookies.Delete("Token");
     }
     #endregion
 }

@@ -20,14 +20,16 @@ public interface IThumbnailService
     /// Gets the thumbnail of a file at the specified path.
     /// </summary>
     /// <param name="path">String representation of the file path.</param>
+    /// <param name="quality">The quality of the thumbnail to get.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either a collection of bytes representing the thumbnail of the file at the specified path or an error.</returns>
-    Task<ErrorOr<ThumbnailDto>> GetThumbnailAsync(string path);
+    Task<ErrorOr<ThumbnailDto>> GetThumbnailAsync(string path, int quality);
 
     /// <summary>
     /// Gets the thumbnail of a file at the specified path.
     /// </summary>
     /// <param name="path">The path object.</param>
+    /// <param name="quality">The quality of the thumbnail to get.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either a collection of bytes representing the thumbnail of the file at the specified path or an error.</returns>
-    Task<ErrorOr<ThumbnailDto>> GetThumbnailAsync(FileSystemPathId path);
+    Task<ErrorOr<ThumbnailDto>> GetThumbnailAsync(FileSystemPathId path, int quality);
     #endregion
 }

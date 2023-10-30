@@ -57,6 +57,7 @@ public class InfrastructureLayerServices : Module
         builder.RegisterType<SecurityService>().As<ISecurity>().InstancePerLifetimeScope();
         builder.RegisterType<Cryptography>().As<ICryptography>().InstancePerLifetimeScope();
         builder.RegisterType<TokenGenerator>().As<ITokenGenerator>().InstancePerLifetimeScope();
+        builder.RegisterType<QRCodeGenerator>().As<IQRCodeGenerator>().InstancePerLifetimeScope();
         builder.RegisterType<InfrastructureService>().As<IInfrastructure>().InstancePerLifetimeScope();
         builder.RegisterType<TotpTokenGenerator>().As<ITotpTokenGenerator>().InstancePerLifetimeScope();
         builder.RegisterType<TranslationService>().As<ITranslationService>().InstancePerLifetimeScope();

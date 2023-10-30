@@ -4,13 +4,13 @@ using MediatR;
 using Mapster;
 using ErrorOr;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
 using Lyrida.DataAccess.Repositories.Permissions;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Permissions.Queries.Read;
@@ -21,7 +21,7 @@ namespace Lyrida.Application.Core.Permissions.Queries.Read;
 /// <remarks>
 /// Creation Date: 11th of August, 2023
 /// </remarks>
-public class GetAllPermissionsQueryHandler : IRequestHandler<GetAllPermissionsQuery, ErrorOr<IEnumerable<PermissionEntity>>>
+public class GetAllPermissionsQueryHandler : IRequestHandler<GetAllPermissionsQuery, ErrorOr<IEnumerable<PermissionDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IPermissionRepository permissionRepository;
@@ -46,7 +46,7 @@ public class GetAllPermissionsQueryHandler : IRequestHandler<GetAllPermissionsQu
     /// Gets the list of permissions stored in the repository
     /// </summary>
     /// <returns>A list of permissions</returns>
-    public async Task<ErrorOr<IEnumerable<PermissionEntity>>> Handle(GetAllPermissionsQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<PermissionDto>>> Handle(GetAllPermissionsQuery request, CancellationToken cancellationToken)
     {
         // check if the user has the permission to perform the action
         if (authorizationService.UserPermissions.CanViewPermissions)
@@ -56,15 +56,15 @@ public class GetAllPermissionsQueryHandler : IRequestHandler<GetAllPermissionsQu
             if (resultSelectPermissions.Error is null)
             {
                 if (resultSelectPermissions.Data is not null)
-                    return resultSelectPermissions.Data.Adapt<PermissionEntity[]>();
+                    return resultSelectPermissions.Data.Adapt<PermissionDto[]>();
                 else
-                    return Array.Empty<PermissionEntity>();
+                    return Array.Empty<PermissionDto>();
             }
             else
                 return Errors.DataAccess.GetUserPermissionsError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

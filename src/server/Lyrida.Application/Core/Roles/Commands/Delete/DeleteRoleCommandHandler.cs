@@ -2,11 +2,11 @@
 using MediatR;
 using ErrorOr;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Roles;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
 #endregion
 
 namespace Lyrida.Application.Core.Roles.Commands.Delete;
@@ -53,7 +53,7 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Error
             {
                 // if the role to be deleted is in the Admin role, return error - admin role can't be deleted!
                 if (resultSelectAdminRole.Data[0].Id == request.Id)
-                    return Errors.Authorization.CannotDeleteAdminRole;
+                    return Errors.Authorization.DeleteAdminRoleError;
             }
             else
                 return Errors.DataAccess.GetRoleError;
@@ -65,7 +65,7 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Error
                 return Errors.DataAccess.DeleteRoleError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

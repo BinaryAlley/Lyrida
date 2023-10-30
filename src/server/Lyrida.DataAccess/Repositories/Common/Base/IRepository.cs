@@ -10,8 +10,8 @@ namespace Lyrida.DataAccess.Repositories.Common.Base;
 /// <remarks>
 /// Creation Date: 11th of June, 2021
 /// </remarks>
-/// <typeparam name="TEntity">The type used for the repository collection. It should implement <see cref="IStorageEntity"/></typeparam>
-public interface IRepository<TEntity> where TEntity : IStorageEntity
+/// <typeparam name="TDto">The type used for the repository collection. It should implement <see cref="IStorageDto"/></typeparam>
+public interface IRepository<TDto> where TDto : IStorageDto
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>

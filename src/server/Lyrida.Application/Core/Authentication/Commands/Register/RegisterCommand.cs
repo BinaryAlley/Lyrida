@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using MediatR;
 using ErrorOr;
-using Lyrida.Application.Common.Entities.Authentication;
+using Lyrida.Application.Common.DTO.Authentication;
 #endregion
 
 namespace Lyrida.Application.Core.Authentication.Commands.Register;
@@ -12,4 +12,4 @@ namespace Lyrida.Application.Core.Authentication.Commands.Register;
 /// <remarks>
 /// Creation Date: 18th of July, 2023
 /// </remarks>
-public record RegisterCommand(string FirstName, string LastName, string Email, string Password, string PasswordConfirm) : IRequest<ErrorOr<RegistrationResultEntity>>;
+public record RegisterCommand(string FirstName, string LastName, string Email, string Password, string PasswordConfirm, bool Use2fa) : IRequest<ErrorOr<RegistrationResultDto>>;

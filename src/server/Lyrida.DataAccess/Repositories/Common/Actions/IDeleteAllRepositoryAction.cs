@@ -1,6 +1,6 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
-using Lyrida.DataAccess.Common.Entities.Common;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Common.Actions;

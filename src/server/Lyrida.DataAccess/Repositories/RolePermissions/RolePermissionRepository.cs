@@ -2,8 +2,8 @@
 using System;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.RolePermissions;
@@ -52,10 +52,10 @@ internal sealed class RolePermissionRepository : IRolePermissionRepository
     /// Gets the permissions of the role identified by <paramref name="id"/> from the storage medium
     /// </summary>
     /// <param name="id">The Id of the role whose permissions to get</param>
-    /// <returns>The permssions of a role identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{RolePermissionEntity}"/></returns>
-    public async Task<ApiResponse<RolePermissionEntity>> GetByIdAsync(string id)
+    /// <returns>The permssions of a role identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{RolePermissionDto}"/></returns>
+    public async Task<ApiResponse<RolePermissionDto>> GetByIdAsync(string id)
     {
-        return await dataAccess.ExecuteAsync<RolePermissionEntity>("SELECT rp.id, rp.role_id AS RoleId, rp.permission_id AS PermissionId, p.permission_name AS PermissionName " +
+        return await dataAccess.ExecuteAsync<RolePermissionDto>("SELECT rp.id, rp.role_id AS RoleId, rp.permission_id AS PermissionId, p.permission_name AS PermissionName " +
             "FROM RolePermissions As rp " +
             "LEFT JOIN Permissions AS p on rp.permission_id = p.id " +
             "WHERE rp.role_id = @id", new { id });

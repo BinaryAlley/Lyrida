@@ -1,8 +1,20 @@
 ﻿@using Lyrida.Infrastructure.Common.Enums;
 @using Lyrida.Infrastructure.Localization;
-@using Lyrida.UI.Common.Entities.FileSystem;
+@using Lyrida.UI.Common.DTO.Configuration;
+@using Lyrida.UI.Common.DTO.FileSystem;
 @inject ITranslationService translattionService
-
+@{
+    if (Model is ProfilePreferencesDto profilePreference)
+    {
+        <script>
+            showThumbnails = @profilePreference.ShowImagePreviews.ToString().ToLower();
+            imagePreviewsQuality = @profilePreference.ImagePreviewsQuality.ToString().ToLower();
+            fullImageQuality = @profilePreference.FullImageQuality.ToString().ToLower();
+            // let REMEMBER_OPEN_TABS = @profilePreference.RememberOpenTabs.ToString().ToLower();
+            // let USE_2FA = @profilePreference.Use2fa.ToString().ToLower();            
+        </script>
+    }
+}
 <div class="dynTab-container">
     <ul class="dynTab-tabs dynTab-clearfix" id="dynTab_tabHeaders">
         <!-- tabs will be populated dynamically here -->

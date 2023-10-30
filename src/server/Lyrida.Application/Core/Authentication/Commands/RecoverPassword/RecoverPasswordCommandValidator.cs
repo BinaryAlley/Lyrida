@@ -21,6 +21,7 @@ public class RecoverPasswordCommandValidator : AbstractValidator<RecoverPassword
     {
         RuleFor(x => x.Email).NotEmpty().WithMessage(Terms.EmailCannotBeEmpty.ToString())
             .EmailAddress().WithMessage(Terms.InvalidEmailAddress.ToString());
+        RuleFor(x => x.TotpCode).NotEmpty().WithMessage(Terms.TotpCodeCannotBeEmpty.ToString());
     }
     #endregion
 }

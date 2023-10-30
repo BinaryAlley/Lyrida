@@ -7,10 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
 using System.Collections.Generic;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Roles;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Roles.Queries.Read;
@@ -21,7 +21,7 @@ namespace Lyrida.Application.Core.Roles.Queries.Read;
 /// <remarks>
 /// Creation Date: 09th of August, 2023
 /// </remarks>
-public class GetAllRolesQueryHandler : IRequestHandler<GetAllRolesQuery, ErrorOr<IEnumerable<RoleEntity>>>
+public class GetAllRolesQueryHandler : IRequestHandler<GetAllRolesQuery, ErrorOr<IEnumerable<RoleDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IRoleRepository roleRepository;
@@ -46,7 +46,7 @@ public class GetAllRolesQueryHandler : IRequestHandler<GetAllRolesQuery, ErrorOr
     /// Gets the list of roles stored in the repository
     /// </summary>
     /// <returns>A list of roles</returns>
-    public async Task<ErrorOr<IEnumerable<RoleEntity>>> Handle(GetAllRolesQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<RoleDto>>> Handle(GetAllRolesQuery request, CancellationToken cancellationToken)
     {
         // check if the user has the permission to perform the action
         if (authorizationService.UserPermissions.CanViewPermissions)
@@ -56,15 +56,15 @@ public class GetAllRolesQueryHandler : IRequestHandler<GetAllRolesQuery, ErrorOr
             if (resultSelectRoles.Error is null)
             {
                 if (resultSelectRoles.Data is not null)
-                    return resultSelectRoles.Data.Adapt<RoleEntity[]>();
+                    return resultSelectRoles.Data.Adapt<RoleDto[]>();
                 else
-                    return Array.Empty<RoleEntity>();
+                    return Array.Empty<RoleDto>();
             }
             else
                 return Errors.DataAccess.GetRolesError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

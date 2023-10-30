@@ -4,9 +4,9 @@ using ErrorOr;
 using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Roles;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
 #endregion
 
 namespace Lyrida.Application.Core.Roles.Commands.Update;
@@ -58,7 +58,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Error
                     {
                         // if the role to be updated is in the Admin role, return error - admin role can't be edited!
                         if (resultSelectAdminRole.Data[0].Id == request.RoleId)
-                            return Errors.Authorization.CannotUpdateAdminRole;
+                            return Errors.Authorization.UpdateAdminRoleError;
                     }
                     else
                         return Errors.DataAccess.GetRoleError;
@@ -69,13 +69,13 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Error
                     else
                         return Errors.DataAccess.InsertRoleError;
                 }
-                return Errors.Authorization.RoleDoesNotExist;
+                return Errors.Authorization.RoleDoesNotExistError;
             }
             else
                 return Errors.DataAccess.GetRoleError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

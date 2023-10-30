@@ -12,11 +12,11 @@ using Lyrida.UI.Common.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Lyrida.Infrastructure.Localization;
 using Lyrida.Infrastructure.Common.Enums;
+using Lyrida.UI.Common.DTO.Configuration;
 using Microsoft.AspNetCore.Authentication;
+using Lyrida.UI.Common.DTO.Authentication;
 using Lyrida.Infrastructure.Common.Security;
-using Lyrida.UI.Common.Entities.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Net.Http;
 #endregion
 
 namespace Lyrida.UI.Controllers;
@@ -53,9 +53,9 @@ public class AccountController : Controller
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Logs out an user and redirects to the login page
+    /// Logs out an user and redirects to the login page.
     /// </summary>
-    [HttpGet("logout")]
+    [HttpGet("Logout")]
     public async Task<IActionResult> Logout()
     {
         // if the user is not logged in, redirect them to the home page
@@ -67,29 +67,31 @@ public class AccountController : Controller
     }
 
     /// <summary>
-    /// Logs out an user and redirects to the login page
+    /// Displays the view for changing the password.
     /// </summary>
-    [HttpGet("changePassword")]
+    [HttpGet("ChangePassword")]
     [Authorize]
     public IActionResult ChangePassword()
     {
-        return View(new ChangePasswordRequestEntity(null, null, null, null));
+        return View(new ChangePasswordRequestDto());
     }
 
     /// <summary>
-    /// Logs out an user and redirects to the login page
+    /// Displays the view for profile preferences.
     /// </summary>
-    [HttpGet("profile")]
+    [HttpGet("Profile")]
     [Authorize]
-    public IActionResult Profile()
+    public async Task<IActionResult> Profile()
     {
-        return View();
+        string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
+        return View(profilePreferences);
     }
 
     /// <summary>
-    /// Returns the Register view with an empty RegisterEntity.
+    /// Displays the view for registering a new account.
     /// </summary>
-    [HttpGet("register")]
+    [HttpGet("Register")]
     public async Task<IActionResult> Register()
     {
         try
@@ -113,38 +115,27 @@ public class AccountController : Controller
         {
             TempData["generalException"] = ex.Message;
         }
-        return View(new RegisterRequestEntity(null, null, null, null, null, null));
+        return View(new RegisterRequestDto());
     }
 
     /// <summary>
-    /// Returns the Login view with an empty LoginEntity
+    /// Displays the view for logging in.
     /// </summary>
-    /// <param name="returnUrl">The url to return to after login</param>
-    [HttpGet("login/{returnUrl?}")]
+    /// <param name="returnUrl">The url to return to, after login (if any).</param>
+    [HttpGet("Login/{returnUrl?}")]
     public IActionResult Login(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
         // if the user is already logged in, redirect them to the home page
         if (User?.Identity?.IsAuthenticated == true)
             return RedirectToAction("Index", "Home");
-        return View(new LoginEntity(null, null));
+        return View(new LoginDto());
     }
 
     /// <summary>
-    /// Returns the LoginPartial view, for in-app session expiration handling
+    /// Displays the view for recovering the password of an account.
     /// </summary>
-    /// <param name="returnUrl">The url to return to after login</param>
-    [HttpGet("loginPartial/{returnUrl}")]
-    public IActionResult LoginPartial(string returnUrl)
-    {
-        ViewData["ReturnUrl"] = returnUrl;
-        return PartialView("_LoginPartial");
-    }
-
-    /// <summary>
-    /// Returns the RecoverPassword view.
-    /// </summary>
-    [HttpGet("recoverPassword")]
+    [HttpGet("RecoverPassword")]
     public IActionResult RecoverPassword()
     {
         // if the user is already logged in, redirect them to the home page
@@ -154,162 +145,37 @@ public class AccountController : Controller
     }
 
     /// <summary>
-    /// </summary>
-    /// <param name="token">The token to verify</param>
-    /// <param name="lang">The language that was used to initiate the password reset request</param>
-    [HttpGet("resetPassword")]
-    public async Task<IActionResult> ResetPassword([FromQuery] string token, [FromQuery] string lang)
-    {
-        // if the user is already logged in, redirect them to the home page
-        if (User?.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Home");
-        SetLanguage(lang);
-        try
-        {
-            var response = await apiHttpClient.PostAsync("authentication/verifyReset/", new ValidateTokenRequestEntity(token), language: translationService.Language);
-            LoginResponseEntity? responseEntity = JsonConvert.DeserializeObject<LoginResponseEntity>(response);
-            return View(new RecoverPasswordEntity(responseEntity?.Email, responseEntity?.Token, null, null));
-        }
-        catch (ApiException ex)
-        {
-            string errorMessage = ex.ToString();
-            // treat validation errors differently - they come as a list of key-value pairs, where the key is the invalid field, and the value is the validation message
-            if (ex.Error != null && ex.Error.ValidationErrors?.Count > 0)
-                errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.ValidationErrors.Select(e => e.Value.First()));
-            else if (ex.Error != null && ex.Error.Errors?.Count > 0) // other errors are just a simple list
-                errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
-            ModelState.AddModelError("resetPasswordTokenError", errorMessage);
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return Json(new { success = false, errorMessage });
-            else
-                return View(new RecoverPasswordEntity(null, null, null, null));
-        }
-        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
-        {
-            ModelState.AddModelError("resetPasswordTokenError", ex.Message);
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return Json(new { success = false, errorMessage = ex.Message });
-            else
-                return View(new RecoverPasswordEntity(null, null, null, null));
-        }        
-    }
-
-    /// <summary>
-    /// </summary>
-    /// <param name="token">The token to verify</param>
-    /// <param name="lang">The language that was used to register the account</param>
-    [HttpGet("verify")]
-    public async Task<IActionResult> Verify([FromQuery] string token, [FromQuery] string lang)
-    {
-        // if the user is already logged in, redirect them to the home page
-        if (User?.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Home");
-        SetLanguage(lang);
-        try
-        {
-            //await authentication.VerifyTokenAsync(token);
-            var response = await apiHttpClient.PostAsync("authentication/verifyRegister/", new ValidateTokenRequestEntity(token), language: translationService.Language);
-            LoginResponseEntity? responseEntity = JsonConvert.DeserializeObject<LoginResponseEntity>(response);
-            TempData["ValidateAccountSuccess"] = translationService.Translate(Terms.EmailVerified);
-            // store the received token in a cookie            
-            Response.Cookies.Delete("Token");
-            Response.Cookies.Append("Token", cryptographyService.Encrypt(responseEntity?.Token!), new CookieOptions 
-            { 
-                Expires = DateTimeOffset.UtcNow.AddYears(1), 
-                Path = "/", 
-                HttpOnly = true, 
-                Secure = true 
-            });
-        }
-        catch (ApiException ex)
-        {
-            string errorMessage = ex.ToString();
-            // treat validation errors differently - they come as a list of key-value pairs, where the key is the invalid field, and the value is the validation message
-            if (ex.Error != null && ex.Error.ValidationErrors?.Count > 0)
-                errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.ValidationErrors.Select(e => e.Value.First()));
-            else if (ex.Error != null && ex.Error.Errors?.Count > 0) // other errors are just a simple list
-                errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
-            else if (ex.Error != null && ex.Error.Status == 401)
-            {
-                TempData["loginError"] = translationService.Translate(Terms.SessionExpired);
-                return RedirectToAction("Login", "Account");
-            }
-            TempData["ValidateAccountError"] = errorMessage;
-        }
-        catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
-        {
-            TempData["ValidateAccountError"] = ex.Message;
-        }
-        return View();
-    }
-
-    /// <summary>
-    /// Sets the language used by the user
-    /// </summary>
-    /// <param name="language">The identifier of the language to set</param>
-    private void SetLanguage(string language)
-    {
-        if (!string.IsNullOrEmpty(language) && (language == "ro" || language == "en" || language == "de"))
-        {
-            Response.Cookies.Delete("Language");
-            Response.Cookies.Append("Language", language, new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), Path = "/", HttpOnly = true, Secure = true });
-            translationService.Language = language == "en" ? Language.English : language == "ro" ? Language.Romanian : Language.German;
-        }
-    }
-
-    /// <summary>
     /// Registers a new account.
     /// </summary>
-    /// <param name="entity">User credentials used for registration</param>
-    [HttpPost("register")]
-    //[ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterRequestEntity entity)
+    /// <param name="data">User credentials used for registration.</param>
+    [HttpPost("Register")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterRequestDto data)
     {
-        ModelState.Clear(); // clear all existing errors, use translated messages instead
-        if (string.IsNullOrEmpty(entity.FirstName))
-            ModelState.AddModelError("firstNameError", translationService.Translate(Terms.EmptyFirstName));
-        if (string.IsNullOrEmpty(entity.LastName))
-            ModelState.AddModelError("lastNameError", translationService.Translate(Terms.EmptyLastName));
-        if (string.IsNullOrEmpty(entity.Email))
-            ModelState.AddModelError("emailError", translationService.Translate(Terms.EmptyEmail));
-        if (string.IsNullOrEmpty(entity.Password))
-            ModelState.AddModelError("passwordError", translationService.Translate(Terms.EmptyPassword));
-        if (string.IsNullOrEmpty(entity.PasswordConfirm))
-            ModelState.AddModelError("passwordConfirmError", translationService.Translate(Terms.EmptyPasswordConfirm));
-        // handle cases when mandatory info is not provided...
-        if (!ModelState.IsValid)
+        // handle cases when mandatory info is not provided
+        if (string.IsNullOrEmpty(data.FirstName) || string.IsNullOrEmpty(data.LastName) || string.IsNullOrEmpty(data.Email) 
+            || string.IsNullOrEmpty(data.Password) ||string.IsNullOrEmpty(data.PasswordConfirm))            
         {
-            // ...in AJAX way
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            var errors = new
             {
-                var errors = new
-                {
-                    FirstNameError = ModelState.ContainsKey("firstNameError") ? ModelState["firstNameError"]!.Errors[0].ErrorMessage : null,
-                    LastNameError = ModelState.ContainsKey("lastNameError") ? ModelState["lastNameError"]!.Errors[0].ErrorMessage : null,
-                    EmailError = ModelState.ContainsKey("emailError") ? ModelState["emailError"]!.Errors[0].ErrorMessage : null,
-                    PasswordError = ModelState.ContainsKey("passwordError") ? ModelState["passwordError"]!.Errors[0].ErrorMessage : null,
-                    PasswordConfirmError = ModelState.ContainsKey("passwordConfirmError") ? ModelState["passwordConfirmError"]!.Errors[0].ErrorMessage : null,
-                };
-                return Json(errors);
-            }
-            else // or FORM way
-                return View(entity);
+                FirstNameError = string.IsNullOrEmpty(data.FirstName) ? translationService.Translate(Terms.EmptyFirstName) : null,
+                LastNameError = string.IsNullOrEmpty(data.LastName) ? translationService.Translate(Terms.EmptyLastName) : null,
+                EmailError = string.IsNullOrEmpty(data.Email) ? translationService.Translate(Terms.EmptyEmail) : null,
+                PasswordError = string.IsNullOrEmpty(data.Password) ? translationService.Translate(Terms.EmptyPassword) : null,
+                PasswordConfirmError = string.IsNullOrEmpty(data.PasswordConfirm) ? translationService.Translate(Terms.EmptyPasswordConfirm) : null,
+            };
+            return Json(errors);
         }
         else
         {
             try
             {
                 // call different endpoints based on the view hidden field - registration for normal users, or initial application admin account setup
-                string endpoint = entity.RegistrationType == "Admin" ? "initialization" : "authentication/register";
+                string endpoint = data.RegistrationType == "Admin" ? "initialization" : "authentication/register";
                 // attempt API registration
-                await apiHttpClient.PostAsync(endpoint, entity, language: translationService.Language);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = true }); // return success status 
-                else
-                {
-                    TempData["registerSuccess"] = translationService.Translate(entity.RegistrationType == "Admin" ? Terms.AccountCreated : Terms.RegistrationEmailSent);
-                    return View();
-                }
+                var response = await apiHttpClient.PostAsync(endpoint, data, language: translationService.Language);
+                RegisterResponseDto? responseDto = JsonConvert.DeserializeObject<RegisterResponseDto>(response);
+                return Json(new { success = true, registrationData = responseDto }); // return success status 
             }
             catch (ApiException ex)
             {
@@ -319,71 +185,46 @@ public class AccountController : Controller
                     errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.ValidationErrors.Select(e => e.Value.First()));
                 else if (ex.Error != null && ex.Error.Errors?.Count > 0) // other errors are just a simple list
                     errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
-                ModelState.AddModelError("registerError", errorMessage);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage });
-                else
-                    return View(entity);
+                return Json(new { success = false, errorMessage });
             }
             catch (Exception ex) 
             {
-                ModelState.AddModelError("registerError", ex.Message);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage = ex.Message });
-                else
-                    return View(entity);
+                return Json(new { success = false, errorMessage = ex.Message });
             }
         }
     }
 
     /// <summary>
-    /// Authenticates the user and redirects to the home page upon successful authentication,
-    /// or returns the Login view with error messages upon failed authentication.
+    /// Authenticates the user.
     /// </summary>
-    /// <param name="entity">User credentials</param>
-    [HttpPost("login")]
-    //[ValidateAntiForgeryToken] TODO: enable this!
-    public async Task<IActionResult> Login(LoginEntity entity, string? returnUrl = null)
+    /// <param name="data">The credentials of the user to authenticate.</param>
+    [HttpPost("Login")]
+    [ValidateAntiForgeryToken] 
+    public async Task<IActionResult> Login(LoginDto data, string? returnUrl = null)
     {
-        ModelState.Clear(); // clear all existing errors, use translated messages instead
-        if (string.IsNullOrEmpty(entity.Email))
-            ModelState.AddModelError("emailError", translationService.Translate(Terms.EmptyUsername));
-        if (string.IsNullOrEmpty(entity.Password))
-            ModelState.AddModelError("passwordError", translationService.Translate(Terms.EmptyPassword));
-        // handle cases when mandatory info is not provided...
-        if (!ModelState.IsValid)
+        // handle cases when mandatory info is not provided
+        if (string.IsNullOrEmpty(data.Email) || string.IsNullOrEmpty(data.Password))
         {
-            // ...in AJAX way
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            var errors = new
             {
-                var errors = new
-                {
-                    EmailError = ModelState.ContainsKey("emailError") ? ModelState["emailError"]!.Errors[0].ErrorMessage : null,
-                    PasswordError = ModelState.ContainsKey("passwordError") ? ModelState["passwordError"]!.Errors[0].ErrorMessage : null
-                };
-                return Json(errors);
-            }
-            else // or FORM way
-                return View(entity);
+                EmailError = string.IsNullOrEmpty(data.Email) ? translationService.Translate(Terms.EmptyUsername) : null,
+                PasswordError = string.IsNullOrEmpty(data.Password) ? translationService.Translate(Terms.EmptyPassword) : null
+            };
+            return Json(errors);
         }
         else
         {
             try
             {
                 // attempt API login
-                var response = await apiHttpClient.PostAsync("authentication/login/", entity, language: translationService.Language);
-                var responseEntity = JsonConvert.DeserializeObject<LoginResponseEntity>(response);
-
-                //var responseUserPermissions = await apiHttpClient.GetAsync($"users/{responseEntity!.Id}/permissions", responseEntity?.Token!, translationService.Language);
-                //var userPermissions = JsonConvert.DeserializeObject<UserPermissionEntity[]>(responseUserPermissions);
-                //var responseUserRoles = await apiHttpClient.GetAsync($"users/{responseEntity!.Id}/roles", responseEntity?.Token!, translationService.Language);
-                //var userRoles = JsonConvert.DeserializeObject<RoleEntity[]>(responseUserRoles);
-                //var responseRolePermissions = await apiHttpClient.GetAsync($"roles/{userRoles![0].Id}/permissions", responseEntity?.Token!, translationService.Language);
-                //var rolePermissions = JsonConvert.DeserializeObject<PermissionEntity[]>(responseRolePermissions);
-
+                string response = await apiHttpClient.PostAsync("authentication/login/", data, language: translationService.Language);
+                LoginResponseDto? responseDto = JsonConvert.DeserializeObject<LoginResponseDto>(response);
+                if (responseDto!.UsesTotp)
+                    if (string.IsNullOrEmpty(data.TotpCode))
+                        return Json(new { success = false, TotpError = translationService.Translate(Terms.EmptyTotp) });
                 // store the received token in a secure cookie            
                 Response.Cookies.Delete("Token");
-                Response.Cookies.Append("Token", cryptographyService.Encrypt(responseEntity?.Token!), new CookieOptions
+                Response.Cookies.Append("Token", cryptographyService.Encrypt(responseDto?.Token!), new CookieOptions
                 {
                     Expires = DateTimeOffset.UtcNow.AddMonths(1),
                     Path = "/",
@@ -391,20 +232,17 @@ public class AccountController : Controller
                     Secure = true
                 });
                 // tell asp.net we are logged in
-                var claims = new List<Claim>
+                List<Claim> claims = new()
                 {
-                    new Claim(ClaimTypes.Name, responseEntity?.Email!),
-                    new Claim(ClaimTypes.NameIdentifier, responseEntity?.Id.ToString()!),
+                    new Claim(ClaimTypes.Name, responseDto?.Email!),
+                    new Claim(ClaimTypes.NameIdentifier, responseDto?.Id.ToString()!),
                     // You can add other claims as needed, for example, you might add a claim for the JWT token
-                    new Claim("Token", responseEntity?.Token!),
+                    new Claim("Token", responseDto?.Token!),
                 };
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                ClaimsIdentity claimsIdentity = new(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
                 // return success status and redirect URL (also, handle cases when a return url was specified)
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = true, redirectUrl = string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl) ? Url.Content("~/") : Url.Content(returnUrl) });
-                else
-                    return Redirect(string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl) ? "~/" : returnUrl);
+                return Json(new { success = true, redirectUrl = string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl) ? Url.Content("~/") : Url.Content(returnUrl) });
             }
             catch (ApiException ex)
             {
@@ -416,202 +254,67 @@ public class AccountController : Controller
                     errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
                 else
                     errorMessage = ex.Message;
-                ModelState.AddModelError("registerError", errorMessage);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage });
-                else
-                    return View(entity);
+                return Json(new { success = false, errorMessage });
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("loginError", ex.Message);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage = ex.Message });
-                else
-                    return View(entity);
+                return Json(new { success = false, errorMessage = ex.Message });
             }
         }
     }
 
     /// <summary>
-    /// Recovers the password of a user identified by <paramref name="email"/>
+    /// Recovers the password of a user identified by <paramref name="email"/>.
     /// </summary>
-    /// <param name="email">The email account of the user for who to recover the password</param>
-    [HttpPost("recoverPassword")]
-    public async Task<IActionResult> RecoverPassword(string email)
+    /// <param name="email">The email account of the user for who to recover the password.</param>
+    [HttpPost("RecoverPassword")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RecoverPassword(string email, string totpCode)
     {
-        ModelState.Clear(); // clear all existing errors
-        if (string.IsNullOrEmpty(email))
-            ModelState.AddModelError("recoverPasswordError", translationService.Translate(Terms.EmptyEmail));
-        if (!ModelState.IsValid)
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(totpCode))
         {
-            // handle errors in AJAX way
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            var errors = new
             {
-                var errors = new
-                {
-                    EmailError = ModelState.ContainsKey("recoverPasswordError") ? ModelState["recoverPasswordError"]!.Errors[0].ErrorMessage : null
-                };
-                return Json(errors);
-            }
-            else // or FORM way
-                return View("RecoverPassword", email);
+                EmailError = string.IsNullOrEmpty(email) ? translationService.Translate(Terms.EmptyEmail) : null,
+                TotpError = string.IsNullOrEmpty(totpCode) ? translationService.Translate(Terms.EmptyTotp) : null
+            };
+            return Json(errors);
         }
         else
         {
-            try
-            {
-                var response = await apiHttpClient.PostAsync("authentication/recoverPassword/", new { email }, language: translationService.Language);
-                var responseEntity = JsonConvert.DeserializeObject<LoginResponseEntity>(response);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = true });
-                else
-                {
-                    TempData["recoverPasswordSuccess"] = translationService.Translate(Terms.PasswordResetEmailSent);
-                    return View();
-                }
-            }
-            catch (ApiException ex)
-            {
-                string errorMessage = ex.ToString();
-                // treat validation errors differently - they come as a list of key-value pairs, where the key is the invalid field, and the value is the validation message
-                if (ex.Error != null && ex.Error.ValidationErrors?.Count > 0)
-                    errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.ValidationErrors.Select(e => e.Value.First()));
-                else if (ex.Error != null && ex.Error.Errors?.Count > 0) // other errors are just a simple list
-                    errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
-                ModelState.AddModelError("recoverPasswordError", errorMessage);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage });
-                else
-                    return View();
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("recoverPasswordError", ex.Message);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, emailError = ex.Message });
-                else
-                    return View("RecoverPassword", email);
-            }
+            await apiHttpClient.PostAsync("authentication/recoverPassword/", new { email, totpCode }, language: translationService.Language);
+            return Json(new { success = true });
         }
     }
 
     /// <summary>
-    /// Resets the password of a user 
+    /// Changes the password of a user.
     /// </summary>
-    /// <param name="entity">The entity representing the user and the password to reset</param>
-    [HttpPost("resetPassword")]
-    public async Task<IActionResult> ResetPassword(RecoverPasswordEntity entity)
+    /// <param name="data">The data representing the user and the password to change.</param>
+    [HttpPost("ChangePassword")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequestDto data)
     {
-        ModelState.Clear(); // clear all existing errors, use translated messages instead
-        if (string.IsNullOrEmpty(entity.Email))
-            ModelState.AddModelError("email", translationService.Translate(Terms.EmptyUsername));
-        if (string.IsNullOrEmpty(entity.Password))
-            ModelState.AddModelError("password", translationService.Translate(Terms.EmptyPassword));
-        if (string.IsNullOrEmpty(entity.PasswordConfirm))
-            ModelState.AddModelError("passwordConfirm", translationService.Translate(Terms.EmptyPasswordConfirm));
         // handle cases when mandatory info is not provided...
-        if (!ModelState.IsValid)
+        if (string.IsNullOrEmpty(data.CurrentPassword) || string.IsNullOrEmpty(data.NewPassword) || string.IsNullOrEmpty(data.NewPasswordConfirm))
         {
-            // ...in AJAX way
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            var errors = new
             {
-                var errors = new
-                {
-                    PasswordError = ModelState.ContainsKey("password") ? ModelState["password"]!.Errors[0].ErrorMessage : null,
-                    PasswordConfirmError = ModelState.ContainsKey("passwordConfirm") ? ModelState["passwordConfirm"]!.Errors[0].ErrorMessage : null
-                };
-                return Json(errors);
-            }
-            else // or FORM way
-                return View(entity);
+                CurrentPasswordError = string.IsNullOrEmpty(data.CurrentPassword) ? translationService.Translate(Terms.EmptyCurrentPassword) : null,
+                NewPasswordError = string.IsNullOrEmpty(data.NewPassword) ? translationService.Translate(Terms.EmptyNewPassword) : null,
+                NewPasswordConfirmError = string.IsNullOrEmpty(data.NewPasswordConfirm) ? translationService.Translate(Terms.EmptyNewPasswordConfirm) : null
+            };
+            return Json(errors);
         }
         else
         {
             try
             {
-                // attempt backend password reset, also send the token that was offered when the verification link was clicked
-                var response = await apiHttpClient.PostAsync("authentication/resetPassword/", entity, token: entity.Token, language: translationService.Language);
-                var responseEntity = JsonConvert.DeserializeObject<LoginResponseEntity>(response);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = true });
-                else
-                {
-                    TempData["resetPasswordSuccess"] = translationService.Translate(Terms.PasswordChanged);
-                    return View();
-                }
-            }
-            catch (ApiException ex)
-            {
-                string errorMessage = ex.ToString();
-                // treat validation errors differently - they come as a list of key-value pairs, where the key is the invalid field, and the value is the validation message
-                if (ex.Error != null && ex.Error.ValidationErrors?.Count > 0)
-                    errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.ValidationErrors.Select(e => e.Value.First()));
-                else if (ex.Error != null && ex.Error.Errors?.Count > 0) // other errors are just a simple list
-                    errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
-                ModelState.AddModelError("resetPasswordError", errorMessage);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage });
-                else
-                    return View();
-            }
-            catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
-            {
-                ModelState.AddModelError("resetPasswordError", ex.Message);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage = ex.Message });
-                else
-                    return View(entity);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Changes the password of a user
-    /// </summary>
-    /// <param name="entity">The entity representing the user and the password to change</param>
-    [HttpPost("changePassword")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordRequestEntity entity)
-    {
-        ModelState.Clear(); // clear all existing errors, use translated messages instead
-        if (string.IsNullOrEmpty(entity.CurrentPassword))
-            ModelState.AddModelError("currentPassword", translationService.Translate(Terms.EmptyCurrentPassword));
-        if (string.IsNullOrEmpty(entity.NewPassword))
-            ModelState.AddModelError("newPassword", translationService.Translate(Terms.EmptyNewPassword));
-        if (string.IsNullOrEmpty(entity.NewPasswordConfirm))
-            ModelState.AddModelError("newPasswordConfirm", translationService.Translate(Terms.EmptyNewPasswordConfirm));
-        // handle cases when mandatory info is not provided...
-        if (!ModelState.IsValid)
-        {
-            // ...in AJAX way
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                var errors = new
-                {
-                    CurrentPasswordError = ModelState.ContainsKey("currentPassword") ? ModelState["currentPassword"]!.Errors[0].ErrorMessage : null,
-                    NewPasswordError = ModelState.ContainsKey("newPassword") ? ModelState["newPassword"]!.Errors[0].ErrorMessage : null,
-                    NewPasswordConfirmError = ModelState.ContainsKey("newPasswordConfirm") ? ModelState["newPasswordConfirm"]!.Errors[0].ErrorMessage : null
-                };
-                return Json(errors);
-            }
-            else // or FORM way
-                return View(entity);
-        }
-        else
-        {
-            try
-            {
-                ChangePasswordRequestEntity newEntity = new(User?.Identity?.Name, entity.CurrentPassword, entity.NewPassword, entity.NewPasswordConfirm);
+                ChangePasswordRequestDto newDto = new() { Email = User?.Identity?.Name, CurrentPassword = data.CurrentPassword, NewPassword = data.NewPassword, NewPasswordConfirm = data.NewPasswordConfirm };
                 // attempt backend password change
-                var response = await apiHttpClient.PostAsync("authentication/changePassword/", newEntity, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
-                var responseEntity = JsonConvert.DeserializeObject<LoginResponseEntity>(response);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = true });
-                else
-                {
-                    TempData["changePasswordSuccess"] = translationService.Translate(Terms.PasswordChanged);
-                    return View();
-                }
+                var response = await apiHttpClient.PostAsync("authentication/changePassword/", newDto, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+                var responseDto = JsonConvert.DeserializeObject<LoginResponseDto>(response);
+                return Json(new { success = true });
             }
             catch (ApiException ex)
             {
@@ -621,21 +324,41 @@ public class AccountController : Controller
                     errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.ValidationErrors.Select(e => e.Value.First()));
                 else if (ex.Error != null && ex.Error.Errors?.Count > 0) // other errors are just a simple list
                     errorMessage = ex.Message + " " + string.Join(Environment.NewLine, ex.Error.Errors);
-                ModelState.AddModelError("changePasswordError", errorMessage);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage });
-                else
-                    return View();
+                return Json(new { success = false, errorMessage });
             }
             catch (Exception ex) when (ex is ArgumentException || ex is InvalidOperationException)
             {
-                ModelState.AddModelError("changePasswordError", ex.Message);
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, errorMessage = ex.Message });
-                else
-                    return View(entity);
+                return Json(new { success = false, errorMessage = ex.Message });
             }
         }
+    }
+
+    /// <summary>
+    /// Updates the profile preferences of a the currently authenticated user.
+    /// </summary>
+    /// <param name="data">The profile preferences to be updated.</param>
+    [HttpPost("Profile")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(ProfilePreferencesDto data)
+    {
+        if (data.ImagePreviewsQuality <= 0 || data.ImagePreviewsQuality > 100)
+            return Json(new { success = false, imagePreviewQualityError = translationService.Translate(Terms.ValueBetweenZeroAndOneHundred) });
+        if (data.FullImageQuality <= 0 || data.FullImageQuality > 100)
+            return Json(new { success = false, fullImageQualityError = translationService.Translate(Terms.ValueBetweenZeroAndOneHundred) });
+        var response = await apiHttpClient.PutAsync("account/updatePreferences/", data, HttpContext.Items["UserToken"]?.ToString(), language: translationService.Language);
+        var responseDto = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
+        return Json(new { success = true, preferences = responseDto });
+    }
+
+    /// <summary>
+    /// Enables 2FA for the currently authenticated user.
+    /// </summary>
+    [HttpGet("EnableTotp")]
+    public async Task<IActionResult> EnableTotp()
+    {
+        string response = await apiHttpClient.GetAsync("authentication/generateTOTPQR/", HttpContext.Items["UserToken"]?.ToString(), language: translationService.Language);
+        QrCodeResultDto? responseDto = JsonConvert.DeserializeObject<QrCodeResultDto>(response);
+        return Json(new { success = true, totpSecret = responseDto });
     }
     #endregion
 }

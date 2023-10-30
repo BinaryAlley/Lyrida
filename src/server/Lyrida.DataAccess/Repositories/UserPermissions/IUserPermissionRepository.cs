@@ -1,10 +1,10 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Lyrida.DataAccess.Common.Entities.Common;
 using Lyrida.DataAccess.Repositories.Common.Base;
 using Lyrida.DataAccess.Repositories.Common.Actions;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.UserPermissions;
@@ -15,8 +15,8 @@ namespace Lyrida.DataAccess.Repositories.UserPermissions;
 /// <remarks>
 /// Creation Date: 18th of July, 2023
 /// </remarks>
-public interface IUserPermissionRepository : IRepository<UserPermissionEntity>,
-                                             IGetByIdRepositoryAction<UserPermissionEntity>
+public interface IUserPermissionRepository : IRepository<UserPermissionDto>,
+                                             IGetByIdRepositoryAction<UserPermissionDto>
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
@@ -24,7 +24,7 @@ public interface IUserPermissionRepository : IRepository<UserPermissionEntity>,
     /// </summary>
     /// <param name="userId">The id of the user whose permissions are added</param>
     /// <param name="permissions">The list of permissions of the role that is created</param>
-    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleEntity}"/></returns>
+    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleDto}"/></returns>
     Task<ApiResponse> InsertAsync(string userId, List<int> permissions);
     #endregion
 }

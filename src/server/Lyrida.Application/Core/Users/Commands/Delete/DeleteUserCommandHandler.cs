@@ -3,12 +3,12 @@ using MediatR;
 using ErrorOr;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Users;
 using Lyrida.DataAccess.Repositories.Roles;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
 using Lyrida.DataAccess.Repositories.UserRoles;
 #endregion
 
@@ -64,7 +64,7 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Error
                 {
                     // if the user to be deleted is in the Admin role, return error - admin account can't be deleted!
                     if (resultSelectUserRole.Data?.Any(userRole => userRole.Id == resultSelectAdminRole.Data[0].Id && userRole.UserId == request.Id) == true)
-                        return Errors.Authorization.CannotDeleteAdminAccount;
+                        return Errors.Authorization.DeleteAdminAccountError;
                 }
                 else
                     return Errors.DataAccess.GetUserRolesError;
@@ -79,7 +79,7 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Error
                 return Errors.DataAccess.DeleteUserError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

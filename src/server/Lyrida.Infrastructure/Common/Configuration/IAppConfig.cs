@@ -14,8 +14,8 @@ public interface IAppConfig
 {
     #region ==================================================================== PROPERTIES =================================================================================
     string? ConfigurationFilePath { get; }
-    JwtSettingsConfigEntity? JwtSettings { get; set; }
-    ApplicationConfigEntity? Application { get; set; }
+    JwtSettingsConfigDto? JwtSettings { get; set; }
+    ApplicationConfigDto? Application { get; set; }
     Dictionary<string, string>? EmailServer { get; set; }
     Dictionary<string, string>? DatabaseConnectionStrings { get; set; }
     #endregion

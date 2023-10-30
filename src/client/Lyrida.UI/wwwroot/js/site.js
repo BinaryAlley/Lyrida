@@ -18,8 +18,6 @@ const SCROLL_TIMEOUT_DURATION = 1000;
 const THUMBNAILS_RETRIEVAL_BATCH_SIZE = 20;
 // Current icon pack theme
 const CURRENT_ICON_THEME = "Lyra";
-// whether to show thumbnails or not
-const SHOW_THUMBNAILS = true;
 // Mapping of file extensions to SVG image paths
 const FILE_ICONS = {
     "ai": "application-postscript.svg",
@@ -149,6 +147,14 @@ function getActiveExplorer() {
 // Variables
 // ==================================
 
+// these variables are declared inside FileSystem/Index!
+if (typeof window.showThumbnails === "undefined")
+    window.showThumbnails = true; // whether to show thumbnails or not
+if (typeof window.imagePreviewsQuality === "undefined")
+    window.imagePreviewsQuality = 70; // the quality used for image thumbnails
+if (typeof window.fullImageQuality === "undefined")
+    window.fullImageQuality = 90; // the quality used for full images
+
 let scrollTimeout; // timeout to delay thumbnail loading after scrolling
 let resizeTimeout; // timeout to delay thumbnail loading after resizing
 let hasScrolledAfterModeChange = false; // flag to track if scrolling occurred after a mode change
@@ -157,6 +163,8 @@ let activeTabId; // tracks the currently active tab's ID
 let activeEnvironmentId = 1; // tracks the currently active platform ID, used for creating a new tab
 let addressBarWidth;
 let addressBarCachedScroll = 0;
+
+window.Permissions = [];
 
 // ==================================
 // Event Handlers
@@ -204,7 +212,7 @@ function handleScrollEvent() {
     }
     // set a timeout to call getVisibleItems once the user stops scrolling
     scrollTimeout = setTimeout(() => {
-        if (SHOW_THUMBNAILS)
+        if (showThumbnails)
             getVisibleItems();
     }, SCROLL_TIMEOUT_DURATION);
     hasScrolledAfterModeChange = true;
@@ -224,7 +232,7 @@ function handleResizeEvent() {
     }
     // set a timeout to call getVisibleItems once the user stops resizing
     resizeTimeout = setTimeout(() => {
-        if (SHOW_THUMBNAILS)
+        if (showThumbnails)
             getVisibleItems();
     }, SCROLL_TIMEOUT_DURATION);
 }
@@ -398,7 +406,7 @@ function switchViewMode(callback) {
     callback(); // execute the view mode switch
     // check if content has been scrolled after the mode change 
     setTimeout(() => {
-        if (!hasScrolledAfterModeChange && SHOW_THUMBNAILS) getVisibleItems();
+        if (!hasScrolledAfterModeChange && showThumbnails) getVisibleItems();
     }, 50); // wait 50ms to ensure all other events have processed
 }
 
@@ -697,7 +705,7 @@ function switchTab(tabId) {
     environmentsDropdownToggle.dispatchEvent(new Event('change'));
     // update the active tab id
     activeTabId = tabId;
-    if (SHOW_THUMBNAILS)
+    if (showThumbnails)
         getVisibleItems(); // get currently visible items in the tab
 }
 
@@ -1020,7 +1028,7 @@ async function getThumbnailApiCall(path) {
     // URL encode the path to ensure it's safely transmitted in the URL
     const encodedItem = encodeURIComponent(path);
     // fetch the thumbnail for the given item from the server
-    const response = await fetch(baseUrl + '/FileSystem/GetThumbnail?path=' + encodeURIComponent(path), {
+    const response = await fetch(baseUrl + '/FileSystem/GetThumbnail?path=' + encodeURIComponent(path) + '&quality=' + imagePreviewsQuality, {
         headers: {
             'X-Environment-Type': activeEnvironmentId.toString()
         },
@@ -1345,6 +1353,74 @@ function handleEnvironemtComboboxChange(event) {
     }
 }
 
+function getUserPermissions() {
+    if (userId !== "") { // userId is set in _Layout.cshtml
+        $.ajax({
+            url: "/Permissions/GetPermissionsByUserId/" + userId,
+            method: "GET",
+            success: function (userPermissionsData) {
+                if (userPermissionsData.success) {
+                    setUserPermissions(userPermissionsData.userPermissions.map(p => p.permissionName))
+                    updatePrimaryMenuItemsVisibility(userPermissionsData.userPermissions);
+                    updateSecondaryMenuItemsVisibility(userPermissionsData.userPermissions);
+                    $.ajax({
+                        url: "/Permissions/GetRolesByUserId/" + userId,
+                        method: "GET",
+                        success: function (userRolesData) {
+                            if (userRolesData.success) {
+                                var userRoles = userRolesData.userRoles;
+                                // iterate roles and get their permissions
+                                for (var i = 0; i < userRoles.length; i++) {
+                                    $.ajax({
+                                        url: "/Permissions/GetPermissionsByRoleId/" + userRoles[i].id,
+                                        method: "GET",
+                                        success: function (rolePermissionsData) {
+                                            if (rolePermissionsData.success) {
+                                                setUserPermissions(rolePermissionsData.rolePermissions.map(p => p.permissionName))
+                                                updatePrimaryMenuItemsVisibility(rolePermissionsData.rolePermissions);
+                                                updateSecondaryMenuItemsVisibility(rolePermissionsData.rolePermissions);
+                                            } else {
+                                                if (rolePermissionsData.errorMessage)
+                                                    swal("STOP!", rolePermissionsData.errorMessage, "error", {
+                                                        button: {
+                                                            text: "OK",
+                                                            className: "confirm-button",
+                                                        }
+                                                    }); 
+                                            }
+                                        }
+                                    });
+                                }
+                            } else {
+                                if (userRolesData.errorMessage)
+                                    swal("STOP!", userRolesData.errorMessage, "error", {
+                                        button: {
+                                            text: "OK",
+                                            className: "confirm-button",
+                                        }
+                                    });
+                            }
+                        }
+                    });
+                } else {
+                    if (userPermissionsData.errorMessage)
+                        swal("STOP!", userPermissionsData.errorMessage, "error", {
+                            button: {
+                                text: "OK",
+                                className: "confirm-button",
+                            }
+                        });
+                }
+            }
+        });
+    }
+}
+
+// store the user permissions for the remaining of this session
+// note: chill, this is for UI visual manipulation purposes ONLY, the permissions are checked server side anyway!
+function setUserPermissions(permissions) {
+    window.Permissions = [...new Set([...window.Permissions, ...permissions])];
+}
 
 $(document).ready(function () {
 

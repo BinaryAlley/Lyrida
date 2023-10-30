@@ -7,12 +7,15 @@ using Lyrida.Api.Common.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
+using Lyrida.Infrastructure.Common.Security;
 using Lyrida.Api.Common.DependencyInjection;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Lyrida.Domain.Common.DependencyInjection;
 using Lyrida.Infrastructure.Core.Authentication;
+using Lyrida.Infrastructure.Common.Configuration;
 using Lyrida.DataAccess.Common.DependencyInjection;
 using Lyrida.Application.Common.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -81,6 +84,7 @@ public class Program
                    };
                });
 
+        builder.Configuration.AddEnvironmentVariables(); 
         builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
         {
             // register dependencies of the application layers
@@ -91,6 +95,23 @@ public class Program
             containerBuilder.RegisterModule(new InfrastructureLayerServices());
         });
         var app = builder.Build();
+        // if environment variables are set, override configuration values with them
+        string? environment = builder.Configuration["ASPNETCORE_ENVIRONMENT"];
+        string? databaseHost = builder.Configuration["DATABASE_HOST"];
+        string? databasePort = builder.Configuration["DATABASE_PORT"];
+        string? databaseName = builder.Configuration["DATABASE_NAME"];
+        string? databaseUser = builder.Configuration["DATABASE_USER"];
+        string? databasePassword = builder.Configuration["DATABASE_PASSWORD"];
+        if (databaseHost is not null)
+        {
+            IAppConfig configService = app.Services.GetRequiredService<IAppConfig>();
+            ICryptography? cryptographyService = app.Services.GetRequiredService<ICryptography>();
+            if (environment is not null)
+                configService.Application!.IsProductionMedium = environment == "Production";
+            string connectionString = "Server=" + databaseHost + ";Port=" + databasePort + ";Database=" + databaseName + ";Uid=" + databaseUser + 
+                ";Pwd=" + databasePassword + ";Convert Zero Datetime=True;Allow User Variables=True;IgnoreCommandTransaction=True";
+            configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"] = cryptographyService.Encrypt(connectionString);
+        }
         app.UseExceptionHandler("/error"); // uses a middleware which reexecutes the request to the  error path
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -105,7 +126,7 @@ public class Program
         app.UseMiddleware<PlatformMiddleware>();
         app.UseMiddleware<LanguageMiddleware>();
         app.UseMiddleware<AuthorizationMiddleware>();
-        app.MapControllers();
+        app.MapControllers();      
         app.Run();
     }
     #endregion

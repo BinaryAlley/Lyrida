@@ -5,13 +5,11 @@ using ErrorOr;
 using System.Threading;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
-using Lyrida.Infrastructure.Localization;
-using Lyrida.Infrastructure.Common.Enums;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Users;
-using Lyrida.Application.Common.Errors.Types;
+using Lyrida.Application.Common.DTO.Common;
+using Lyrida.Infrastructure.Common.Security;
 using Lyrida.Infrastructure.Core.Authentication;
-using Lyrida.Infrastructure.Common.Notification;
-using Lyrida.Application.Common.Entities.Common;
 #endregion
 
 namespace Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
@@ -22,13 +20,12 @@ namespace Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
 /// <remarks>
 /// Creation Date: 01st of August, 2023
 /// </remarks>
-public class RecoverPasswordCommandHandler : IRequestHandler<RecoverPasswordCommand, ErrorOr<CommandResultEntity>>
+public class RecoverPasswordCommandHandler : IRequestHandler<RecoverPasswordCommand, ErrorOr<CommandResultDto>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
-    private readonly IEmailService emailService;
+    private readonly ISecurity securityService;
     private readonly IUserRepository userRepository;
-    private readonly ITokenGenerator tokenGenerator;
-    private readonly ITranslationService translationService;
+    private readonly ITotpTokenGenerator totpTokenGenerator;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -36,13 +33,12 @@ public class RecoverPasswordCommandHandler : IRequestHandler<RecoverPasswordComm
     /// Overload C-tor
     /// </summary>
     /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
-    /// <param name="tokenGenerator">Injected service for generating authentication tokens</param>
-    /// <param name="emailService">Injected service for sending emails</param>
-    public RecoverPasswordCommandHandler(IUnitOfWork unitOfWork, ITokenGenerator tokenGenerator, IEmailService emailService, ITranslationService translationService)
+    /// <param name="totpTokenGenerator">Injected service for generating TOTP tokens</param>
+    /// <param name="securityService">Injected service for security related functionality</param>
+    public RecoverPasswordCommandHandler(IUnitOfWork unitOfWork, ITotpTokenGenerator totpTokenGenerator, ISecurity securityService)
     {
-        this.tokenGenerator = tokenGenerator;
-        this.emailService = emailService;
-        this.translationService = translationService;
+        this.securityService = securityService;
+        this.totpTokenGenerator = totpTokenGenerator;
         userRepository = unitOfWork.GetRepository<IUserRepository>();
     }
     #endregion
@@ -56,31 +52,27 @@ public class RecoverPasswordCommandHandler : IRequestHandler<RecoverPasswordComm
     /// <returns>
     /// A Task containing an error or a command result
     /// </returns>
-    public async Task<ErrorOr<CommandResultEntity>> Handle(RecoverPasswordCommand command, CancellationToken cancellationToken)
+    public async Task<ErrorOr<CommandResultDto>> Handle(RecoverPasswordCommand command, CancellationToken cancellationToken)
     {
-        // check if the provided email is registered as an account
+        // validate that the user exists
         var resultSelectUser = await userRepository.GetByEmailAsync(command.Email);
-        if (resultSelectUser.Error is null && resultSelectUser.Data is not null)
+        if (resultSelectUser.Error is null)
         {
-            // check if a token was not already issued and not verified by the user
-            if (string.IsNullOrEmpty(resultSelectUser.Data[0].VerificationToken))
+            if (resultSelectUser.Data is not null)
             {
-                string language = translationService.Language == Language.English ? "en" : translationService.Language == Language.German ? "de" : "ro";
-                // generate a new validation token and assign it to the user - they need to be able to prove they have access to the e-mail account
-                resultSelectUser.Data[0].VerificationToken = tokenGenerator.GenerateToken();
-                resultSelectUser.Data[0].VerificationTokenCreated = DateTime.Now;
-                // update the user in the repository with the generated token
+                // convert the user, and see if they use TOTP
+                if (!totpTokenGenerator.ValidateToken(Convert.FromBase64String(securityService.CryptographyService.Decrypt(resultSelectUser.Data[0].TotpSecret!)), command.TotpCode))
+                    return Errors.Authentication.InvalidTotpCode;
+                // hash the new password and assign it
+                resultSelectUser.Data[0].Password = Uri.EscapeDataString(securityService.HashService.HashString("Abcd123$"));
+                // update the user
                 var resultUpdateUser = await userRepository.UpdateAsync(resultSelectUser.Data[0]);
                 if (!string.IsNullOrEmpty(resultUpdateUser.Error) || resultUpdateUser.Count == 0)
                     return Errors.DataAccess.UpdateUserError;
-                else // send an email to the user and ask them to confirm by clicking the validation link
-                    await emailService.SendEmailAsync(translationService.Translate(Terms.PasswordReset), translationService.Translate(Terms.PasswordChangeEmail1)
-                            + "<a href=\"https://www.thefibremanager.com/Account/ResetPassword?token=" + resultSelectUser.Data[0].VerificationToken + "&lang=" + language + "\" target=\"_blank\">" +
-                            translationService.Translate(Terms.ClickHereToChangePassword) + "</a>" + translationService.Translate(Terms.PasswordChangeEmail2), "email address here", command.Email);
-                return new CommandResultEntity(true);
+                return new CommandResultDto(true);
             }
             else
-                return Errors.Authentication.TokenAlreadyIssued;
+                return Errors.Authentication.InvalidUsername;
         }
         else
             return Errors.DataAccess.GetUserError;

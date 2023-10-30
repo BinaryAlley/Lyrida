@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using MediatR;
 using ErrorOr;
-using Lyrida.Application.Common.Entities.Authentication;
+using Lyrida.Application.Common.DTO.Authentication;
 #endregion
 
 namespace Lyrida.Application.Core.Authentication.Queries.Login;
@@ -12,4 +12,4 @@ namespace Lyrida.Application.Core.Authentication.Queries.Login;
 /// <remarks>
 /// Creation Date: 18th of July, 2023
 /// </remarks>
-public record LoginQuery(string Email, string Password) : IRequest<ErrorOr<AuthenticationResultEntity>>;
+public record LoginQuery(string Email, string Password, string TotpCode) : IRequest<ErrorOr<AuthenticationResultDto>>;

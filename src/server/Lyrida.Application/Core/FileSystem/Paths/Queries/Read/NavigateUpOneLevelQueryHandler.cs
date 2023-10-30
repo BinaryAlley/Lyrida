@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Lyrida.Domain.Core.FileSystem.ValueObjects;
 using Lyrida.Domain.Core.FileSystem.Services.Paths;
-using Lyrida.Application.Common.Entities.FileSystem;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.Application.Core.FileSystem.Paths.Queries.Read;
@@ -18,7 +18,7 @@ namespace Lyrida.Application.Core.FileSystem.Paths.Queries.Read;
 /// <remarks>
 /// Creation Date: 11th of October, 2023
 /// </remarks>
-public class NavigateUpOneLevelQueryHandler : IRequestHandler<NavigateUpOneLevelQuery, ErrorOr<IEnumerable<PathSegmentEntity>>>
+public class NavigateUpOneLevelQueryHandler : IRequestHandler<NavigateUpOneLevelQuery, ErrorOr<IEnumerable<PathSegmentDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IPathService pathService;
@@ -40,10 +40,10 @@ public class NavigateUpOneLevelQueryHandler : IRequestHandler<NavigateUpOneLevel
     /// Navigates up one level from a path and parses the resulting path into its constituent segments
     /// </summary>
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments, or an error.</returns>
-    public Task<ErrorOr<IEnumerable<PathSegmentEntity>>> Handle(NavigateUpOneLevelQuery request, CancellationToken cancellationToken)
+    public Task<ErrorOr<IEnumerable<PathSegmentDto>>> Handle(NavigateUpOneLevelQuery request, CancellationToken cancellationToken)
     {
         ErrorOr<IEnumerable<PathSegment>> result = pathService.GoUpOneLevel(request.Path);
-        return Task.FromResult(result.Match(values => ErrorOrFactory.From(values.Adapt<IEnumerable<PathSegmentEntity>>()), errors => errors));
+        return Task.FromResult(result.Match(values => ErrorOrFactory.From(values.Adapt<IEnumerable<PathSegmentDto>>()), errors => errors));
     }
     #endregion
 }

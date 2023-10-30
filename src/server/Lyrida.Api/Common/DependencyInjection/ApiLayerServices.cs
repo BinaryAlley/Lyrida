@@ -26,7 +26,7 @@ public class ApiLayerServices : Module
     /// <param name="builder">The Dependency Injection container where the services are registered</param>
     protected override void Load(ContainerBuilder builder)
     {
-        builder.RegisterType<ProjectProblemDetailsFactory>()
+        builder.RegisterType<CustomProblemDetailsFactory>()
                .As<ProblemDetailsFactory>()
 #if !DEBUG
                .EnableClassInterceptors()
@@ -47,33 +47,6 @@ public class ApiLayerServices : Module
                 .InterceptedBy(typeof(ProxyInterceptor))
 #endif
                .InstancePerLifetimeScope();
-
-        #region domain
-        //        builder.RegisterType<Authentication>()
-        //               .As<IAuthentication>()
-        //#if !DEBUG                    
-        //               .EnableInterfaceInterceptors()
-        //               .InterceptedBy(typeof(ProxyInterceptor))
-        //#endif                    
-        //               .InstancePerMatchingLifetimeScope("userSession");
-
-        //        builder.RegisterType<Authorization>()
-        //               .As<IAuthorization>()
-        //#if !DEBUG                    
-        //               .EnableInterfaceInterceptors()
-        //               .InterceptedBy(typeof(ProxyInterceptor))
-        //#endif                    
-        //               .InstancePerMatchingLifetimeScope("userSession");
-
-        //        builder.RegisterType<AccessControlService>()
-        //               .As<IAccessControlService>()
-        //#if !DEBUG                    
-        //               .EnableInterfaceInterceptors()
-        //               .InterceptedBy(typeof(ProxyInterceptor))
-        //#endif                    
-        //               .InstancePerMatchingLifetimeScope("userSession");
-
-        #endregion
     }
     #endregion
 }

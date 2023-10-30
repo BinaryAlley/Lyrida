@@ -5,13 +5,13 @@ using Mapster;
 using ErrorOr;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Users;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
-using Lyrida.Application.Common.Entities.Authentication;
+using Lyrida.Application.Common.DTO.Authentication;
 #endregion
 
 namespace Lyrida.Application.Core.Users.Queries.Read;
@@ -22,7 +22,7 @@ namespace Lyrida.Application.Core.Users.Queries.Read;
 /// <remarks>
 /// Creation Date: 04th of August, 2023
 /// </remarks>
-public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, ErrorOr<IEnumerable<UserEntity>>>
+public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, ErrorOr<IEnumerable<UserDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IUserRepository userRepository;
@@ -47,7 +47,7 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, ErrorOr
     /// Gets the list of users stored in the repository
     /// </summary>
     /// <returns>A list of users</returns>
-    public async Task<ErrorOr<IEnumerable<UserEntity>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<UserDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
         // check if the user has the permission to perform the action
         if (authorizationService.UserPermissions.CanViewUsers)
@@ -60,15 +60,15 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, ErrorOr
                     {
                         user.Password = string.Empty;
                         return user;
-                    }).Adapt<UserEntity[]>();
+                    }).Adapt<UserDto[]>();
                 else
-                    return Array.Empty<UserEntity>();
+                    return Array.Empty<UserDto>();
             }
             else
                 return Errors.DataAccess.GetUsersError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

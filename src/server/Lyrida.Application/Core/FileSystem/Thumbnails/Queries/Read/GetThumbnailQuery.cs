@@ -1,7 +1,4 @@
-﻿/// Written by: Ciprian Horeanu
-/// Creation Date: 28th of September, 2023
-/// Purpose: Query for retrieving the thumbnail of a file at a path
-#region ========================================================================= USING =====================================================================================
+﻿#region ========================================================================= USING =====================================================================================
 using MediatR;
 using ErrorOr;
 using Lyrida.Domain.Common.DTO;
@@ -9,4 +6,10 @@ using Lyrida.Domain.Common.DTO;
 
 namespace Lyrida.Application.Core.FileSystem.Thumbnails.Queries.Read;
 
-public record GetThumbnailQuery(string Path) : IRequest<ErrorOr<ThumbnailDto>>;
+/// <summary>
+/// Query for retrieving the thumbnail of a file at a path
+/// </summary>
+/// <remarks>
+/// Creation Date: 28th of September, 2023
+/// </remarks>
+public record GetThumbnailQuery(string Path, int Quality, int UserId) : IRequest<ErrorOr<ThumbnailDto>>;

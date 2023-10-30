@@ -6,8 +6,17 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:18137
+      - DATABASE_HOST=host.docker.internal
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=lyrida
+      - DATABASE_USER=lyrida
+      - DATABASE_PASSWORD=lyrida
     ports:
       - "18137:18137"
     volumes:
+      - ./bin/Debug/appsettings.json:/app/appsettings.json
+
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - A:\docker\Lyrida\src\client\Lyrida.UI\wwwroot\images\icons\Lyra:/app/v
+      - C:\Users\Andromeda:/app/v2

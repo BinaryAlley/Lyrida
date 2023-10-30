@@ -1,6 +1,6 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
-using Lyrida.DataAccess.Common.Entities.Common;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Common.Actions;
@@ -15,10 +15,10 @@ public interface IDeleteByIdRepositoryAction
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Deletes an entity identified by <paramref name="id"/> from the storage medium
+    /// Deletes an element identified by <paramref name="id"/> from the storage medium
     /// </summary>
-    /// <param name="id">The id of the entity to be deleted</param>
-    /// <returns>The result of deleting the entity, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
+    /// <param name="id">The id of the element to be deleted</param>
+    /// <returns>The result of deleting the element, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
     Task<ApiResponse> DeleteByIdAsync(string id);
     #endregion
 }

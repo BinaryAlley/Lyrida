@@ -7,9 +7,9 @@ using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 using Lyrida.DataAccess.Repositories.UserPermissions;
 #endregion
 
@@ -21,7 +21,7 @@ namespace Lyrida.Application.Core.Users.Queries.Read;
 /// <remarks>
 /// Creation Date: 18th of August, 2023
 /// </remarks>
-public class GetUserPermissionsQueryHandler : IRequestHandler<GetUserPermissionsQuery, ErrorOr<IEnumerable<UserPermissionEntity>>>
+public class GetUserPermissionsQueryHandler : IRequestHandler<GetUserPermissionsQuery, ErrorOr<IEnumerable<UserPermissionDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IUserPermissionRepository userPermissionRepository;
@@ -46,7 +46,7 @@ public class GetUserPermissionsQueryHandler : IRequestHandler<GetUserPermissions
     /// Gets the list of user permissions stored in the repository
     /// </summary>
     /// <returns>A list of user permissions</returns>
-    public async Task<ErrorOr<IEnumerable<UserPermissionEntity>>> Handle(GetUserPermissionsQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<UserPermissionDto>>> Handle(GetUserPermissionsQuery request, CancellationToken cancellationToken)
     {
         // check if the user has the permission to perform the action, or if they get their own permissions
         if (authorizationService.UserPermissions.CanViewPermissions || request.UserId == request.CurrentUserId)
@@ -55,15 +55,15 @@ public class GetUserPermissionsQueryHandler : IRequestHandler<GetUserPermissions
             if (resultSelectUserRoles.Error is null)
             {
                 if (resultSelectUserRoles.Data is not null)
-                    return resultSelectUserRoles.Data.Adapt<UserPermissionEntity[]>();
+                    return resultSelectUserRoles.Data.Adapt<UserPermissionDto[]>();
                 else
-                    return Array.Empty<UserPermissionEntity>();
+                    return Array.Empty<UserPermissionDto>();
             }
             else
                 return Errors.DataAccess.GetUserRolesError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

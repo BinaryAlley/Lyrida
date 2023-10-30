@@ -3,8 +3,8 @@ using System;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.Common.Enums;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.UserRoles;
@@ -53,28 +53,28 @@ internal sealed class UserRoleRepository : IUserRoleRepository
     /// Gets the role of a user identified by <paramref name="id"/> from the storage medium
     /// </summary>
     /// <param name="id">The Id of the user whose role to get</param>
-    /// <returns>A role of a user identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserRoleEntity}"/></returns>
-    public async Task<ApiResponse<UserRoleEntity>> GetByUserIdAsync(string id)
+    /// <returns>A role of a user identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserRoleDto}"/></returns>
+    public async Task<ApiResponse<UserRoleDto>> GetByUserIdAsync(string id)
     {
-        return await dataAccess.SelectAsync<UserRoleEntity>(EntityContainers.UserRoles, new { user_id = id });
+        return await dataAccess.SelectAsync<UserRoleDto>(DataContainers.UserRoles, new { user_id = id });
     }
 
     /// <summary>
     /// Saves a user role in the storage medium
     /// </summary>
-    /// <param name="entity">The user role to be saved</param>
-    /// <returns>The result of saving <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserRoleEntity}"/></returns>
-    public async Task<ApiResponse<UserRoleEntity>> InsertAsync(UserRoleEntity entity)
+    /// <param name="data">The user role to be saved</param>
+    /// <returns>The result of saving <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserRoleDto}"/></returns>
+    public async Task<ApiResponse<UserRoleDto>> InsertAsync(UserRoleDto data)
     {
-        return await dataAccess.InsertAsync(EntityContainers.UserRoles, entity);
+        return await dataAccess.InsertAsync(DataContainers.UserRoles, data);
     }
 
     /// <summary>
-    /// Updates <paramref name="entity"/> in the storage medium
+    /// Updates <paramref name="data"/> in the storage medium
     /// </summary>
-    /// <param name="entity">The entity that will be updated</param>
-    /// <returns>The result of updating <paramref name="entity"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
-    public async Task<ApiResponse> UpdateAsync(UserRoleEntity entity)
+    /// <param name="data">The element that will be updated</param>
+    /// <returns>The result of updating <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
+    public async Task<ApiResponse> UpdateAsync(UserRoleDto data)
     {
         OpenTransaction();
         // check if the user is the admin account
@@ -83,20 +83,20 @@ internal sealed class UserRoleRepository : IUserRoleRepository
             "JOIN UserRoles AS ur ON u.id = ur.user_id " +
             "JOIN Roles AS r ON ur.role_id = r.id " +
             "WHERE u.id = @userId AND r.role_name = 'Admin' " +
-            "GROUP BY u.id;", new { userId = entity.UserId });
+            "GROUP BY u.id;", new { userId = data.UserId });
         if (resultIsAdminAccount.Count > 0)
             return new ApiResponse() { Error = "Cannot set admin role!" };
         var resultIsAdminRole = await dataAccess.ExecuteAsync("SELECT CASE WHEN COUNT(*) > 0 THEN r.id ELSE NULL END AS RoleId " +
             "FROM Roles AS r " +
             "WHERE r.id = @roleId AND r.role_name = 'Admin' " +
-            "GROUP BY r.id;", new { roleId = entity.RoleId });
+            "GROUP BY r.id;", new { roleId = data.RoleId });
         if (resultIsAdminRole.Count > 0)
             return new ApiResponse() { Error = "Cannot set admin role!" };
         // delete all roles of the user
-        ApiResponse response = await dataAccess.DeleteAsync(EntityContainers.UserRoles, new { user_id = entity.UserId });
+        ApiResponse response = await dataAccess.DeleteAsync(DataContainers.UserRoles, new { user_id = data.UserId });
         // add the role of the user
-        if (entity.RoleId > 0) // id 0 means "no role"
-            response.Error = (await dataAccess.InsertAsync(EntityContainers.UserRoles, entity))?.Error ?? response.Error;
+        if (data.RoleId > 0) // id 0 means "no role"
+            response.Error = (await dataAccess.InsertAsync(DataContainers.UserRoles, data))?.Error ?? response.Error;
         CloseTransaction();
         return response;
     }

@@ -4,12 +4,12 @@ using MediatR;
 using ErrorOr;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 using Lyrida.DataAccess.Repositories.RolePermissions;
 #endregion
 
@@ -21,7 +21,7 @@ namespace Lyrida.Application.Core.Roles.Queries.Read;
 /// <remarks>
 /// Creation Date: 11th of August, 2023
 /// </remarks>
-public class GetAllRolePermissionsQueryHandler : IRequestHandler<GetAllRolePermissionsQuery, ErrorOr<IEnumerable<PermissionEntity>>>
+public class GetAllRolePermissionsQueryHandler : IRequestHandler<GetAllRolePermissionsQuery, ErrorOr<IEnumerable<PermissionDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IAuthorizationService authorizationService;
@@ -46,7 +46,7 @@ public class GetAllRolePermissionsQueryHandler : IRequestHandler<GetAllRolePermi
     /// Gets the list of role permissions stored in the repository
     /// </summary>
     /// <returns>A list of role permissions</returns>
-    public async Task<ErrorOr<IEnumerable<PermissionEntity>>> Handle(GetAllRolePermissionsQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<PermissionDto>>> Handle(GetAllRolePermissionsQuery request, CancellationToken cancellationToken)
     {
         // check if the user has the permission to perform the action
         if (authorizationService.UserPermissions.CanViewPermissions)
@@ -56,19 +56,19 @@ public class GetAllRolePermissionsQueryHandler : IRequestHandler<GetAllRolePermi
             if (resultSelectRolePermissions.Error is null)
             {
                 if (resultSelectRolePermissions.Data is not null) // repository returns role permissions, convert to permissions
-                    return resultSelectRolePermissions.Data.Select(rolePermission => new PermissionEntity() 
+                    return resultSelectRolePermissions.Data.Select(rolePermission => new PermissionDto() 
                     {
                         Id = rolePermission.PermissionId, 
                         PermissionName = rolePermission.PermissionName 
                     }).ToArray();
                 else
-                    return Array.Empty<PermissionEntity>();
+                    return Array.Empty<PermissionDto>();
             }
             else
                 return Errors.DataAccess.GetRolePermissionsError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

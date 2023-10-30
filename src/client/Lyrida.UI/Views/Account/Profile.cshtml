@@ -3,15 +3,226 @@
 @inject ITranslationService translationService
 
 
-<div class="rounded p-2 mx-auto panel w-50">
-    @if (User?.Identity?.IsAuthenticated == true)
-    {
-        <p>@translationService.Translate(Terms.Welcome) @User.Identity.Name!</p>
-        <a asp-controller="Account" asp-action="Logout">@translationService.Translate(Terms.Logout)</a>
-        <a asp-controller="Account" asp-action="ChangePassword">@translationService.Translate(Terms.ChangePassword)</a>
-    }
-    else
-    {
-        <span class="invalid-feedback">@translationService.Translate(Terms.AuthenticationRequired)</span>
-    }
+<div class="enlightenment-panel shadow-effect p-2 mx-auto panel w-70 mt-10" style="min-width: 320px;">
+    <div class="shine-effect"></div>
+    <p class="text-light-one f-24 mx-auto text-light-two" style="text-align: center;">@translationService.Translate(Terms.Welcome) @User.Identity?.Name!</p>
+    <div class="w-90 text-end mx-auto">
+        <a class="abort-button f-14 pt-0 pb-0 pl-5 pr-5 h-22px mt-0 mb-0 mx-auto inline-block" asp-controller="Account" asp-action="Logout">@translationService.Translate(Terms.Logout)</a>
+        <a class="abort-button f-14 pt-0 pb-0 pl-5 pr-5 h-22px mt-0 mb-0 mx-auto inline-block" style="text-align: center;" asp-controller="Account" asp-action="ChangePassword">@translationService.Translate(Terms.ChangePassword)</a>
+    </div>
+
+    <form id="profilePreferencesForm" method="post" action="@(!string.IsNullOrEmpty(Configuration["BASE_URL"]) ? Configuration["BASE_URL"] : string.Empty)/Account/Profile">
+        @Html.AntiForgeryToken()
+        <table class="w-90 mx-auto">
+            <!-- section 2FA -->
+            <tr>
+                <td class="w-100">
+                    <input type="hidden" id="originalUseTwoFa" value="@Model.Use2fa.ToString().ToLower()"> <!--used to store how this setting was initially, when this page loads-->
+                    <input type="hidden" id="hiddenUseTwoFa" name="use2fa" value="@Model.Use2fa.ToString().ToLower()">
+                    <label class="enlightenment-checkbox-label">
+                        <input type="checkbox" id="chkUseTwoFa" class="enlightenment-checkbox-hidden" @(Model.Use2fa ? "checked" : "")>
+                        <span class="enlightenment-checkbox"></span>
+                        @translationService.Translate(Terms.Enable2Fa)
+                    </label>
+                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionEnable2Fa)</small>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="register2FaError" class="invalid-feedback @(Model.Use2fa ? "hidden" : "")">@translationService.Translate(Terms.Disabled2Fa)</span>
+                </td>
+            </tr>
+            <!-- section remember open tabs -->
+            <tr>
+                <td class="w-100">
+                    <input type="hidden" id="hiddenRememberOpenTabs" name="rememberOpenTabs" value="@Model.RememberOpenTabs.ToString().ToLower()">
+                    <label class="enlightenment-checkbox-label">
+                        <input type="checkbox" id="chkRememberOpenTabs" class="enlightenment-checkbox-hidden" @(Model.RememberOpenTabs ? "checked" : "")>
+                        <span class="enlightenment-checkbox"></span>
+                        @translationService.Translate(Terms.RememberOpenTabs)
+                    </label>
+                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionRememberOpenTabs)</small>
+                </td>
+            </tr>
+            <!-- section show image previews -->
+            <tr>
+                <td class="w-100">
+                    <input type="hidden" id="hiddenShowImagePreviews" name="showImagePreviews" value="@Model.ShowImagePreviews.ToString().ToLower()">
+                    <label class="enlightenment-checkbox-label">
+                        <input type="checkbox" id="chkShowImagePreviews" class="enlightenment-checkbox-hidden" @(Model.ShowImagePreviews ? "checked" : "")>
+                        <span class="enlightenment-checkbox"></span>
+                        @translationService.Translate(Terms.ShowImagePreviews)
+                    </label>
+                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionShowImagePreviews)</small>
+                </td>
+            </tr>
+            <!-- section image preview quality -->
+            <tr>
+                <td class="w-100">
+                    <label for="imagePreviewsQuality" class="text-light-one">@translationService.Translate(Terms.ImagePreviewsQuality)</label>
+                    <input type="number" class="w-100 enlightenment-input" id="imagePreviewsQuality" name="imagePreviewsQuality" value="@Model.ImagePreviewsQuality">
+                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionImagePreviewsQuality)</small>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="profileImagePreviewQualityError" class="invalid-feedback hidden"></span>
+                </td>
+            </tr>
+            <!-- section full image quality -->
+            <tr>
+                <td class="w-100">
+                    <label for="fullImageQuality" class="text-light-one">@translationService.Translate(Terms.FullImageQuality)</label>
+                    <input type="number" class="w-100 enlightenment-input" id="fullImageQuality" name="fullImageQuality" value="@Model.FullImageQuality">
+                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionFullImageQuality)</small>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="profileFullImageQualityError" class="invalid-feedback hidden"></span>
+                </td>
+            </tr>
+            <!-- section generic registration errors -->
+            <tr>
+                <td colspan="2" class="w-100">
+                    <span id="profilePreferencesError" class="invalid-feedback hidden"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="w-100 text-center">
+                    <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Update)</button>
+                </td>
+            </tr>
+        </table>
+    </form>
 </div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#profilePreferencesForm').on('submit', function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: form.serialize(),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: async function (data) {
+                        const profilePreferencesError = $('#profilePreferencesError');
+                        const profileImagePreviewQualityError = $('#profileImagePreviewQualityError');
+                        const profileFullImageQualityError = $('#profileFullImageQualityError');
+                        const totpImage = $('#totpImage');
+                        const totpMessage = $('#totpMessage');
+                        profilePreferencesError.removeClass('inline').addClass('hidden');
+                        profileImagePreviewQualityError.removeClass('inline').addClass('hidden');
+                        profileFullImageQualityError.removeClass('inline').addClass('hidden');
+                        if (data.success) {
+                            // re-populate properties
+                            var preferences = data.preferences;
+                            // update checkboxes
+                            $('#chkUseTwoFa').prop('checked', preferences.use2fa);
+                            $('#chkRememberOpenTabs').prop('checked', preferences.rememberOpenTabs);
+                            $('#chkShowImagePreviews').prop('checked', preferences.showImagePreviews);
+                            // update hidden fields too
+                            $('#hiddenUseTwoFa').val(preferences.use2fa);
+                            $('#hiddenRememberOpenTabs').val(preferences.rememberOpenTabs);
+                            $('#hiddenShowImagePreviews').val(preferences.rememberOpenTabs);
+                            // update number fields
+                            $('#imagePreviewsQuality').val(preferences.imagePreviewsQuality);
+                            $('#fullImageQuality').val(preferences.fullImageQuality);
+                            // check if 2FA was originally disabled, and was enabled this session, and if yes, ask for QR code
+                            const originalUseTwoFaValue = $('#originalUseTwoFa').val() === 'true';
+                            const currentUseTwoFaValue = $('#hiddenUseTwoFa').val() === 'true';
+                            if (originalUseTwoFaValue !== currentUseTwoFaValue && currentUseTwoFaValue) {
+                                $.ajax({
+                                    type: "GET",
+                                    url: "/Account/EnableTotp/",
+                                    success: async function (data) {
+                                        if (data.success) {
+                                            $('#originalUseTwoFa').val('true');
+                                            Swal.fire({
+                                                title: '@translationService.Translate(Terms.NotificationSuccess)',
+                                                icon: 'info',
+                                                allowEscapeKey: false,
+                                                allowOutsideClick: false,
+                                                allowEnterKey: false,
+                                                buttonsStyling: false,
+                                                customClass: {
+                                                    popup: 'colored-toast',
+                                                    confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10'
+                                                },
+                                                html:
+                                                    '<img src="' + data.totpSecret.dataUri + '" class="w-200px h-200px h-align-m mx-auto mt-10" />' +
+                                                    '<p id="totpMessage" class="text-light-one w-100">@translationService.Translate(Terms.ScanTotpCode)</p>',
+                                                focusConfirm: false,
+                                                confirmButtonText: 'OK'
+                                            });
+                                        } else {
+                                            if (data.errorMessage)
+                                                profilePreferencesError.text(data.errorMessage).removeClass('hidden').addClass('inline');
+                                        }
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        swal("STOP!", textStatus + " " + errorThrown, "error", {
+                                            button: {
+                                                text: "OK",
+                                                className: "confirm-button",
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                            const Toast = swal.mixin({
+                                toast: true,
+                                position: 'bottom-left',
+                                iconColor: 'white',
+                                customClass: {
+                                    popup: 'colored-toast'
+                                },
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                            await Toast.fire({
+                                icon: 'success',
+                                title: '@translationService.Translate(Terms.NotificationSuccess)'
+                            });
+                        } else {
+                            if (data.imagePreviewQualityError)
+                                profileImagePreviewQualityError.text(data.imagePreviewQualityError).removeClass('hidden').addClass('inline');
+                            if (data.fullImageQualityError)
+                                profileFullImageQualityError.text(data.fullImageQualityError).removeClass('hidden').addClass('inline');
+                            if (data.errorMessage)
+                                profilePreferencesError.text(data.errorMessage).removeClass('hidden').addClass('inline');
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        swal("STOP!", textStatus + " " + errorThrown, "error", {
+                            button: {
+                                text: "OK",
+                                className: "confirm-button",
+                            }
+                        });
+                    }
+                });
+            });
+            $('#chkUseTwoFa').on('change', function () {
+                var isChecked = $(this).is(':checked');
+                $('#register2FaError').toggleClass('hidden', isChecked).toggleClass('inline', !isChecked);
+                $('#hiddenUseTwoFa').val(isChecked.toString());
+            });
+            $('#chkShowImagePreviews').on('change', function () {
+                var isChecked = $(this).is(':checked');
+                $('#hiddenShowImagePreviews').val(isChecked.toString());
+            });
+            $('#chkRememberOpenTabs').on('change', function () {
+                var isChecked = $(this).is(':checked');
+                $('#hiddenRememberOpenTabs').val(isChecked.toString());
+            });
+        });
+    </script>
+}

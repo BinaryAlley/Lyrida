@@ -16,8 +16,8 @@ namespace Lyrida.Infrastructure.Common.Configuration;
 public sealed class AppConfig : IAppConfig
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    public JwtSettingsConfigEntity? JwtSettings { get; set; }
-    public ApplicationConfigEntity? Application { get; set; }
+    public JwtSettingsConfigDto? JwtSettings { get; set; }
+    public ApplicationConfigDto? Application { get; set; }
     public Dictionary<string, string>? EmailServer { get; set; }
     public Dictionary<string, string>? DatabaseConnectionStrings { get; set; }
     [JsonIgnore]

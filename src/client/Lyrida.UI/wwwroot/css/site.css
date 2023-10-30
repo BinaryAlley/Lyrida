@@ -103,12 +103,12 @@ header {
     background-color: #232323;
 }
 
-.swal-modal {
-    background: linear-gradient(135deg, #404040, #232323);
-    border-top: 1px solid #505050;
-    border-left: 1px solid #505050;
-    border-right: 1px solid #000;
-    border-bottom: 1px solid #000;
+.swal-modal, .colored-toast {
+    background: linear-gradient(135deg, #404040, #232323) !important;
+    border-top: 1px solid #505050 !important;
+    border-left: 1px solid #505050 !important;
+    border-right: 1px solid #000 !important;
+    border-bottom: 1px solid #000 !important;
     box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.8);
 }
 
@@ -142,6 +142,40 @@ header {
 .swal-button {
     padding: 5px 14px;
     min-width: 75px;
+}
+
+.colored-toast.swal2-icon-success {
+    /*background-color: #a5dc86 !important;*/
+    color: #a5dc86 !important;
+}
+
+.colored-toast.swal2-icon-error {
+    color: #f27474 !important;
+}
+
+.colored-toast.swal2-icon-warning {
+    color: #f8bb86 !important;
+}
+
+.colored-toast.swal2-icon-info {
+    color: #3fc3ee !important;
+}
+
+.colored-toast.swal2-icon-question {
+    background-color: #87adbd !important;
+}
+
+.colored-toast .swal2-close {
+    color: white;
+}
+
+.colored-toast .swal2-html-container {
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #505050;
+    border-bottom: 1px solid #505050;
+    padding: 17px;
+    color: white;
 }
 
 footer {

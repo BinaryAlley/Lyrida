@@ -2,7 +2,7 @@
 using MediatR;
 using ErrorOr;
 using System.Collections.Generic;
-using Lyrida.Application.Common.Entities.FileSystem;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.Application.Core.FileSystem.Directories.Queries.Read;
@@ -13,4 +13,4 @@ namespace Lyrida.Application.Core.FileSystem.Directories.Queries.Read;
 /// <remarks>
 /// Creation Date: 25th of September, 2023
 /// </remarks>
-public record GetFoldersQuery(string Path) : IRequest<ErrorOr<IEnumerable<DirectoryEntity>>>;
+public record GetFoldersQuery(string Path) : IRequest<ErrorOr<IEnumerable<DirectoryDto>>>;

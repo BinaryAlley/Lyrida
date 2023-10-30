@@ -12,7 +12,7 @@ using Lyrida.DataAccess.Common.Enums;
 using System.Runtime.CompilerServices;
 using Lyrida.DataAccess.Common.Attributes;
 using Lyrida.Infrastructure.Common.Utilities;
-using Lyrida.DataAccess.Common.Entities.Common;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.StorageAccess;
@@ -30,7 +30,7 @@ internal sealed class SqlDataAccess : IDataAccess
     internal static bool usesSnakeCasingDatabaseNaming = true;
     private IDbTransaction? dbTransaction;
     private readonly IDbConnection dbConnection;
-    private readonly Dictionary<EntityContainers, string> dbTableNamesMaping = new();
+    private readonly Dictionary<DataContainers, string> dbTableNamesMaping = new();
     #endregion
 
     #region ==================================================================== PROPERTIES =================================================================================
@@ -67,22 +67,22 @@ internal sealed class SqlDataAccess : IDataAccess
     /// <summary>
     /// Executes a generic operation on the storage medium
     /// </summary>
-    /// <typeparam name="TEntity">The type of the model to get from the storage medium as a result of <paramref name="command"/></typeparam>
+    /// <typeparam name="TDto">The type of the model to get from the storage medium as a result of <paramref name="command"/></typeparam>
     /// <param name="query">The command to execute on the storage medium</param>
     /// <param name="filter">Specifies an anonymous object whose properties are used for the named parameters</param>
     /// <param name="line">The line number in the source file where the method is called</param>
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TEntity}"/> instance containing the requested data from the storage medium, if any, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse<TEntity>> ExecuteAsync<TEntity>(string query, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TEntity : IStorageEntity
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the storage medium, if any, or the provided error, in case of failure</returns>
+    public async Task<ApiResponse<TDto>> ExecuteAsync<TDto>(string query, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto
     {
-        ApiResponse<TEntity> serializedData = new();
+        ApiResponse<TDto> serializedData = new();
         try
         {
             if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
                 dbConnection.ConnectionString = ConnectionStringFactory?.Invoke();
             // execute the SQL query
-            TEntity[] temp = (await dbConnection.QueryAsync<TEntity>(query, filter ?? null)).ToArray();
+            TDto[] temp = (await dbConnection.QueryAsync<TDto>(query, filter ?? null)).ToArray();
             // construct the API response and return it
             serializedData.Data = temp.Length > 0 ? temp : null;
             serializedData.Count = temp.Length;
@@ -131,19 +131,19 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Selects data of type <typeparamref name="TEntity"/> from the database with manual column mapping
+    /// Selects data of type <typeparamref name="TDto"/> from the database with manual column mapping
     /// </summary>
-    /// <typeparam name="TEntity">The type of the model to get from the database</typeparam>
+    /// <typeparam name="TDto">The type of the model to get from the database</typeparam>
     /// <param name="table">The table from which to select the data</param>
     /// <param name="columns">The columns to take from <paramref name="table"/></param>
     /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
     /// <param name="line">The line number in the source file where the method is called</param>
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TEntity}"/> instance containing the requested data from the database, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse<TEntity>> SelectAsync<TEntity>(EntityContainers table, string? columns, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TEntity : IStorageEntity
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the database, or the provided error, in case of failure</returns>
+    public async Task<ApiResponse<TDto>> SelectAsync<TDto>(DataContainers table, string? columns, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto
     {
-        ApiResponse<TEntity> serializedData = new();
+        ApiResponse<TDto> serializedData = new();
         try
         {
             if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
@@ -178,7 +178,7 @@ internal sealed class SqlDataAccess : IDataAccess
             }
             query += ";";
             // execute the SQL query
-            TEntity[] temp = (await dbConnection.QueryAsync<TEntity>(query, args ?? null)).ToArray();
+            TDto[] temp = (await dbConnection.QueryAsync<TDto>(query, args ?? null)).ToArray();
             // construct the API response and return it
             serializedData.Data = temp.Length > 0 ? temp : null;
             serializedData.Count = temp.Length;
@@ -196,24 +196,24 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Selects data of type <typeparamref name="TEntity"/> from the database without manual column mapping
+    /// Selects data of type <typeparamref name="TDto"/> from the database without manual column mapping
     /// </summary>
-    /// <typeparam name="TEntity">The type of the model to get from the database</typeparam>
+    /// <typeparam name="TDto">The type of the model to get from the database</typeparam>
     /// <param name="table">The table from which to select the data</param>
     /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
     /// <param name="line">The line number in the source file where the method is called</param>
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TEntity}"/> instance containing the requested data from the database, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse<TEntity>> SelectAsync<TEntity>(EntityContainers table, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TEntity : IStorageEntity
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the database, or the provided error, in case of failure</returns>
+    public async Task<ApiResponse<TDto>> SelectAsync<TDto>(DataContainers table, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto
     {
-        ApiResponse<TEntity> serializedData = new();
+        ApiResponse<TDto> serializedData = new();
         try
         {
             if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
                 dbConnection.ConnectionString = ConnectionStringFactory?.Invoke();
             // reconstruct the SQL query from the parameters
-            string query = "SELECT " + GetProperties<TEntity>() + " FROM " + dbTableNamesMaping[table] + (filter != null ? " WHERE " : string.Empty);
+            string query = "SELECT " + GetQueryProperties<TDto>() + " FROM " + dbTableNamesMaping[table] + (filter != null ? " WHERE " : string.Empty);
             // if a filter was specified, add the properties and their values from filter as the WHERE clauses of the SQL query
             Dictionary<string, object>? args = null;
             if (filter != null)
@@ -242,7 +242,7 @@ internal sealed class SqlDataAccess : IDataAccess
             }
             query += ";";
             // execute the SQL query
-            TEntity[] temp = (await dbConnection.QueryAsync<TEntity>(query, args ?? null)).ToArray();
+            TDto[] temp = (await dbConnection.QueryAsync<TDto>(query, args ?? null)).ToArray();
             // construct the API response and return it
             serializedData.Data = temp.Length > 0 ? temp : null;
             serializedData.Count = temp.Length;
@@ -260,24 +260,24 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Saves data of type <typeparamref name="TEntity"/> in the database
+    /// Saves data of type <typeparamref name="TDto"/> in the database
     /// </summary>
-    /// <typeparam name="TEntity">The type of the model to save in the database</typeparam>
+    /// <typeparam name="TDto">The type of the model to save in the database</typeparam>
     /// <param name="table">The table in which to insert data</param>
     /// <param name="model">The model to be saved</param>
     /// <param name="line">The line number in the source file where the method is called</param>
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TEntity}"/> instance containing the id of the inserted data from the database, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse<TEntity>> InsertAsync<TEntity>(EntityContainers table, TEntity model, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TEntity : IStorageEntity, new()
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the id of the inserted data from the database, or the provided error, in case of failure</returns>
+    public async Task<ApiResponse<TDto>> InsertAsync<TDto>(DataContainers table, TDto model, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto, new()
     {
-        ApiResponse<TEntity> serializedData = new();
+        ApiResponse<TDto> serializedData = new();
         try
         {
             if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
                 dbConnection.ConnectionString = ConnectionStringFactory?.Invoke();
             // reconstruct the SQL query from the properties of the provided model
-            string query = "INSERT INTO " + dbTableNamesMaping[table] + " (\n\t" + GetColumns(model) + ")\nVALUES (\n\t" + GetParameters(model) + ");";
+            string query = "INSERT INTO " + dbTableNamesMaping[table] + " (\n\t" + GetCommandProperties<TDto>() + ")\nVALUES (\n\t" + GetParameters(model) + ");";
             // also select last inserted row id
             if (dbConnection.GetType().Name == "MySqlConnection")
                 query += "\nSELECT last_insert_id();";
@@ -285,7 +285,7 @@ internal sealed class SqlDataAccess : IDataAccess
             //Debug.WriteLine(query);
 #endif
             // execute the SQL query and construct the API response with the returned id of the inserted data
-            serializedData.Data = new TEntity[] { new TEntity() { Id = await dbConnection.ExecuteScalarAsync<int>(query, model) } };
+            serializedData.Data = new TDto[] { new TDto() { Id = await dbConnection.ExecuteScalarAsync<int>(query, model) } };
             serializedData.Count = 1;
         }
         catch (Exception ex)
@@ -303,7 +303,7 @@ internal sealed class SqlDataAccess : IDataAccess
     /// <summary>
     /// Updates data in the database using a model
     /// </summary>
-    /// <typeparam name="TEntity">The type of the model to update in the database</typeparam>
+    /// <typeparam name="TDto">The type of the model to update in the database</typeparam>
     /// <param name="table">The table in which to update the data</param>
     /// <param name="model">The model to be updated</param>
     /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
@@ -311,7 +311,7 @@ internal sealed class SqlDataAccess : IDataAccess
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
     /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse> UpdateAsync<TEntity>(EntityContainers table, TEntity model, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TEntity : IStorageEntity, new()
+    public async Task<ApiResponse> UpdateAsync<TDto>(DataContainers table, TDto model, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto, new()
     {
         ApiResponse serializedData = new();
         try
@@ -412,7 +412,7 @@ internal sealed class SqlDataAccess : IDataAccess
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
     /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse> UpdateAsync(EntityContainers table, object values, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
+    public async Task<ApiResponse> UpdateAsync(DataContainers table, object values, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
     {
         ApiResponse serializedData = new();
         try
@@ -502,7 +502,7 @@ internal sealed class SqlDataAccess : IDataAccess
     /// <param name="caller">The method or property name of the caller of the method</param>
     /// <param name="file">The full path of the file that contains the caller, at compile time</param>
     /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure</returns>
-    public async Task<ApiResponse> DeleteAsync(EntityContainers table, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
+    public async Task<ApiResponse> DeleteAsync(DataContainers table, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
     {
         if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
             dbConnection.ConnectionString = ConnectionStringFactory?.Invoke();
@@ -557,34 +557,12 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Gets the names of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
-    /// </summary>
-    /// <typeparam name="TEntity">The type of <paramref name="model"/></typeparam>
-    /// <param name="model">A database model containing the public properties used for getting or saving data in a database table</param>
-    /// <returns>A formatted string used in SQL queries, composed of the names of the public properties of <paramref name="model"/></returns>
-    internal static string GetColumns<TEntity>(TEntity model) where TEntity : IStorageEntity
-    {
-        if (model != null)
-        {
-            // get a list of all public properties of the provided model, but ignore those with the IgnoreOnCommand attribute
-            IEnumerable<PropertyInfo> properties = model.GetType()
-                                                        .GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
-                                                        .Where(property => !property.GetCustomAttributes<IgnoreOnCommandAttribute>().Any());
-            // concatenate all the above properties in a single string, separated by comas, and escape them as SQL column names
-            // in case the properties have custom names in the storage container, get that name from their mapping attribute
-            return string.Join(",\n\t", properties.Select(p => "`" + (p.GetCustomAttribute<MapsToAttribute>()?.Name ?? p.Name) + "`"));
-        }
-        else
-            throw new ArgumentException("The model cannot be empty!");
-    }
-
-    /// <summary>
     /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
     /// </summary>
-    /// <typeparam name="TEntity">The type of <paramref name="model"/></typeparam>
+    /// <typeparam name="TDto">The type of <paramref name="model"/></typeparam>
     /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table</param>
     /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/></returns>
-    internal static string GetParameters<TEntity>(TEntity model) where TEntity : IStorageEntity
+    internal static string GetParameters<TDto>(TDto model) where TDto : IStorageDto
     {
         if (model != null)
         {
@@ -600,21 +578,31 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
+    /// Gets the values of the public properties of the DTO and formats them as a string used in SQL commands
     /// </summary>
-    /// <typeparam name="TEntity">The type of <paramref name="model"/></typeparam>
-    /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table</param>
-    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/></returns>
-    internal static string GetProperties<TEntity>() where TEntity : IStorageEntity
+    /// <typeparam name="TDto">The type of database DTO whose properties are taken</typeparam>
+    /// <returns>A formatted string used in SQL commands, composed of the columns of the public properties of the provided model</returns>
+    internal static string GetCommandProperties<TDto>() where TDto : IStorageDto
     {
         // get a list of all public properties of the provided model, but ignore those with the IgnoreOnQueryAttribute attribute
-        IEnumerable<PropertyInfo> properties = typeof(TEntity).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
-                                                              .Where(property => property.GetCustomAttributes<IgnoreOnQueryAttribute>().None());
-            // concatenate all the above properties in a single string, separated by comas, and escape them as SQL column parameters
-            if (usesSnakeCasingDatabaseNaming) // also, convert pascal casing to snake casing 
-                return Regex.Replace(string.Join(", ", properties.Select(p => p.Name)), @"([a-z0-9])([A-Z])", "$1_$2").ToLower();
-            else
-                return string.Join(", ", properties.Select(p => p.Name));
+        IEnumerable<PropertyInfo> properties = typeof(TDto).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                                                           .Where(property => property.GetCustomAttributes<IgnoreOnCommandAttribute>().None());
+        // concatenate all the above properties in a single string, separated by comas, and escape them as SQL column parameters
+        return string.Join(",\n\t", properties.Select(p => "`" + (p.GetCustomAttribute<MapsToAttribute>()?.Name ?? p.Name) + "`"));
+    }
+
+    /// <summary>
+    /// Gets the values of the public properties of the DTO and formats them as a string used in SQL queries
+    /// </summary>
+    /// <typeparam name="TDto">The type of database DTO whose properties are taken</typeparam>
+    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of the provided model</returns>
+    internal static string GetQueryProperties<TDto>() where TDto : IStorageDto
+    {
+        // get a list of all public properties of the provided model, but ignore those with the IgnoreOnQueryAttribute attribute
+        IEnumerable<PropertyInfo> properties = typeof(TDto).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                                                           .Where(property => property.GetCustomAttributes<IgnoreOnQueryAttribute>().None());
+        // concatenate all the above properties in a single string, separated by comas, and escape them as SQL column parameters
+        return string.Join(",\n\t", properties.Select(p => "`" + (p.GetCustomAttribute<MapsToAttribute>()?.Name ?? p.Name) + "`"));
     }
 
     /// <summary>
@@ -622,12 +610,13 @@ internal sealed class SqlDataAccess : IDataAccess
     /// </summary>
     private void MapDatabaseTableNames()
     {
-        dbTableNamesMaping.Add(EntityContainers.Users, "Users");
-        dbTableNamesMaping.Add(EntityContainers.Roles, "Roles");
-        dbTableNamesMaping.Add(EntityContainers.UserRoles, "UserRoles");
-        dbTableNamesMaping.Add(EntityContainers.Permissions, "Permissions");
-        dbTableNamesMaping.Add(EntityContainers.RolePermissions, "RolePermissions");
-        dbTableNamesMaping.Add(EntityContainers.UserPermissions, "UserPermissions");
+        dbTableNamesMaping.Add(DataContainers.Users, "Users");
+        dbTableNamesMaping.Add(DataContainers.Roles, "Roles");
+        dbTableNamesMaping.Add(DataContainers.UserRoles, "UserRoles");
+        dbTableNamesMaping.Add(DataContainers.Permissions, "Permissions");
+        dbTableNamesMaping.Add(DataContainers.UserPreferences, "UserPreferences");
+        dbTableNamesMaping.Add(DataContainers.RolePermissions, "RolePermissions");
+        dbTableNamesMaping.Add(DataContainers.UserPermissions, "UserPermissions");
     }
 
     /// <summary>

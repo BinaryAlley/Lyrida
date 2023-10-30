@@ -1,11 +1,11 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using Mapster;
 using ErrorOr;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
-using Lyrida.Application.Common.Errors.Types;
+using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Permissions;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Authorization;
@@ -42,13 +42,13 @@ public class AuthorizationService : IAuthorizationService
     /// Gets the permissions of a user identified by <paramref name="userId"/>
     /// </summary>
     /// <param name="userId">The id of the user for which to get the permissions</param>
-    /// <returns>An entity containing the permissions of a user identified by <paramref name="userId"/></returns>
+    /// <returns>A DTO containing the permissions of a user identified by <paramref name="userId"/></returns>
     public async Task<ErrorOr<bool>> GetUserPermissionsAsync(int userId)
     {
         var resultSelectPermissions = await permissionRepository.GetAllByUserIdAsync(userId);
         if (resultSelectPermissions.Error is null)
         {
-            UserPermissions = new UserPermissions(resultSelectPermissions.Data?.Adapt<PermissionEntity[]>());
+            UserPermissions = new UserPermissions(resultSelectPermissions.Data?.Adapt<PermissionDto[]>());
             return true;
         }
         else

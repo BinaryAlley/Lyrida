@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using Lyrida.DataAccess.Repositories.Common.Base;
 using Lyrida.DataAccess.Repositories.Common.Actions;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.RolePermissions;
@@ -12,7 +12,7 @@ namespace Lyrida.DataAccess.Repositories.RolePermissions;
 /// <remarks>
 /// Creation Date: 11th of July, 2023
 /// </remarks>
-public interface IRolePermissionRepository : IRepository<RolePermissionEntity>,
-                                             IGetByIdRepositoryAction<RolePermissionEntity>
+public interface IRolePermissionRepository : IRepository<RolePermissionDto>,
+                                             IGetByIdRepositoryAction<RolePermissionDto>
 {
 }

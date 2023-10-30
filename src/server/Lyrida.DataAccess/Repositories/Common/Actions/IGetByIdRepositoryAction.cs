@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
 using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Entities.Common;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Common.Actions;
@@ -12,15 +12,15 @@ namespace Lyrida.DataAccess.Repositories.Common.Actions;
 /// <remarks>
 /// Creation Date: 10th of March, 2022
 /// </remarks>
-/// <typeparam name="TEntity">The type used as a result for the "get by id" action. It should implement <see cref="IStorageEntity"/></typeparam>
-public interface IGetByIdRepositoryAction<TEntity> where TEntity : IStorageEntity
+/// <typeparam name="TDto">The type used as a result for the "get by id" action. It should implement <see cref="IStorageDto"/></typeparam>
+public interface IGetByIdRepositoryAction<TDto> where TDto : IStorageDto
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Gets an entity of type <typeparamref name="TEntity"/> identified by <paramref name="id"/> from the storage medium
+    /// Gets an element of type <typeparamref name="TDto"/> identified by <paramref name="id"/> from the storage medium
     /// </summary>
-    /// <param name="id">The id of the entity to get</param>
-    /// <returns>An entity of type <typeparamref name="TEntity"/> identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{TEntity}"/></returns>
-    Task<ApiResponse<TEntity>> GetByIdAsync(string id);
+    /// <param name="id">The id of the element to get</param>
+    /// <returns>An element of type <typeparamref name="TDto"/> identified by <paramref name="id"/>, wrapped in a generic API container of type <see cref="ApiResponse{TDto}"/></returns>
+    Task<ApiResponse<TDto>> GetByIdAsync(string id);
     #endregion
 }

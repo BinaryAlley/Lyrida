@@ -147,7 +147,6 @@ internal class FileSystemPermissionsService : IFileSystemPermissionsService
     {
         bool allowAccess = false;
         AuthorizationRuleCollection acl;
-        //FileSystemInfo fileSystemInfo = isFile ? new FileInfo(path) : new DirectoryInfo(path);
         WindowsIdentity identity = WindowsIdentity.GetCurrent();
         WindowsPrincipal principal = new(identity);
         // get the collection of authorization rules that apply to the specified directory

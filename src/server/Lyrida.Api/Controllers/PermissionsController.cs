@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Lyrida.Infrastructure.Localization;
-using Lyrida.Domain.Common.Entities.Authorization;
 using Lyrida.Application.Core.Users.Commands.Delete;
 using Lyrida.Application.Core.Permissions.Queries.Read;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -44,7 +44,7 @@ public class PermissionsController : ApiController
     [HttpGet()]
     public async Task<IActionResult> GetAll()
     {
-        ErrorOr<IEnumerable<PermissionEntity>> getResult = await mediator.Send(new GetAllPermissionsQuery());
+        ErrorOr<IEnumerable<PermissionDto>> getResult = await mediator.Send(new GetAllPermissionsQuery());
         return getResult.Match(result => Ok(result), errors => Problem(errors));
     }
 

@@ -14,7 +14,7 @@ public interface IAppConfig
 {
     #region ==================================================================== PROPERTIES =================================================================================
     string? ConfigurationFilePath { get; }
-    ApplicationConfigEntity? Application { get; set; }
+    ApplicationConfigDto? Application { get; set; }
     Dictionary<string, string>? EmailServer { get; set; }
     string? ServerPath { get; set; }
     int ServerPort { get; set; }

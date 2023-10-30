@@ -3,12 +3,12 @@ using MediatR;
 using Mapster;
 using ErrorOr;
 using System.Threading;
-using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
+using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.DataAccess.Repositories.Roles;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Roles.Commands.Create;
@@ -19,7 +19,7 @@ namespace Lyrida.Application.Core.Roles.Commands.Create;
 /// <remarks>
 /// Creation Date: 14th of August, 2023
 /// </remarks>
-public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, ErrorOr<RoleEntity>>
+public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, ErrorOr<RoleDto>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IRoleRepository roleRepository;
@@ -43,7 +43,7 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Error
     /// Creates a role in the repository
     /// </summary>
     /// <returns>True, if the action was successful, an Error otherwise</returns>
-    public async Task<ErrorOr<RoleEntity>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<RoleDto>> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
     {
         // check if the user has the permission to perform the action
         if (authorizationService.UserPermissions.CanViewPermissions)
@@ -58,18 +58,18 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Error
                     var resultInsertRole = await roleRepository.InsertAsync(request.RoleName!, request.Permissions);
                     // and return it if all went well
                     if (resultInsertRole.Error is null && resultInsertRole.Data is not null)
-                        return resultInsertRole.Data[0].Adapt<RoleEntity>();
+                        return resultInsertRole.Data[0].Adapt<RoleDto>();
                     else
                         return Errors.DataAccess.InsertRoleError;
                 }
                 else
-                    return Errors.Authorization.RoleAlreadyExists;
+                    return Errors.Authorization.DuplicateRoleError;
             }
             else
                 return Errors.DataAccess.GetRoleError;
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

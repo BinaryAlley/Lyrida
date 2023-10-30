@@ -1,7 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Linq;
 using System.Collections.Generic;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Authorization;
@@ -42,7 +42,7 @@ public class UserPermissions
     /// Overload C-tor
     /// </summary>
     /// <param name="permissions">List of permissions</param>
-    public UserPermissions(IEnumerable<PermissionEntity>? permissions)
+    public UserPermissions(IEnumerable<PermissionDto>? permissions)
     {
         if (permissions != null)
         {

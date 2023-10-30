@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Lyrida.Infrastructure.Localization;
 using Lyrida.Infrastructure.Common.Enums;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -69,8 +70,6 @@ public class ApiController : ControllerBase
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             ErrorType.NotFound => StatusCodes.Status404NotFound,
             ErrorType.Validation => StatusCodes.Status400BadRequest,
-            // TODO: correct
-            // ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorType.Failure => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError,
 
@@ -80,14 +79,11 @@ public class ApiController : ControllerBase
             ErrorType.Conflict => Terms.Conflict,
             ErrorType.NotFound => Terms.NotFound,
             ErrorType.Validation => Terms.BadRequest,
-            // TODO: correct
-            //ErrorType.Unauthorized => Terms.Unauthorized,
             ErrorType.Failure => Terms.Forbidden,
             _ => Terms.InternalServerError,
 
         };
         // return the HTTP error status and the translated domain error message
-        //return Problem(statusCode: statusCode);
         return Problem(statusCode: statusCode, title: translationService.Translate(errorTerm));
     }
 
@@ -98,9 +94,13 @@ public class ApiController : ControllerBase
     protected internal IActionResult ValidationProblem(List<Error> errors)
     {
         var modelStateDictionary = new ModelStateDictionary();
-        // TODO: correct
-        //foreach (var error in errors)
-        //    modelStateDictionary.AddModelError(error.Term.ToString(), translationService.Translate(error.Term));
+        foreach (var error in errors)
+        {
+            if (Enum.TryParse<Terms>(error.Code, out var term)) // if there is a translation available for the error code, use it
+                modelStateDictionary.AddModelError(error.Code, translationService.Translate(term));
+            else
+                modelStateDictionary.AddModelError(error.Code, error.Description);
+        }            
         return ValidationProblem(modelStateDictionary: modelStateDictionary, title: translationService.Translate(Terms.ValidationError));
     }
     #endregion

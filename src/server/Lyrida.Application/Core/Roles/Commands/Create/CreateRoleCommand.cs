@@ -2,7 +2,7 @@
 using MediatR;
 using ErrorOr;
 using System.Collections.Generic;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Roles.Commands.Create;
@@ -13,4 +13,4 @@ namespace Lyrida.Application.Core.Roles.Commands.Create;
 /// <remarks>
 /// Creation Date: 14th of August, 2023
 /// </remarks>
-public record CreateRoleCommand(string? RoleName, List<int> Permissions) : IRequest<ErrorOr<RoleEntity>>;
+public record CreateRoleCommand(string? RoleName, List<int> Permissions) : IRequest<ErrorOr<RoleDto>>;

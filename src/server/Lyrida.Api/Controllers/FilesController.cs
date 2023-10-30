@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using Lyrida.Api.Common.ModelBinders;
 using Lyrida.Infrastructure.Localization;
 using Microsoft.AspNetCore.Authorization;
-using Lyrida.Application.Common.Entities.FileSystem;
 using Lyrida.Application.Core.FileSystem.Files.Queries.Read;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -44,10 +44,9 @@ public class FilesController : ApiController
     /// Gets the directories of <paramref name="path"/>
     /// </summary>
     [HttpGet()]
-    [AllowAnonymous]
     public async Task<IActionResult> GetFiles([FromQuery, ModelBinder(typeof(UrlStringBinder))] string path)
     {
-        ErrorOr<IEnumerable<FileEntity>> getResult = await mediator.Send(new GetFilesQuery(path));
+        ErrorOr<IEnumerable<FileDto>> getResult = await mediator.Send(new GetFilesQuery(path));
         return getResult.Match(result => Ok(result), errors => Problem(errors));
     }
     #endregion

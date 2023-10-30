@@ -1,9 +1,11 @@
 ﻿#region ========================================================================= USING =====================================================================================
-using System;
 using Lyrida.UI.Common.Api;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Lyrida.UI.Common.Exceptions;
 using Lyrida.Infrastructure.Localization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 #endregion
 
 namespace Lyrida.Client.Controllers;
@@ -35,9 +37,30 @@ public class HomeController : Controller
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================
-    public IActionResult Index()
+    /// <summary>
+    /// Checks if the API has been initialized, and if yes, displays the view for filesystem interactions. If not, displays the setup view.
+    /// </summary>
+    public async Task<IActionResult> Index()
     {
-        return View();
+        try
+        {
+            // check if the web app was initialized
+            var response = await apiHttpClient.GetAsync("initialization/", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+            if (response == "true") // application was initialized
+                return RedirectToAction("Index", "FileSystem");
+            else
+                // TODO: should be:
+                // return View("~/Views/Account/Register", new RegisterRequestDto());
+                // but doesn't work because of an ASP.NET bug: https://github.com/dotnet/AspNetCore.Docs/issues/25157
+                return RedirectToAction("Register", "Account");
+        }
+        catch (ApiException)
+        {
+            // if it got here, assume something bad, and sign out
+            Response.Cookies.Delete("Token");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Register", "Account");
+        }
     }
     #endregion
 }

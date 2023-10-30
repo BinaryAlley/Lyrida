@@ -1,10 +1,10 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Lyrida.DataAccess.Common.Entities.Common;
 using Lyrida.DataAccess.Repositories.Common.Base;
 using Lyrida.DataAccess.Repositories.Common.Actions;
-using Lyrida.DataAccess.Common.Entities.Authorization;
+using Lyrida.DataAccess.Common.DTO.Authorization;
+using Lyrida.DataAccess.Common.DTO.Common;
 #endregion
 
 namespace Lyrida.DataAccess.Repositories.Roles;
@@ -15,26 +15,26 @@ namespace Lyrida.DataAccess.Repositories.Roles;
 /// <remarks>
 /// Creation Date: 09th of July, 2023
 /// </remarks>
-public interface IRoleRepository : IRepository<RoleEntity>,
+public interface IRoleRepository : IRepository<RoleDto>,
                                    IDeleteByIdRepositoryAction,
-                                   IGetAllRepositoryAction<RoleEntity>,
-                                   IGetByIdRepositoryAction<RoleEntity>
+                                   IGetAllRepositoryAction<RoleDto>,
+                                   IGetByIdRepositoryAction<RoleDto>
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
     /// Gets the role identified by <paramref name="name"/> from the storage medium
     /// </summary>
     /// <param name="name">The name of the role to get</param>
-    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleEntity}"/></returns>
-    Task<ApiResponse<RoleEntity>> GetByNameAsync(string name);
+    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleDto}"/></returns>
+    Task<ApiResponse<RoleDto>> GetByNameAsync(string name);
 
     /// <summary>
     /// Creates a role identified by <paramref name="name"/> and the <paramref name="permissions"/> list of permissions in the storage medium
     /// </summary>
     /// <param name="name">The name of the role to create</param>
     /// <param name="permissions">The list of permissions of the role that is created</param>
-    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleEntity}"/></returns>
-    Task<ApiResponse<RoleEntity>> InsertAsync(string name, List<int> permissions);
+    /// <returns>A role identified by <paramref name="name"/>, wrapped in a generic API container of type <see cref="ApiResponse{RoleDto}"/></returns>
+    Task<ApiResponse<RoleDto>> InsertAsync(string name, List<int> permissions);
 
     /// <summary>
     /// Updates a role identified by <paramref name="roleId"/> and the <paramref name="permissions"/> list of permissions in the storage medium

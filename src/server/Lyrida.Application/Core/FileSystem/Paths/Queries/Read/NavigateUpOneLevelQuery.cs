@@ -2,7 +2,7 @@
 using ErrorOr;
 using MediatR;
 using System.Collections.Generic;
-using Lyrida.Application.Common.Entities.FileSystem;
+using Lyrida.Application.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.Application.Core.FileSystem.Paths.Queries.Read;
@@ -13,4 +13,4 @@ namespace Lyrida.Application.Core.FileSystem.Paths.Queries.Read;
 /// <remarks>
 /// Creation Date: 11th of October, 2023
 /// </remarks>
-public record NavigateUpOneLevelQuery(string Path) : IRequest<ErrorOr<IEnumerable<PathSegmentEntity>>>;
+public record NavigateUpOneLevelQuery(string Path) : IRequest<ErrorOr<IEnumerable<PathSegmentDto>>>;

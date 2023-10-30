@@ -4,10 +4,10 @@ using ErrorOr;
 using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
+using Lyrida.Domain.Common.Errors;
 using Lyrida.Application.Core.Authorization;
-using Lyrida.Application.Common.Errors.Types;
 using Lyrida.DataAccess.Repositories.UserRoles;
-using Lyrida.Domain.Common.Entities.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Application.Core.Users.Commands.Create;
@@ -48,24 +48,24 @@ public class SetUserRoleCommandHandler : IRequestHandler<SetUserRoleCommand, Err
         if (authorizationService.UserPermissions.CanViewPermissions)
         {
             // create the updated user role
-            var userRole = new UserRoleEntity
+            var userRole = new UserRoleDto
             {
                 UserId = request.UserId,
                 RoleId = request.RoleId ?? 0
             };
-            var resultUpdateUserRole = await userRoleRepository.UpdateAsync(userRole.ToStorageEntity());
+            var resultUpdateUserRole = await userRoleRepository.UpdateAsync(userRole.ToStorageDto());
             if (resultUpdateUserRole.Error is null)
                 return true;
             else
             {
                 if (resultUpdateUserRole.Error == "Cannot set admin role!")
-                    return Errors.Authorization.CannotSetAdminRole;
+                    return Errors.Authorization.SetAdminRoleError;
                 else
                     return Errors.DataAccess.UpdateUserRoleError;
             }
         }
         else
-            return Errors.Authorization.InvalidPermission;
+            return Errors.Authorization.InvalidPermissionError;
     }
     #endregion
 }

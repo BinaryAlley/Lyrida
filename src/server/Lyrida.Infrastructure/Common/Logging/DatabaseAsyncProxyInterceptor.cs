@@ -26,8 +26,8 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     private readonly Dictionary<string, string> dbTableNamesMaping = new();
     private static readonly ConcurrentDictionary<Type, string> PropertyNamesCache = new();
     private const string DATA_ACCESS = "Lyrida.DataAccess";
-    private const string I_STORAGE_ENTITY = "IStorageEntity";
-    private const string ENTITIES = "Lyrida.DataAccess.Common.Entities";
+    private const string I_STORAGE_DTO = "IStorageDto";
+    private const string DTOs = "Lyrida.DataAccess.Common.DTO";
     private const string MAPS_TO_ATTRIBUTE = "Lyrida.DataAccess.Common.Attributes.MapsToAttribute, Lyrida.DataAccess";
     private const string IGNORE_ON_QUERY_ATTRIBUTE = "Lyrida.DataAccess.Common.Attributes.IgnoreOnQueryAttribute, Lyrida.DataAccess";
     private const string IGNORE_ON_COMMAND_ATTRIBUTE = "Lyrida.DataAccess.Common.Attributes.IgnoreOnCommandAttribute, Lyrida.DataAccess";
@@ -242,12 +242,12 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     /// Substitutes named parameters in SQL queries with their corresponding values
     /// </summary>
     /// <param name="originalQuery">The original SQL query</param>
-    /// <param name="entity">The anonymous object containing the values of the named parameters</param>
+    /// <param name="data">The anonymous object containing the values of the named parameters</param>
     /// <returns>A string representing the original SQL queries, with the named parameters replaced by their corresponding values</returns>
-    private static string SubstituteNamedParameters(string originalQuery, object entity)
+    private static string SubstituteNamedParameters(string originalQuery, object data)
     {
         // get the properties of the filter object
-        PropertyInfo[] filters = entity.GetType()
+        PropertyInfo[] filters = data.GetType()
                                        .GetProperties()
                                        .ToArray();
         // replace the named parameters with the corresponding values
@@ -255,7 +255,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
         {
             if (originalQuery.Contains("@" + f.Name))
             {
-                object? propertyValue = f.GetValue(entity);
+                object? propertyValue = f.GetValue(data);
                 // account for array parameters!
                 originalQuery = originalQuery.Replace("@" + f.Name,
                     propertyValue is Array ? "('" + string.Join("', '", ((System.Collections.IEnumerable)propertyValue).Cast<object>().Select(i => i.ToString())) + "')" :
@@ -268,10 +268,10 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     /// <summary>
     /// Gets the names of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
     /// </summary>
-    /// <typeparam name="TEntity">The type of <paramref name="model"/></typeparam>
+    /// <typeparam name="TDto">The type of <paramref name="model"/></typeparam>
     /// <param name="model">A database model containing the public properties used for getting or saving data in a database table</param>
     /// <returns>A formatted string used in SQL queries, composed of the names of the public properties of <paramref name="model"/></returns>
-    internal static string GetColumns<TEntity>(TEntity model)
+    internal static string GetColumns<TDto>(TDto model)
     {
         if (model != null)
         {
@@ -305,10 +305,10 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     /// <summary>
     /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
     /// </summary>
-    /// <typeparam name="TEntity">The type of <paramref name="model"/></typeparam>
+    /// <typeparam name="TDto">The type of <paramref name="model"/></typeparam>
     /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table</param>
     /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/></returns>
-    internal static string GetParameters<TEntity>(TEntity model)
+    internal static string GetParameters<TDto>(TDto model)
     {
         if (model != null)
         {
@@ -341,7 +341,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     /// <summary>
     /// Gets the values of the public properties of <paramref name="type"/> and formats them as a string used in SQL queries
     /// </summary>
-    /// <param name="type">A database entity containing the public properties whose values are used for saving data in a database table</param>
+    /// <param name="type">A database element containing the public properties whose values are used for saving data in a database table</param>
     /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="type"/></returns>
     internal static string GetProperties(Type type) 
     {
@@ -352,7 +352,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
 
         var mapsToAttributeType = Type.GetType(MAPS_TO_ATTRIBUTE);
         var nameProperty = mapsToAttributeType?.GetProperty("Name");
-        // for each property of the entity, either get the value of its MapsToAttribute's Name property (if it has this attribute) or its name (if it doesn't)
+        // for each property of the element, either get the value of its MapsToAttribute's Name property (if it has this attribute) or its name (if it doesn't)
         foreach (var property in properties)
         {
             var mapsToAttribute = property.GetCustomAttributes(mapsToAttributeType!, false).FirstOrDefault();
@@ -371,14 +371,14 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Caches the Data Access Layer entity types, for performance improved access
+    /// Caches the Data Access Layer DTO types, for performance improved access
     /// </summary>
     private static void CacheDataAccessLayerEntitiesPropertyNames()
     {
         var assembly = Assembly.Load(DATA_ACCESS);
         var types = assembly.GetTypes()
-                            .Where(t => t.Namespace != null && t.Namespace.StartsWith(ENTITIES) && t.GetInterfaces()
-                                                                                                    .Any(i => i.Name == I_STORAGE_ENTITY));
+                            .Where(t => t.Namespace != null && t.Namespace.StartsWith(DTOs) && t.GetInterfaces()
+                                                                                                    .Any(i => i.Name == I_STORAGE_DTO));
         foreach (var type in types)
             PropertyNamesCache.TryAdd(type, GetProperties(type));
     }
@@ -394,6 +394,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
         dbTableNamesMaping.Add("Permissions", "Permissions");
         dbTableNamesMaping.Add("UserPermissions", "UserPermissions");
         dbTableNamesMaping.Add("RolePermissions", "RolePermissions");
+        dbTableNamesMaping.Add("UserPreferences", "UserPreferences");
     }
     #endregion
 }

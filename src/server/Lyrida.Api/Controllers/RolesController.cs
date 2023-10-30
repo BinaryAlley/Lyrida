@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Lyrida.Infrastructure.Localization;
-using Lyrida.Api.Common.Entities.Authorization;
 using Lyrida.Application.Core.Roles.Queries.Read;
-using Lyrida.Domain.Common.Entities.Authorization;
 using Lyrida.Application.Core.Roles.Commands.Create;
 using Lyrida.Application.Core.Roles.Commands.Delete;
 using Lyrida.Application.Core.Roles.Commands.Update;
+using Lyrida.Api.Common.DTO.Authorization;
+using Lyrida.Application.Common.DTO.Authorization;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -47,7 +47,7 @@ public class RolesController : ApiController
     [HttpGet()]
     public async Task<IActionResult> GetAll()
     {
-        ErrorOr<IEnumerable<RoleEntity>> result = await mediator.Send(new GetAllRolesQuery());
+        ErrorOr<IEnumerable<RoleDto>> result = await mediator.Send(new GetAllRolesQuery());
         return result.Match(result => Ok(result), errors => Problem(errors));
     }
 
@@ -58,7 +58,7 @@ public class RolesController : ApiController
     [HttpGet("{id}/permissions")]
     public async Task<IActionResult> GetPermissionsByRoleId(int id)
     {
-        ErrorOr<IEnumerable<PermissionEntity>> result = await mediator.Send(new GetAllRolePermissionsQuery(id));
+        ErrorOr<IEnumerable<PermissionDto>> result = await mediator.Send(new GetAllRolePermissionsQuery(id));
         return result.Match(result => Ok(result), errors => Problem(errors));
     }
 
@@ -75,11 +75,11 @@ public class RolesController : ApiController
     /// <summary>
     /// Creates a new role with permissions
     /// </summary>
-    /// <param name="entity">Entity containing the name of the role to create, and its permissions</param>
+    /// <param name="data">DTO containing the name of the role to create, and its permissions</param>
     [HttpPost()]
-    public async Task<IActionResult> Add([FromBody] AddRoleRequestEntity entity)
+    public async Task<IActionResult> Add([FromBody] AddRoleRequestDto data)
     {
-        ErrorOr<RoleEntity> result = await mediator.Send(new CreateRoleCommand(entity.RoleName, entity.Permissions));
+        ErrorOr<RoleDto> result = await mediator.Send(new CreateRoleCommand(data.RoleName, data.Permissions));
         return result.Match(result => Ok(result), errors => Problem(errors));
     }
 
@@ -87,11 +87,11 @@ public class RolesController : ApiController
     /// Updates an existing role and its permissions
     /// </summary>
     /// <param name="id">The id of the role to update</param>
-    /// <param name="entity">Entity containing the updated role, and its permissions</param>
+    /// <param name="data">DTO containing the updated role, and its permissions</param>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleRequestEntity entity)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleRequestDto data)
     {
-        ErrorOr<bool> result = await mediator.Send(new UpdateRoleCommand(id, entity.RoleName, entity.Permissions));
+        ErrorOr<bool> result = await mediator.Send(new UpdateRoleCommand(id, data.RoleName, data.Permissions));
         return result.Match(result => NoContent(), errors => Problem(errors));
     }
     #endregion

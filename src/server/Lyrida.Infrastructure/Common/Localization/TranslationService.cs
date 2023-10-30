@@ -37,6 +37,17 @@ public class TranslationService : ITranslationService
         this.appConfig = appConfig;
         translations = new TranslationsCollection
         {
+            (Terms.GetUsersError, "Eroare la preluarea listei de utilizatori din mediul de stocare!", "Error getting the users list from the storage medium!", "Fehler beim Abrufen der Benutzerliste aus dem Speichermedium!"),
+            (Terms.UninitializedDatabaseError, "Database not initialized", "Database not initialized", "Database not initialized"), // this MUST be the same for any language!
+            (Terms.InvalidTotpCode, "Codul TOTP este invalid!", "TOTP code is invalid!", "Der TOTP-Code ist ungültig!"), 
+            (Terms.InsertUserPreferencesError, "Eroare la inserarea preferințelor de utilizator în mediul de stocare!", "Error inserting the user preferences in the storage medium!", "Fehler beim Einfügen der Benutzereinstellungen im Speichermedium!"), 
+            (Terms.UpdateUserPreferencesError, "Eroare la actualizarea preferințelor de utilizator în mediul de stocare!", "Error updating the user preferences in the storage medium!", "Fehler beim Aktualisieren der Benutzereinstellungen im Speichermedium!"), 
+            (Terms.GetUserPreferencesError, "Eroare la preluarea preferințelor de utilizator din mediul de stocare!", "Error getting the user preferences from the storage medium!", "Fehler beim Abrufen der Benutzereinstellungen aus dem Speichermedium!"), 
+            (Terms.NoThumbnail, "Fișierul nu conține o pictogramă!", "The file does not contain a thumbnail!", "Die Datei enthält kein Vorschaubild!"), 
+            (Terms.DuplicateEmailError, "Adresa de e-mail este folosită deja!", "The e-mail address is already used!", "Die E-Mail-Adresse wird bereits verwendet!"),
+            (Terms.TotpCodeCannotBeEmpty, "Codul TOTP nu poate fi gol!", "TOTP code cannot be empty!", "Der TOTP-Code darf nicht leer sein!"),
+            (Terms.CannotNavigateUp, "Nu se poate naviga un nivel mai sus!", "Cannot navigate one level up!", "Kann nicht eine Ebene nach oben navigieren!"),
+
             (Terms.Conflict, "A apărut un conflict!", "You have a conflict!", "Ein Konflikt ist aufgetreten!"),
             (Terms.NotFound, "Resursa nu a putut fi gasită!", "The resource was not found!", "Die Ressource wurde nicht gefunden!"),
             (Terms.BadRequest, "Cerere invalidă!", "Invalid request!", "Ungültige Anfrage!"),
@@ -53,6 +64,7 @@ public class TranslationService : ITranslationService
             (Terms.EmailCannotBeEmpty, "Adresa de e-mail nu poate fi goală!", "E-mail cannot be empty!", "E-Mail darf nicht leer sein!"),
             (Terms.RoleMustHavePermissions, "Rolul trebuie să aibă cel puțin o permisiune!", "The role must have at least one permission!", "Die Rolle muss mindestens eine Berechtigung haben!"),
             (Terms.RoleNameCannotBeEmpty, "Numele rolului nu poate fi gol!", "The role name cannot be empty!", "Der Rollenname darf nicht leer sein!"),
+            (Terms.ProfilePreferencesCannotBeEmpty, "Preferințele de cont nu pot fi goale!", "The profile preferences cannot be empty!", "Die Profilpräferenzen dürfen nicht leer sein!"),
             (Terms.InvalidPassword, "Parola trebuie să aibă minim 8 caractere și trebuie să conțină cel puțin o minusculă, o majusculă, un număr și un caracter special!", "The password must be at least 8 characters long and it must contain at least one lowercase character, one uppercase, a number and a special character!", "Das Passwort muss mindestens 8 Zeichen lang sein und mindestens einen Kleinbuchstaben, einen Großbuchstaben, eine Zahl und ein Sonderzeichen enthalten."),
             (Terms.PasswordCannotBeEmpty, "Parola nu poate fi goală!", "Password cannot be empty!", "Passwort darf nicht leer sein!"),
             (Terms.EmptyPasswordConfirm, "Confirmarea parolei nu poate fi goală!", "The password confirm cannot be empty!", "Die Passwortbestätigung darf nicht leer sein!"),
@@ -74,8 +86,6 @@ public class TranslationService : ITranslationService
             (Terms.ErrorGettingUserPermissions, "Eroare la preluarea permisiunilor contului din mediul de stocare!", "Error getting the user permissions from the storage medium!", "Fehler beim Abrufen der Benutzerberechtigungen aus dem Speichermedium!"),
             (Terms.ErrorGettingPermissions, "Eroare la preluarea permisiunilor din mediul de stocare!", "Error getting the permissions from the storage medium!", "Fehler beim Abrufen der Berechtigungen aus dem Speichermedium!"),
             (Terms.ErrorInsertingUser, "Eroare la inserarea contului în mediul de stocare!", "Error inserting the account in the storage medium!", "Fehler beim Einfügen des Kontos in das Speichermedium!"),
-            (Terms.ErrorGettingUsers, "Eroare la preluarea listei de utilizatori din mediul de stocare!", "Error getting the users list from the storage medium!", "Fehler beim Abrufen der Benutzerliste aus dem Speichermedium!"),
-            (Terms.UninitializedDatabase, "Database not initialized", "Database not initialized", "Database not initialized"), // this needs to be the same for any language!
             (Terms.ErrorGettingRolePermissions, "Eroare la preluarea listei de permisiuni ale rolului din mediul de stocare!", "Error getting the role permissions list from the storage medium!", "Fehler beim Abrufen der Liste der Rollenberechtigungen aus dem Speichermedium!"),
             (Terms.ErrorGettingUserRoles, "Eroare la preluarea listei de roluri de utilizator din mediul de stocare!", "Error getting the user roles list from the storage medium!", "Fehler beim Abrufen der Liste der Benutzerrollen aus dem Speichermedium!"),
             (Terms.ErrorGettingRoles, "Eroare la preluarea listei de roluri din mediul de stocare!", "Error getting the roles list from the storage medium!", "Fehler beim Abrufen der Liste der Rollen aus dem Speichermedium!"),
@@ -86,7 +96,6 @@ public class TranslationService : ITranslationService
             (Terms.ErrorDeletingUser, "Eroare la ștergerea utilizatorului din mediul de stocare!", "Error deleting the user from the storage medium!", "Fehler beim Löschen des Benutzers aus dem Speichermedium!"),
             (Terms.NoFirstError, "Prima eroare nu poate fi preluată dintr-un ErrorOr reușit!", "First error cannot be retrieved from a successful ErrorOr!", "Der erste Fehler kann nicht von einem erfolgreichen ErrorOr abgerufen werden!"),
             (Terms.NoErrors, "Lista de erori nu poate fi preluată dintr-un ErrorOr reușit!", "Error list cannot be retrieved from a successful ErrorOr!", "Fehlerliste kann nicht von einem erfolgreichen ErrorOr abgerufen werden!"),
-            (Terms.AccountAlreadyRegistered, "Adresa de e-mail este folosită deja!", "The e-mail address is already used!", "Die E-Mail-Adresse wird bereits verwendet!"),
             (Terms.UnverifiedAccount, "Contul dumneavoastră nu a fost încă verificat. Verificați-vă adresa de email pentru a găsi emailul de verificare.", "Your account has not yet been verified. Check your email address to find the verification email.", "Ihr Konto wurde noch nicht verifiziert. Überprüfen Sie Ihre E-Mail-Adresse, um die Bestätigungs-E-Mail zu finden."),
             (Terms.AccountAlreadyVerified, "Contul dumneavoastră este deja verificat.", "Your account has already been verified.", "Ihr Konto wurde bereits verifiziert."),
             (Terms.TokenCannotBeEmpty, "Token-ul nu poate fi gol!", "The token cannot be empty!", "Das Token darf nicht leer sein!"),
@@ -102,6 +111,7 @@ public class TranslationService : ITranslationService
             (Terms.PasswordChangeEmail1, "Dragă client,<br/><br/>Am primit o cerere de resetare a parolei pentru contul tău The Fibre Manager. Pentru a continua cu resetarea, te rugăm să dai click pe linkul de mai jos:<br/><br/>", "Dear client,<br/><br/>We received a password reset request for your The Fibre Manager account. To proceed with the reset, please click on the link below:<br/><br/>", "Lieber Kunde,<br/><br/>Wir haben eine Anforderung zum Zurücksetzen des Passworts für Ihr The Fibre Manager Konto erhalten. Um mit dem Zurücksetzen fortzufahren, klicken Sie bitte auf den unten stehenden Link:<br/><br/>"),
             (Terms.PasswordChangeEmail2, "<br/><br/>Dacă nu tu ai inițiat această cerere, poți ignora acest e-mail în întregime. Totuși, dacă ai o bănuială că cineva încearcă să acceseze contul tău, poate ar fi o idee bună să îți schimbi parola cu una mai puternică.<br/><br/>O zi minunată în continuare,<br/>Echipa The Fibre Manager.", "<br/><br/>If you did not initiate this request, you can simply ignore this email. However, if you suspect someone might be trying to access your account, it might be a good idea to change your password to a stronger one.<br/><br/>Have a great day,<br/>The The Fibre Manager Team.", "<br/><br/>Wenn Sie diese Anforderung nicht gestellt haben, können Sie diese E-Mail einfach ignorieren. Sollten Sie jedoch den Verdacht haben, dass jemand versucht, auf Ihr Konto zuzugreifen, wäre es vielleicht eine gute Idee, Ihr Passwort durch ein stärkeres zu ersetzen.<br/><br/>Einen schönen Tag noch,<br/>Das The Fibre Manager Team."),
             (Terms.ClickHereToChangePassword, "Click aici pentru schimbarea parolei", "Click here to change password", "Klicken Sie hier, um Ihr Passwort zu ändern"),
+            (Terms.ValueBetweenZeroAndOneHundred, "Valoarea trebuie să fie in intervalul 1-100!", "The value must be between 1 and 100!", "Der Wert muss zwischen 1 und 100 liegen!"),
         };
     }
     #endregion

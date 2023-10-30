@@ -4,23 +4,21 @@ using MediatR;
 using ErrorOr;
 using MapsterMapper;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Lyrida.Domain.Common.Errors;
 using Microsoft.AspNetCore.Authorization;
 using Lyrida.Infrastructure.Common.Enums;
 using Lyrida.Infrastructure.Localization;
-using Lyrida.Application.Common.Errors.Types;
-using Lyrida.Api.Common.Entities.Authentication;
-using Lyrida.Application.Common.Entities.Common;
-using Lyrida.Application.Common.Entities.Authentication;
+using Lyrida.Api.Common.DTO.Authentication;
+using Lyrida.Application.Common.DTO.Common;
+using Lyrida.Application.Common.DTO.Authentication;
 using Lyrida.Application.Core.Authentication.Queries.Login;
 using Lyrida.Application.Core.Authentication.Commands.Register;
-using Lyrida.Application.Core.Authentication.Queries.VerifyReset;
-using Lyrida.Application.Core.Authentication.Commands.ResetPassword;
 using Lyrida.Application.Core.Authentication.Commands.ChangePassword;
-using Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
-using Lyrida.Application.Core.Authentication.Queries.VerifyRegistration;
 using Lyrida.Application.Core.Authentication.Commands.GenerateTotpQr;
+using Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -58,24 +56,24 @@ public class AuthenticationController : ApiController
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Registers a new user identified by <paramref name="entity"/>
+    /// Registers a new user identified by <paramref name="data"/>
     /// </summary>
-    /// <param name="entity"></param>
+    /// <param name="data">The data of the user to register</param>
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequestEntity entity)
+    public async Task<IActionResult> Register(RegisterRequestDto data)
     {
-        ErrorOr<RegistrationResultEntity> registerResult = await mediator.Send(mapper.Map<RegisterCommand>(entity));
-        return registerResult.Match(result => Ok(mapper.Map<AuthenticationResponseEntity>(result)), errors => Problem(errors));
+        ErrorOr<RegistrationResultDto> registerResult = await mediator.Send(mapper.Map<RegisterCommand>(data));
+        return registerResult.Match(result => Ok(mapper.Map<AuthenticationResponseDto>(result)), errors => Problem(errors));
     }
 
     /// <summary>
-    /// Authenticates an user identified by <paramref name="entity"/>
+    /// Authenticates an user identified by <paramref name="data"/>
     /// </summary>
-    /// <param name="entity">The entity used for the login</param>
+    /// <param name="data">The data used for the login</param>
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequestEntity entity)
+    public async Task<IActionResult> Login(LoginRequestDto data)
     {
-        ErrorOr<AuthenticationResultEntity> authResult = await mediator.Send(mapper.Map<LoginQuery>(entity));
+        ErrorOr<AuthenticationResultDto> authResult = await mediator.Send(mapper.Map<LoginQuery>(data));
         // handle the special case when the provided credentials were not ok
         if (authResult.IsError && authResult.FirstError == Errors.Authentication.InvalidUsername)
         {
@@ -86,61 +84,29 @@ public class AuthenticationController : ApiController
                 title = authResult.FirstError.Code;
             return Problem(statusCode: StatusCodes.Status401Unauthorized, title: title);
         }
-        return authResult.Match(result => Ok(mapper.Map<AuthenticationResponseEntity>(result)), errors => Problem(errors));
-    }
-
-    /// Verifies <paramref name="token"/> for validity. If valid, the account owning the token is marked as active.
-    /// </summary>
-    /// <param name="token">The token to be verified</param>
-    [HttpPost("verifyRegister")]
-    public async Task<IActionResult> VerifyRegister(ValidateTokenRequestEntity token)
-    {
-        ErrorOr<AuthenticationResultEntity> verifyResult = await mediator.Send(mapper.Map<VerifyRegistrationTokenQuery>(token));
-        return verifyResult.Match(result => Ok(mapper.Map<AuthenticationResponseEntity>(result)), errors => Problem(errors));
-    }
-
-    /// Verifies <paramref name="token"/> for validity. If valid, the account owning the token can reset its password.
-    /// </summary>
-    /// <param name="token">The token to be verified</param>
-    [HttpPost("verifyReset")]
-    public async Task<IActionResult> VerifyReset(ValidateTokenRequestEntity token)
-    {
-        ErrorOr<AuthenticationResultEntity> verifyResult = await mediator.Send(mapper.Map<VerifyResetTokenQuery>(token));
-        return verifyResult.Match(authResult => Ok(mapper.Map<AuthenticationResponseEntity>(authResult)), errors => Problem(errors));
+        return authResult.Match(result => Ok(mapper.Map<LoginResponseDto>(result)), errors => Problem(errors));
     }
 
     /// <summary>
-    /// Sends a password recovery link to an account identified by <paramref name="email"/>.
+    /// Sends a password recovery link to an account identified by <paramref name="data"/>.
     /// </summary>
-    /// <param name="email">The email of the account for which to send a password recovery link</param>
+    /// <param name="data">The email of the account for which to send a password recovery link</param>
     [HttpPost("recoverPassword")]
-    public async Task<IActionResult> RecoverPassword(RecoverPasswordRequestEntity email)
+    public async Task<IActionResult> RecoverPassword(RecoverPasswordRequestDto data)
     {
-        ErrorOr<CommandResultEntity> recoverPasswordResult = await mediator.Send(mapper.Map<RecoverPasswordCommand>(email));
+        ErrorOr<CommandResultDto> recoverPasswordResult = await mediator.Send(mapper.Map<RecoverPasswordCommand>(data));
         return recoverPasswordResult.Match(result => NoContent(), errors => Problem(errors));
     }
 
     /// <summary>
-    /// Sends a password recovery link to an account identified by <paramref name="entity"/>.
+    /// Sends a password recovery link to an account identified by <paramref name="data"/>.
     /// </summary>
-    /// <param name="entity">The email of the account for which to send a password recovery link</param>
-    [Authorize]
-    [HttpPost("resetPassword")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequestEntity entity)
-    {
-        ErrorOr<RegistrationResultEntity> recoverPasswordResult = await mediator.Send(mapper.Map<ResetPasswordCommand>(entity));
-        return recoverPasswordResult.Match(result => NoContent(), errors => Problem(errors));
-    }
-
-    /// <summary>
-    /// Sends a password recovery link to an account identified by <paramref name="entity"/>.
-    /// </summary>
-    /// <param name="entity">The email of the account for which to send a password recovery link</param>
+    /// <param name="data">The email of the account for which to send a password recovery link</param>
     [Authorize]
     [HttpPost("changePassword")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordRequestEntity entity)
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequestDto data)
     {
-        ErrorOr<RegistrationResultEntity> recoverPasswordResult = await mediator.Send(mapper.Map<ChangePasswordCommand>(entity));
+        ErrorOr<RegistrationResultDto> recoverPasswordResult = await mediator.Send(mapper.Map<ChangePasswordCommand>(data));
         return recoverPasswordResult.Match(result => NoContent(), errors => Problem(errors));
     }
 
@@ -148,35 +114,24 @@ public class AuthenticationController : ApiController
     /// Generates a QR code for TOTP authentication setup.
     /// </summary>
     [Authorize] // User should be authenticated to enable 2FA
-    [HttpPost("generateTOTPQR")]
+    [HttpGet("generateTOTPQR")]
     public async Task<IActionResult> GenerateTOTPQR()
     {
-        ErrorOr<QrCodeResultEntity> qrResult = await mediator.Send(new GenerateTotpQrCommand(User.Identity.Name)); // Assuming the username can be identified from the user claims.
-        return qrResult.Match(result => Ok(result), errors => Problem(errors)); // QrCodeResultEntity should contain the QR code or URL.
+        if (!TryGetUserId(out int userId))
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: translationService.Translate(Terms.InvalidUserId));
+        ErrorOr<QrCodeResultDto> qrResult = await mediator.Send(new GenerateTotpQrCommand(userId)); 
+        return qrResult.Match(result => Ok(result), errors => Problem(errors)); 
     }
 
-    ///// <summary>
-    ///// Verifies the provided TOTP from user's authenticator app.
-    ///// </summary>
-    ///// <param name="entity">Entity containing the user's TOTP.</param>
-    //[Authorize]
-    //[HttpPost("verifyTOTP")]
-    //public async Task<IActionResult> VerifyTOTP(VerifyTOTPRequestEntity entity)
-    //{
-    //    ErrorOr<CommandResultEntity> verifyResult = await mediator.Send(mapper.Map<VerifyTOTPCommand>(entity));
-    //    return verifyResult.Match(result => NoContent(), errors => Problem(errors));
-    //}
-
-    ///// <summary>
-    ///// Authenticates an user with TOTP after password authentication.
-    ///// </summary>
-    ///// <param name="entity">The entity containing the TOTP.</param>
-    //[Authorize]
-    //[HttpPost("loginWithTOTP")]
-    //public async Task<IActionResult> LoginWithTOTP(LoginWithTOTPRequestEntity entity)
-    //{
-    //    ErrorOr<AuthenticationResultEntity> authResult = await mediator.Send(mapper.Map<LoginWithTOTPQuery>(entity));
-    //    return authResult.Match(result => Ok(mapper.Map<AuthenticationResponseEntity>(result)), errors => Problem(errors));
-    //}
+    /// <summary>
+    /// Gets the id of the user currently making requests
+    /// </summary>
+    /// <param name="userId">The id of the user currently making requests</param>
+    /// <returns>True if the id of the user currently making requests could be parsed, False otherwise</returns>
+    private bool TryGetUserId(out int userId)
+    {
+        var userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(userIdClaim, out userId);
+    }
     #endregion
 }
