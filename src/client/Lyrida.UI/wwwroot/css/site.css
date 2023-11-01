@@ -266,7 +266,7 @@ footer {
     display: flex; /* use flex for its children */
     flex-wrap: nowrap;
     align-items: center; /* vertically center its children */
-    height: 28px;
+    height: 30px;
     overflow-x: hidden;
 }
 
@@ -294,8 +294,7 @@ footer {
     margin-top: -2px;
     padding-left:2px;
     vertical-align: middle;
-    height: 28px; 
-    margin-top: 0; 
+    height: 30px; 
     flex-grow: 1;
     overflow-x: auto;
     overflow-y: hidden;
@@ -362,6 +361,28 @@ header #btnNavigate, header #btnEditPath {
     display: none;
 }
 
+#selectionRectangle {
+    background-color: transparent;
+    border: 0px;
+    pointer-events: none; 
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 0px;
+    height: 0px;
+}
+
+#visibleSelectionRectangle {
+    background-color: #0078D777;
+    border: 1px solid #0078D7;
+    pointer-events: none; /* so it doesn't interfere with the mouse events */
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 0px;
+    height: 0px;
+    visibility: hidden;
+}
 
 .text-light-one {
     color: #6DCBFE;

@@ -102,6 +102,10 @@ const btnSplitView = document.getElementById('btnSplitView');
 const btnNavigate = document.getElementById('btnNavigate');
 const btnEditPath = document.getElementById('btnEditPath');
 const btnUpOneLevel = document.getElementById('btnUpOneLevel');
+const visibleSelectionRectangle = document.getElementById('visibleSelectionRectangle');
+const selectionRectangle = document.getElementById('selectionRectangle');
+const scrollbarHeight = getScrollbarHeight();
+const scrollbarWidth = getScrollbarWidth();
 
 /**
  * Retrieves the active's tab explorer container element.
@@ -163,7 +167,9 @@ let activeTabId; // tracks the currently active tab's ID
 let activeEnvironmentId = 1; // tracks the currently active platform ID, used for creating a new tab
 let addressBarWidth;
 let addressBarCachedScroll = 0;
-
+let selectionStartPosition = { x: 0, y: 0 };
+let isSelecting = false;
+let currentMousePosition = { x: 0, y: 0 };
 window.Permissions = [];
 
 // ==================================
@@ -787,12 +793,166 @@ function renderTabPage(tabId, data) {
     // appending elements to the DOM
     explorerContainer.appendChild(detailsHeader);
     explorerContainer.appendChild(explorer);
+    $(explorerContainer).on('mousedown', function (event) {
+
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            const explorerScrollbars = hasScrollbars(explorer);
+            const containerExplorerScrollbars = hasScrollbars(explorerContainer);
+            // check if clicked on the horizontal or vertical scrollbar
+            if (explorerScrollbars.horizontal && event.clientY > $(explorer).offset().top + $(explorer).height() - scrollbarHeight) 
+                return;
+            if (containerExplorerScrollbars.vertical && event.clientX > $(explorerContainer).offset().left + $(explorerContainer).width() - scrollbarWidth) 
+                return;
+            // store information about selection start
+            isSelecting = true;
+            document.body.style.overflowY = 'hidden'; // needed in order to not put a vertical scrollbar on the document, while in vertical layout selection
+            document.documentElement.style.overflowY = 'hidden';
+            selectionStartPosition.x = event.pageX + $(explorer).scrollLeft();
+            selectionStartPosition.y = event.pageY + $(explorerContainer).scrollTop(); // not a mistake - in vertical mode, this is the overflow container!
+           
+            visibleSelectionRectangle.style.left = event.pageX + 'px';
+            visibleSelectionRectangle.style.top = event.pageY + 'px';
+            visibleSelectionRectangle.style.width = '0px';
+            visibleSelectionRectangle.style.height = '0px';
+            visibleSelectionRectangle.style.visibility = 'visible';
+
+            selectionRectangle.style.left = event.pageX + 'px';
+            selectionRectangle.style.top = event.pageY + 'px';
+            selectionRectangle.style.width = '0px';
+            selectionRectangle.style.height = '0px';
+        }
+    });
+    $(explorerContainer).on('mousemove', function (event) {
+        if (!isSelecting)
+            return;
+        currentMousePosition.x = event.pageX;
+        currentMousePosition.y = event.pageY;
+        handleSelection(explorerContainer);
+    });
+
+    $(explorerContainer).on('mouseup', function (event) {        
+        // selection ended, hide the selection rectangle
+        isSelecting = false;
+        document.body.style.removeProperty('overflow-y');
+        document.documentElement.style.removeProperty('overflow-y');
+
+        visibleSelectionRectangle.style.visibility = 'hidden';
+        selectionRectangle.style.visibility = 'hidden';
+
+        selectionRectangle.style.left = '0px';
+        selectionRectangle.style.top = '0px';
+        selectionRectangle.style.width = '0px';
+        selectionRectangle.style.height = '0px';
+        visibleSelectionRectangle.style.left = '0px';
+        visibleSelectionRectangle.style.top = '0px';
+        visibleSelectionRectangle.style.width = '0px';
+        visibleSelectionRectangle.style.height = '0px';
+        // change color of items that fall within selection rectangle
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            // go through each .e item that was inside the selection rectangle, and mark it as selected
+            explorer.querySelectorAll('.e.selectionHover').forEach(item => {                
+                item.classList.add('selected');
+                item.classList.remove('selectionHover');
+            });
+        }
+    });
+    // both wheel and scroll functions are needed, otherwise scrollTop() and scrollLeft() values are not updated, or the event is not fired
+    $(explorerContainer).on('wheel', function (event) {
+        handleSelection(explorerContainer);
+    });
+    $(explorerContainer).on('scroll', function (event) {
+        handleSelection(explorerContainer);
+    });
     const tabPage = document.querySelector(`#tabPage${tabId}`);
     tabPage.appendChild(drivesContainer);
     tabPage.appendChild(explorerContainer);
     tabPage.appendChild(previewContainer);
     // switch to the newly rendered tab
     switchTab(tabId);
+}
+
+/**
+ * Handles selection rectangle updates and item highlighting within the explorer container.
+ * @param {HTMLElement} explorerContainer - The main container for item selection.
+ */
+function handleSelection(explorerContainer) {
+    if (!isSelecting)
+        return;
+    const explorer = getActiveExplorer();
+    if (explorer) {
+         // calculate dimensions of the selection rectangle
+        const currentX = currentMousePosition.x;
+        const currentY = currentMousePosition.y;
+        const width = currentX - (selectionStartPosition.x - $(explorer).scrollLeft());
+        const height = currentY - (selectionStartPosition.y - $(explorerContainer).scrollTop());
+
+        // update selection rectangle dimensions
+        visibleSelectionRectangle.style.width = Math.abs(width) + 'px';
+        visibleSelectionRectangle.style.height = Math.abs(height) + 'px';
+        selectionRectangle.style.width = Math.abs(width) + 'px';
+        selectionRectangle.style.height = Math.abs(height) + 'px';
+
+        // adjust position based on selection direction
+        if (width < 0) {
+            selectionRectangle.style.left = currentX + 'px';
+            visibleSelectionRectangle.style.left = currentX + 'px';
+        }
+        else {
+            selectionRectangle.style.left = (selectionStartPosition.x - $(explorer).scrollLeft()) + 'px';
+            visibleSelectionRectangle.style.left = (selectionStartPosition.x - $(explorer).scrollLeft()) + 'px';
+        }
+        if (height < 0) {
+            selectionRectangle.style.top = currentY + 'px';
+            visibleSelectionRectangle.style.top = currentY + 'px';
+        }
+        else {
+            selectionRectangle.style.top = (selectionStartPosition.y - $(explorerContainer).scrollTop()) + 'px';
+            visibleSelectionRectangle.style.top = (selectionStartPosition.y - $(explorerContainer).scrollTop()) + 'px';
+        }
+
+        // do not let the selection rectangle go outside of explorer container, clip it if needed
+        const containerRect = explorerContainer.getBoundingClientRect();
+        const left = parseFloat(visibleSelectionRectangle.style.left);
+        const top = parseFloat(visibleSelectionRectangle.style.top) + 1;
+        const right = left + parseFloat(visibleSelectionRectangle.style.width);
+        const bottom = top + parseFloat(visibleSelectionRectangle.style.height);
+        if (left < containerRect.left) {
+            const difference = containerRect.left - left;
+            visibleSelectionRectangle.style.width = (parseFloat(visibleSelectionRectangle.style.width) - difference) + 'px';
+            visibleSelectionRectangle.style.left = containerRect.left + 'px';
+        }
+        if (right > containerRect.right) 
+            visibleSelectionRectangle.style.width = (containerRect.right - left) + 'px';
+
+        if (top < containerRect.top) {
+            const difference = containerRect.top - top;
+            visibleSelectionRectangle.style.height = (parseFloat(visibleSelectionRectangle.style.height) - difference) + 'px';
+            visibleSelectionRectangle.style.top = containerRect.top + 'px';
+        }
+        if (bottom > containerRect.bottom) 
+            visibleSelectionRectangle.style.height = (containerRect.bottom - top) + 'px';  
+
+        // change color of items that fall within selection rectangle            
+        const selectionRect = selectionRectangle.getBoundingClientRect();
+        // go through each .e item which has not had its thumbnail retrieved yet
+        explorer.querySelectorAll('.e').forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            // check if the item is fully or partially visible horizontally and vertically
+            const isFullyVisibleHorizontally = itemRect.left >= selectionRect.left && itemRect.right <= selectionRect.right;
+            const isFullyVisibleVertically = itemRect.top >= selectionRect.top && itemRect.bottom <= selectionRect.bottom;
+            const isPartiallyVisibleHorizontally = itemRect.left < selectionRect.right && itemRect.right > selectionRect.left;
+            const isPartiallyVisibleVertically = itemRect.top < selectionRect.bottom && itemRect.bottom > selectionRect.top;
+            // if the item is fully or partially visible in both directions, add it to our list
+            if ((isFullyVisibleHorizontally || isPartiallyVisibleHorizontally) &&
+                (isFullyVisibleVertically || isPartiallyVisibleVertically)) {
+                item.classList.add('selectionHover');
+            }
+            else
+                item.classList.remove('selectionHover');
+        });
+    }
 }
 
 /**
@@ -845,7 +1005,21 @@ function createExplorer(tabId, path) {
     const explorer = createContainer(`explorer${tabId}`, "List");
     explorer.setAttribute("data-path", path);
     explorer.setAttribute("data-environment", activeEnvironmentId);
-    explorer.style.flexDirection = "column";
+    explorer.style.flexDirection = "column"; // TODO: change based on preferences of initial display view    
+    explorer.addEventListener('mouseup', (event) => {
+        const explorerScrollbars = hasScrollbars(explorer);
+        // check if clicked on the horizontal scrollbar
+        if (explorerScrollbars.horizontal && event.clientY > $(explorer).offset().top + $(explorer).height() - scrollbarHeight)
+            return;
+        if (!event.ctrlKey && !event.shiftKey) {
+            // deselect all file system elements when their explorer is clicked
+            explorer.querySelectorAll('.e.selected').forEach(item => {
+                item.classList.remove('selected');
+            });
+            // do not store information about what item was clicked first, in context of Shift-selection
+            explorer.removeAttribute('data-selection-start');
+        }
+    });
     return explorer;
 }
 
@@ -869,6 +1043,11 @@ function populateExplorerWithData(explorer, data) {
     }
 }
 
+// handle clicks on files and folders
+let lastClickedItem = null;
+let lastClickedExplorer = null;
+
+
 /**
  * Creates a DOM element for a file or directory.
  * @param {Object} entity - The file or directory object.
@@ -877,9 +1056,14 @@ function populateExplorerWithData(explorer, data) {
  */
 function createFileSystemEntity(entity, type) {
     const entityDiv = document.createElement("div");
-    entityDiv.className = "e list-icons";
+    entityDiv.className = "e list-icons"; // TODO: change "list-icons" with customizable property
     entityDiv.dataset.path = entity.path;
-    entityDiv.dataset.type = type;
+    entityDiv.dataset.type = type;    
+    entityDiv.addEventListener('mouseup', handleFileSystemEntityClick);
+    entityDiv.addEventListener('mousedown', function (event) {
+        // stop the event from bubbling up to the explorer - we dont want to start selection rectangles when clicking files or directories
+        event.stopPropagation();
+    });
     // create and append child divs to the entityDiv
     entityDiv.appendChild(createIconDiv(entity.path, type));
     entityDiv.appendChild(createTextDiv(entity.name, type));
@@ -944,6 +1128,73 @@ function createSizeDiv(size, type) {
     sizeDiv.style.display = "none";
     sizeDiv.textContent = size;
     return sizeDiv;
+}
+
+/**
+ * Handle the logic when a file or directory is clicked.
+ * @param {Event} event - The click event object.
+ */
+function handleFileSystemEntityClick(event) {
+    event.preventDefault();
+    if (!isSelecting)
+        event.stopPropagation();
+
+    const explorer = getActiveExplorer();
+    const allEClassElements = Array.from(explorer.querySelectorAll('.e'));
+    const currentIndex = allEClassElements.indexOf(event.currentTarget);
+
+    // If a previous click timestamp exists, check the time difference
+    const previousTime = parseInt(event.currentTarget.dataset.selectionStartTime || 0);
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - previousTime;
+
+    // if time difference is less than 300ms, treat it as a double-click
+    if (timeDifference < 300) { 
+        if (event.currentTarget.dataset.type === 'directory') { // directories
+            if (IS_DEBUG)
+                console.info(getCurrentTime() + " Double clicked: " + event.currentTarget.dataset.path);
+            addressBarInput.value = event.currentTarget.dataset.path;
+            parsePath(true); // TODO: add to undo 
+            return;
+        } else { // files
+
+        }
+        // reset the timestamp used to track double clicks
+        event.currentTarget.dataset.selectionStartTime = 0;
+        return;
+    }
+
+    if (event.ctrlKey) { // when CTRL key is pressed
+        // toggle selection for the current clicked item
+        event.currentTarget.classList.toggle('selected');
+        // Set the selection start if it's not already set
+        if (explorer.dataset.selectionStart === undefined) 
+            explorer.dataset.selectionStart = currentIndex;      
+    } else if (event.shiftKey && explorer.dataset.selectionStart !== undefined) { // when SHIFT key is pressed
+        const start = parseInt(explorer.dataset.selectionStart);
+        // remove all selections
+        allEClassElements.forEach(elem => {
+            elem.classList.remove('selected');
+        });
+        // define the range to select items from and to
+        const [from, to] = start < currentIndex ? [start, currentIndex] : [currentIndex, start];
+        // add the 'selected' class to items in the range
+        for (let i = from; i <= to; i++) 
+            allEClassElements[i].classList.add('selected');       
+    } else { // when neither CTRL nor SHIFT keys are pressed
+        // deselect all items
+        allEClassElements.forEach(elem => {
+            elem.classList.remove('selected');
+            // remove selectionStartTime from all items
+            delete elem.dataset.selectionStartTime;
+        });
+        // add 'selected' class to the current clicked item
+        event.currentTarget.classList.add('selected');
+        // set the current item as the selection start
+        explorer.dataset.selectionStart = currentIndex;
+        // store the current timestamp for future double-click checks
+        event.currentTarget.dataset.selectionStartTime = currentTime;
+    }
 }
 
 /**
@@ -1097,6 +1348,15 @@ function parsePath(needsContentRefresh) {
     if (!addressBarInput.value.endsWith(separator))
         addressBarInput.value = addressBarInput.value + separator;
     const path = addressBarInput.value;
+    if (IS_DEBUG)
+        console.info(getCurrentTime() + " Preparing to parse path: " + path);
+    if (needsContentRefresh) {
+        // if there was a job for thumbnails retrieval, cancel it
+        if (abortController) {
+            abortController.abort();
+            abortController = null;
+        }
+    }
     $.ajax({
         url: baseUrl + '/FileSystem/CheckPath?path=' + encodeURIComponent(path),
         type: 'GET',
@@ -1105,6 +1365,8 @@ function parsePath(needsContentRefresh) {
         },
         success: function (data) {
             if (data.success) {
+                if (IS_DEBUG)
+                    console.info(getCurrentTime() + " Checked path for: " + path);
                 $.ajax({
                     url: baseUrl + '/FileSystem/ParsePath?path=' + encodeURIComponent(path),
                     type: 'GET',
@@ -1113,6 +1375,8 @@ function parsePath(needsContentRefresh) {
                     },
                     success: function (data) {
                         if (data.success) {
+                            if (IS_DEBUG)
+                                console.info(getCurrentTime() + " Parsed path for: " + path);
                             renderAddressBar(data.pathSegments);
                             addressBarInput.style.display = 'none'; // Hide #addressBarInput
                             addressBar.style.display = 'block'; // Show #addressBar
@@ -1130,16 +1394,22 @@ function parsePath(needsContentRefresh) {
                         else
                             console.error(data.errorMessage);
                     },
-                    error: function (error) {
-                        console.error('Failed to fetch files:', error);
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        if (jqXHR.status === 401) 
+                            window.location.href = "/Account/Login";
+                        else 
+                            console.error('Failed to fetch files:', errorThrown);
                     }
                 });
             }
             else
                 console.error(data.errorMessage);
         },
-        error: function (error) {
-            console.error('Failed to fetch files:', error);
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 401) // TODO: perhaps, update the last location of current tab, so that it returns to it after login?
+                window.location.href = "/Account/Login"; 
+            else 
+                console.error('Failed to fetch files:', errorThrown);
         }
     });
 }
@@ -1420,6 +1690,61 @@ function getUserPermissions() {
 // note: chill, this is for UI visual manipulation purposes ONLY, the permissions are checked server side anyway!
 function setUserPermissions(permissions) {
     window.Permissions = [...new Set([...window.Permissions, ...permissions])];
+}
+
+/**
+ * Determines if the given element has vertical and/or horizontal scrollbars.
+ * @param {HTMLElement} element - The element to check for scrollbars.
+ * @returns {Object} An object indicating the presence of vertical and horizontal scrollbars.
+ * @property {boolean} vertical - True if the element has a vertical scrollbar, otherwise false.
+ * @property {boolean} horizontal - True if the element has a horizontal scrollbar, otherwise false.
+ */
+function hasScrollbars(element) {
+    const tolerance = 2;
+    return {
+        vertical: element.scrollHeight - element.clientHeight > tolerance,
+        horizontal: element.scrollWidth - element.clientWidth > tolerance
+    };
+}
+
+/**
+ * Get the height of the browser's scrollbar.
+ * @returns {number} Height of the scrollbar in pixels.
+ */
+function getScrollbarHeight() {
+    // create an outer div and set its height and overflowY properties
+    const outer = document.createElement('div');
+    outer.style.visibility = 'hidden';
+    outer.style.height = '100px';
+    outer.style.overflowY = 'scroll';
+    document.body.appendChild(outer);
+    const heightNoScroll = outer.offsetHeight;
+    const heightWithScroll = outer.clientHeight;
+    // cleanup after measuring
+    outer.parentNode.removeChild(outer);
+    return heightNoScroll - heightWithScroll;
+}
+
+/**
+ * Get the width of the browser's scrollbar.
+ * @returns {number} Width of the scrollbar in pixels.
+ */
+function getScrollbarWidth() {
+    // create an outer div and set its width
+    const outer = document.createElement('div');
+    outer.style.visibility = 'hidden';
+    outer.style.width = '100px';
+    document.body.appendChild(outer);
+    const widthNoScroll = outer.offsetWidth;
+    // apply overflow and append an inner div
+    outer.style.overflow = 'scroll';
+    const inner = document.createElement('div');
+    inner.style.width = '100%';
+    outer.appendChild(inner);
+    const widthWithScroll = inner.offsetWidth;
+    // cleanup and calculate the difference
+    outer.parentNode.removeChild(outer);
+    return widthNoScroll - widthWithScroll;
 }
 
 $(document).ready(function () {

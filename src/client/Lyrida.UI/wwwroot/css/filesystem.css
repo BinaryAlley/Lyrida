@@ -212,6 +212,7 @@ div[id^="explorer"]:not([id*="Container"]) {
 
     display: flex;
     align-items: center;
+    user-select: none;
 }
 
 .e.details-icons {
@@ -409,7 +410,6 @@ div[id^="explorer"]:not([id*="Container"]) {
     word-wrap: break-word; 
 }
 
-
 .e.details-icons .date-modified, 
 .e.details-icons .type, 
 .e.details-icons .size {
@@ -429,6 +429,7 @@ div[id^="explorer"]:not([id*="Container"]) {
     align-items: center;
     padding-left: 10px;
 }
+
 .e.details-icons .date-modified {
     width: 180px; 
     padding-left: 10px;
@@ -450,9 +451,20 @@ div[id^="explorer"]:not([id*="Container"]) {
 }
 
 .e:hover {
+    background-color: #404040;
+    border-top-color: #999999;
+    border-left-color: #999999;
+}
+
+.e.selected {
+    
     background-color: #4D4D4D;
     border-top-color: #999999;
     border-left-color: #999999;
+}
+
+.e.selectionHover {    
+    background-color: #0048D7;
 }
 
 /*directory*/

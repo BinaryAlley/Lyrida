@@ -125,7 +125,7 @@ public class Program
         app.UseMiddleware<EnvironmentMiddleware>();
         app.UseMiddleware<PlatformMiddleware>();
         app.UseMiddleware<LanguageMiddleware>();
-        app.UseMiddleware<AuthorizationMiddleware>();
+        //app.UseMiddleware<AuthorizationMiddleware>();
         app.MapControllers();      
         app.Run();
     }
