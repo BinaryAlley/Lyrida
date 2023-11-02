@@ -9,6 +9,7 @@ using Lyrida.Infrastructure.Common.Enums;
 using Lyrida.Infrastructure.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Lyrida.UI.Common.DTO.Configuration;
+using System.Collections.Generic;
 #endregion
 
 namespace Lyrida.UI.Controllers;
@@ -50,7 +51,10 @@ public class FileSystemController : Controller
     {
         string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
         ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
-        return View("Index", profilePreferences);
+        response = await apiHttpClient.GetAsync($"pages", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        ViewData["Preferences"] = profilePreferences;
+        ViewData["InitialPages"] = JsonConvert.DeserializeObject<List<PageDto>>(response);
+        return View("Index");
     }
 
     /// <summary>
@@ -137,6 +141,39 @@ public class FileSystemController : Controller
         var response = await apiHttpClient.GetAsync($"paths/goUpOneLevel?path={Uri.EscapeDataString(path)}", HttpContext.Items["UserToken"]?.ToString(),
             translationService.Language, environment, platform);
         return Json(new { success = true, pathSegments = JsonConvert.DeserializeObject<PathSegmentDto[]>(response) });
+    }
+
+    /// <summary>
+    /// Stores a new user page
+    /// </summary>
+    /// <param name="page">The page to be stored</param>
+    [HttpPost("AddPage")]
+    public async Task<IActionResult> AddPage([FromBody] PageDto page)
+    {
+        await apiHttpClient.PostAsync($"pages", page, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        return Json(new { success = true });
+    }
+
+    /// <summary>
+    /// Removes an existing user page
+    /// </summary>
+    /// <param name="page">The page to be removed</param>
+    [HttpPost("RemovePage")]
+    public async Task<IActionResult> RemovePage([FromBody] string guid)
+    {
+        await apiHttpClient.DeleteAsync($"pages/{guid}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        return Json(new { success = true });
+    }
+
+    /// <summary>
+    /// Updates an existing user page
+    /// </summary>
+    /// <param name="page">The page to be updated</param>
+    [HttpPost("UpdatePage")]
+    public async Task<IActionResult> UpdatePage([FromBody] PageDto page)
+    {
+        await apiHttpClient.PutAsync($"pages", page, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        return Json(new { success = true });
     }
     #endregion
 }

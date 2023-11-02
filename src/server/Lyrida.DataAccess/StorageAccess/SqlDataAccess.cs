@@ -213,7 +213,7 @@ internal sealed class SqlDataAccess : IDataAccess
             if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
                 dbConnection.ConnectionString = ConnectionStringFactory?.Invoke();
             // reconstruct the SQL query from the parameters
-            string query = "SELECT " + GetQueryProperties<TDto>() + " FROM " + dbTableNamesMaping[table] + (filter != null ? " WHERE " : string.Empty);
+            string query = "SELECT " + GetQueryProperties<TDto>() + " \nFROM " + dbTableNamesMaping[table] + (filter != null ? " \nWHERE " : string.Empty);
             // if a filter was specified, add the properties and their values from filter as the WHERE clauses of the SQL query
             Dictionary<string, object>? args = null;
             if (filter != null)
@@ -602,7 +602,7 @@ internal sealed class SqlDataAccess : IDataAccess
         IEnumerable<PropertyInfo> properties = typeof(TDto).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
                                                            .Where(property => property.GetCustomAttributes<IgnoreOnQueryAttribute>().None());
         // concatenate all the above properties in a single string, separated by comas, and escape them as SQL column parameters
-        return string.Join(",\n\t", properties.Select(p => "`" + (p.GetCustomAttribute<MapsToAttribute>()?.Name ?? p.Name) + "`"));
+        return string.Join(",\n\t", properties.Select(p => "`" + (p.GetCustomAttribute<MapsToAttribute>()?.Name ?? p.Name) + "` AS " + p.Name));
     }
 
     /// <summary>
@@ -612,6 +612,7 @@ internal sealed class SqlDataAccess : IDataAccess
     {
         dbTableNamesMaping.Add(DataContainers.Users, "Users");
         dbTableNamesMaping.Add(DataContainers.Roles, "Roles");
+        dbTableNamesMaping.Add(DataContainers.UserPages, "UserPages");
         dbTableNamesMaping.Add(DataContainers.UserRoles, "UserRoles");
         dbTableNamesMaping.Add(DataContainers.Permissions, "Permissions");
         dbTableNamesMaping.Add(DataContainers.UserPreferences, "UserPreferences");

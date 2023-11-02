@@ -49,7 +49,7 @@ public sealed class FileSystemPathId : ValueObject
     public static ErrorOr<FileSystemPathId> Create(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         return new FileSystemPathId(path);
     }
     #endregion

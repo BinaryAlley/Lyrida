@@ -47,10 +47,10 @@ public class UnixPathStrategy : IUnixPathStrategy
     public ErrorOr<IEnumerable<PathSegment>> ParsePath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         // if path starts with anything other than '/', it's considered relative and invalid for this parser
         if (!path.StartsWith('/'))
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         // get the path segments
         var splitSegments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         IEnumerable<PathSegment> segments = splitSegments.Select((segment, index) =>
@@ -74,7 +74,7 @@ public class UnixPathStrategy : IUnixPathStrategy
     {
         // validation: ensure the path is not null or empty
         if (!IsValidPath(path))
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         // trim trailing slash for consistent processing
         if (path.EndsWith("/"))
             path = path.TrimEnd('/');
@@ -82,7 +82,7 @@ public class UnixPathStrategy : IUnixPathStrategy
         int lastIndex = path.LastIndexOf('/');
         // if there's no slash found (shouldn't happen due to previous steps), or if we are at the root level after trimming, return error
         if (lastIndex <= 0)
-            return Errors.FileSystem.CannotNavigateUp;
+            return Errors.FileSystem.CannotNavigateUpError;
         // return the path up to the last slash
         return ParsePath(path[..lastIndex]);
     }

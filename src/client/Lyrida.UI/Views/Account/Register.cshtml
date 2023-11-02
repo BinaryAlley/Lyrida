@@ -10,7 +10,7 @@
         <table class="w-100">
             <!-- section for determining registration type (regular user/admin) -->
             <input type="hidden" id="registrationType" name="registrationType" value="@ViewData["RegistrationType"]">
-            @if (@ViewData["RegistrationType"] as string == "Admin")
+            @if (ViewData["RegistrationType"] as string == "Admin")
             {
                 <tr>
                     <td colspan="2">

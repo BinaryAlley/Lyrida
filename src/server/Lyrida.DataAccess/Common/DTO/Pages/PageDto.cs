@@ -1,17 +1,18 @@
 ﻿#region ========================================================================= USING =====================================================================================
+using System;
 using Lyrida.DataAccess.StorageAccess;
 using Lyrida.DataAccess.Common.Attributes;
 #endregion
 
-namespace Lyrida.DataAccess.Common.DTO.Configuration;
+namespace Lyrida.DataAccess.Common.DTO.Pages;
 
 /// <summary>
-/// Profile preferences data transfer object
+/// User pages data transfer object
 /// </summary>
 /// <remarks>
-/// Creation Date: 25th of October, 2023
+/// Creation Date: 02nd of November, 2023
 /// </remarks>
-public sealed class ProfilePreferencesDto : IStorageDto
+public sealed class PageDto : IStorageDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
     [IgnoreOnCommand]
@@ -19,16 +20,24 @@ public sealed class ProfilePreferencesDto : IStorageDto
     public int Id { get; set; }
     [MapsTo(Name = "user_id")]
     public int UserId { get; set; }
-    [MapsTo(Name = "remember_open_tabs")]
-    public bool RememberOpenTabs { get; set; } = true;
-    [MapsTo(Name = "show_image_previews")]
-    public bool ShowImagePreviews { get; set; } = true;
-    [MapsTo(Name = "use_2fa")]
-    public bool Use2fa { get; set; } = true;
-    [MapsTo(Name = "image_previews_quality")]
-    public int ImagePreviewsQuality { get; set; }
-    [MapsTo(Name = "full_image_quality")]
-    public int FullImageQuality { get; set; }
+    [IgnoreOnQuery]
+    [MapsTo(Name = "page_id")]
+    public Guid Uuid { get; set; }
+    [IgnoreOnCommand]
+    [MapsTo(Name = "page_id")]
+    public string? UuidString { get; set; }
+    [MapsTo(Name = "title")]
+    public string? Title { get; set; }
+    [MapsTo(Name = "path")]
+    public string? Path { get; set; }
+    [MapsTo(Name = "platform_id")]
+    public int PlatformId { get; set; }
+    [IgnoreOnCommand]
+    [MapsTo(Name = "created")]
+    public DateTime Created { get; set; }
+    [IgnoreOnCommand]
+    [MapsTo(Name = "updated")]
+    public DateTime Updated { get; set; }
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================

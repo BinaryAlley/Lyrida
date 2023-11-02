@@ -290,7 +290,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
             {
                 dynamic mappedAttribute = property.GetCustomAttribute(mappingAttributeType!)!;
                 if (mappedAttribute != null && ((IEnumerable<dynamic>)mappedAttribute!.GetType().GetProperties()).Any(p => p.Name == "Name"))
-                    result += (((IEnumerable<dynamic>)mappedAttribute!.GetType().GetProperties()).First(p => p.Name == "Name")).GetValue(mappedAttribute) + ", ";
+                    result += (((IEnumerable<dynamic>)mappedAttribute!.GetType().GetProperties()).First(p => p.Name == "Name")).GetValue(mappedAttribute) + " AS " + property.Name + ", ";
                 else
                     result += property.Name + ", ";
             }
@@ -361,7 +361,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
                 var name = nameProperty.GetValue(mapsToAttribute) as string;
                 if (!string.IsNullOrEmpty(name))
                 {
-                    propertyNames.Add(name);
+                    propertyNames.Add(name + " AS " + property.Name);
                     continue;
                 }
             }
@@ -390,6 +390,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     {
         dbTableNamesMaping.Add("Roles", "Roles");
         dbTableNamesMaping.Add("Users", "Users");
+        dbTableNamesMaping.Add("UserPages", "UserPages");
         dbTableNamesMaping.Add("UserRoles", "UserRoles");
         dbTableNamesMaping.Add("Permissions", "Permissions");
         dbTableNamesMaping.Add("UserPermissions", "UserPermissions");

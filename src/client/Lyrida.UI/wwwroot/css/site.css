@@ -41,7 +41,14 @@ header {
     margin-left: 5px;
 }
 
-#accountIcon {
+#selectionIconContainer {
+    position: relative;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+
+.icon {
     cursor: pointer;
     width: 26px; 
     height: 26px; 
@@ -70,17 +77,40 @@ header {
     left: 3px;
 }
 
+#selectionDropdown {
+    position: absolute;
+    left: 0; 
+    top: calc(100% + 10px);
+    border: 1px solid #039BFC;
+    border-radius: 5px;
+    background-color: #1E1E1E;
+    min-width: 180px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+}
+
+#selectionDropdownArrow {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #039BFC;
+    position: absolute;
+    top: -10px;
+    left: 3px;
+}
+
 .hidden {
     display: none;
 }
 
-#accountDropdown ul {
+#accountDropdown ul, #selectionDropdown ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-#accountDropdown li a {
+#accountDropdown li a, #selectionDropdown li a {
     display: block;
     padding: 8px 12px;
     text-decoration: none;
@@ -88,18 +118,18 @@ header {
 }
 
 /* rounded corners for the first link */
-#accountDropdown li:first-child a {
+#accountDropdown li:first-child a, #selectionDropdown li:first-child a {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
 }
 
 /* rounded corners for the last link */
-#accountDropdown li:last-child a {
+#accountDropdown li:last-child a, #selectionDropdown li:last-child a {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
 }
 
-#accountDropdown li a:hover {
+#accountDropdown li a:hover, #selectionDropdown li a:hover {
     background-color: #232323;
 }
 
@@ -237,6 +267,14 @@ footer {
 
 #navigationControlsGroup {
     width: 165px;
+    display: flex;
+    align-items: center;
+    margin-right: 5px;
+}
+
+#navigationMiscellaneousGroup {
+    margin-left: 5px;
+    width: 35px;
     display: flex;
     align-items: center;
 }
@@ -727,7 +765,7 @@ header #btnNavigate, header #btnEditPath {
     header {
         flex-wrap: wrap;
         justify-content: space-between;
-        height: 64px;
+        height: 100px;
     }
     #viewModeGroup {
         height: 26px;

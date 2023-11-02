@@ -3,6 +3,7 @@ using Mapster;
 using System.Collections.Generic;
 using Lyrida.Domain.Core.FileSystem.Entities;
 using Lyrida.Application.Common.DTO.FileSystem;
+using System;
 #endregion
 
 namespace Lyrida.Application.Common.Mapping;
@@ -35,6 +36,24 @@ public class MappingConfig : IRegister
             .Map(dest => dest.DateModified, src => src.DateModified)
             .Map(dest => dest.DateCreated, src => src.DateCreated)
             .Map(dest => dest.Size, src => src.Size);
+
+        TypeAdapterConfig<DataAccess.Common.DTO.Pages.PageDto, DTO.Pages.PageDto>
+            .NewConfig()
+            .Map(dest => dest.Uuid, src => ConvertUuidString(src.UuidString));
+    }
+
+    /// <summary>
+    /// Converts a string representation of a unique identifier (UUID) to its Guid equivalent.
+    /// </summary>
+    /// <param name="uuidString">The string representation of the UUID to convert.</param>
+    /// <returns>
+    /// A Guid equivalent to the UUID contained in <paramref name="uuidString"/>, or <see cref="Guid.Empty"/> if the string is null, empty, or not of a valid format.
+    /// </returns>
+    public static Guid ConvertUuidString(string? uuidString)
+    {
+        if (Guid.TryParse(uuidString, out Guid temp))
+            return temp;
+        return Guid.Empty;
     }
     #endregion
 }

@@ -237,7 +237,13 @@ public class TranslationService : ITranslationService
             (Terms.DescriptionFullImageQuality, "Calitatea imaginii când este văzută la dimensiune completă. Ajustează ca procentaj.", "Image quality when viewing at full size. Adjust as a percentage.", "Bildqualität beim Betrachten in voller Größe. Als Prozentsatz anpassen."),
             (Terms.DescriptionImagePreviewsQuality, "Calitatea imaginii pentru miniaturi. Ajustează ca procentaj.", "Image quality for thumbnails. Adjust as a percentage.", "Bildqualität für Vorschaubilder. Als Prozentsatz anpassen."),
             (Terms.ValueBetweenZeroAndOneHundred, "Valoarea trebuie să fie in intervalul 1-100!", "The value must be between 1 and 100!", "Der Wert muss zwischen 1 und 100 liegen!"),
-      };
+            (Terms.SelectionMode, "Mod selecție", "Selection mode", "Auswahlmodus"),
+            (Terms.NormalMode, "Mod normal", "Normal mode", "Normalmodus"),
+            (Terms.SelectAll, "Selectează tot", "Select all", "Alles auswählen"),
+            (Terms.SelectNone, "Deselectează tot", "Select none", "Nichts auswählen"),
+            (Terms.SelectInverse, "Inversează selecție", "Invert selection", "Auswahl umkehren"),
+            (Terms.SelectAPlatform, "Selectați o platformă", "Select a platform", "Plattform auswählen"),
+        };
     }
     #endregion
 

@@ -1,34 +1,25 @@
 ﻿#region ========================================================================= USING =====================================================================================
-using Lyrida.DataAccess.StorageAccess;
-using Lyrida.DataAccess.Common.Attributes;
+using System;
+using Mapster;
 #endregion
 
-namespace Lyrida.DataAccess.Common.DTO.Configuration;
+namespace Lyrida.Application.Common.DTO.Pages;
 
 /// <summary>
-/// Profile preferences data transfer object
+/// User pages data transfer object
 /// </summary>
 /// <remarks>
-/// Creation Date: 25th of October, 2023
+/// Creation Date: 02nd of November, 2023
 /// </remarks>
-public sealed class ProfilePreferencesDto : IStorageDto
+public sealed class PageDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    [IgnoreOnCommand]
-    [MapsTo(Name = "id")]
     public int Id { get; set; }
-    [MapsTo(Name = "user_id")]
     public int UserId { get; set; }
-    [MapsTo(Name = "remember_open_tabs")]
-    public bool RememberOpenTabs { get; set; } = true;
-    [MapsTo(Name = "show_image_previews")]
-    public bool ShowImagePreviews { get; set; } = true;
-    [MapsTo(Name = "use_2fa")]
-    public bool Use2fa { get; set; } = true;
-    [MapsTo(Name = "image_previews_quality")]
-    public int ImagePreviewsQuality { get; set; }
-    [MapsTo(Name = "full_image_quality")]
-    public int FullImageQuality { get; set; }
+    public Guid Uuid { get; set; }
+    public string? Title { get; set; }
+    public string? Path { get; set; }
+    public int PlatformId { get; set; }
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================
@@ -38,7 +29,16 @@ public sealed class ProfilePreferencesDto : IStorageDto
     /// <returns>Custom string value showing relevant data for current class</returns>
     public override string ToString()
     {
-        return Id + " :: " + UserId;
+        return Id + " :: " + Path;
+    }
+
+    /// <summary>
+    /// Maps between this DTO and the coresponding persistance DTO
+    /// </summary>
+    /// <returns>A data storage DTO representation of this DTO</returns>
+    public DataAccess.Common.DTO.Pages.PageDto ToStorageDto()
+    {
+        return this.Adapt<DataAccess.Common.DTO.Pages.PageDto>();
     }
     #endregion
 }

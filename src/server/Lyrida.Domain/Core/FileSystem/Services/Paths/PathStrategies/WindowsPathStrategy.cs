@@ -46,10 +46,10 @@ public class WindowsPathStrategy : IWindowsPathStrategy
     {
         // validation: ensure the path is not null or empty.
         if (string.IsNullOrWhiteSpace(path))
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         // Windows paths usually start with a drive letter and colon, e.g., "C:"
         if (!path.Contains(':') || !path.Contains('\\') || !char.IsLetter(path[0]) || path[1] != ':' || path[2] != '\\')
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         return ErrorOrFactory.From(GetPathSegments());
         IEnumerable<PathSegment> GetPathSegments()
         {
@@ -79,10 +79,10 @@ public class WindowsPathStrategy : IWindowsPathStrategy
     {
         // validation: ensure the path is not null or empty
         if (!IsValidPath(path))
-            return Errors.FileSystem.InvalidPath;
+            return Errors.FileSystem.InvalidPathError;
         // if path is just a drive letter followed by ":\", return null
         if (Regex.IsMatch(path, @"^[a-zA-Z]:\\?$"))
-            return Errors.FileSystem.CannotNavigateUp;
+            return Errors.FileSystem.CannotNavigateUpError;
         // trim trailing slash for consistent processing
         if (path.EndsWith("\\"))
             path = path.TrimEnd('\\');
@@ -90,7 +90,7 @@ public class WindowsPathStrategy : IWindowsPathStrategy
         int lastIndex = path.LastIndexOf('\\');
         // if there's no slash found (shouldn't happen due to previous steps), or if we are at the root level after trimming, return error
         if (lastIndex < 0)
-            return Errors.FileSystem.CannotNavigateUp;
+            return Errors.FileSystem.CannotNavigateUpError;
         // if we are at the drive root level after trimming, return drive root
         if (lastIndex == 2 && path[1] == ':')
             return ParsePath(path[..3]);

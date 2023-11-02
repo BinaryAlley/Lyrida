@@ -1,5 +1,7 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System.Diagnostics;
+using System.Collections.Generic;
+using Lyrida.UI.Common.DTO.FileSystem;
 #endregion
 
 namespace Lyrida.UI.Common.DTO.Configuration;
@@ -18,5 +20,6 @@ public class ProfilePreferencesDto
     public bool Use2fa { get; set; } = true;
     public int ImagePreviewsQuality { get; set; } = 70;
     public int FullImageQuality { get; set; } = 90;
+    public List<PageDto> OpenTabs { get; set; } = new();
     #endregion
 }

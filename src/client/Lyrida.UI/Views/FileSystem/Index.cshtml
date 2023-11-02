@@ -1,17 +1,37 @@
-﻿@using Lyrida.Infrastructure.Common.Enums;
+﻿@using Newtonsoft.Json;
+@using Lyrida.UI.Common.DTO.FileSystem;
+@using Lyrida.Infrastructure.Common.Enums;
 @using Lyrida.Infrastructure.Localization;
 @using Lyrida.UI.Common.DTO.Configuration;
-@using Lyrida.UI.Common.DTO.FileSystem;
 @inject ITranslationService translattionService
 @{
-    if (Model is ProfilePreferencesDto profilePreference)
+    if (ViewData["Preferences"] is ProfilePreferencesDto profilePreference)
     {
         <script>
-            showThumbnails = @profilePreference.ShowImagePreviews.ToString().ToLower();
-            imagePreviewsQuality = @profilePreference.ImagePreviewsQuality.ToString().ToLower();
-            fullImageQuality = @profilePreference.FullImageQuality.ToString().ToLower();
-            // let REMEMBER_OPEN_TABS = @profilePreference.RememberOpenTabs.ToString().ToLower();
-            // let USE_2FA = @profilePreference.Use2fa.ToString().ToLower();            
+            let nextTabId = 0;
+            $(document).ready(() => {
+                @if (profilePreference.RememberOpenTabs)
+                {
+                    if (ViewData["InitialPages"] is List<PageDto> initialPages)// TODO: "remember" view mode for each tab (if enabled as user preference)
+                    {
+                        for (int i = 0; i < initialPages.Count; i++)
+                        {
+                            var title = Json.Serialize(initialPages[i].Title);
+                            var path = Json.Serialize(initialPages[i].Path);
+                            var platformId = initialPages[i].PlatformId;
+                            var uuid = Json.Serialize(initialPages[i].Uuid);
+                            <text>
+                                addNewTab(@title, @path, @platformId, @uuid);
+                            </text>
+                        }
+                    }
+                }
+                showThumbnails = @profilePreference.ShowImagePreviews.ToString().ToLower();
+                imagePreviewsQuality = @profilePreference.ImagePreviewsQuality.ToString().ToLower();
+                fullImageQuality = @profilePreference.FullImageQuality.ToString().ToLower();
+                rememberOpenTabs = @profilePreference.RememberOpenTabs.ToString().ToLower();
+                // let USE_2FA = @profilePreference.Use2fa.ToString().ToLower();
+            });
         </script>
     }
 }
@@ -29,23 +49,24 @@
 
 @section Scripts {
     <script type="text/javascript">
-        const initialPages = [
-            { title: "Home", path: "/app/", platformId: 1 },
-        ];
-        let nextTabId = initialPages.length;
+        // const initialPages = [
+        //     { title: "Home", path: "/app/", platformId: 1 },
+        // ];
+        //let nextTabId = initialPages.length;
 
         $('#dynTab_addTab').click((e) => {
             e.preventDefault();
+            activeEnvironmentId = 0;
             addNewTab("New Tab", null, null, null);
             e.stopPropagation();
         });
 
-        $(document).ready(() => {
-            if (initialPages && initialPages.length > 0) {
-                initialPages.forEach((page, index) => {
-                    addNewTab(page.title, page.path, index, page.platformId);
-                });
-            }
-        });
+                // $(document).ready(() => {
+                //     if (initialPages && initialPages.length > 0) {
+                //         initialPages.forEach((page, index) => {
+                //             addNewTab(page.title, page.path, index, page.platformId);
+                //         });
+                //     }
+                // });
     </script>
 }

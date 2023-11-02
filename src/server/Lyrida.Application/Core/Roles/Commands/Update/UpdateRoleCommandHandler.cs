@@ -67,7 +67,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Error
                     if (resultUpdateRole.Error is null && resultUpdateRole.Count > 0)
                         return true;
                     else
-                        return Errors.DataAccess.InsertRoleError;
+                        return Errors.DataAccess.UpdateRoleError;
                 }
                 return Errors.Authorization.RoleDoesNotExistError;
             }

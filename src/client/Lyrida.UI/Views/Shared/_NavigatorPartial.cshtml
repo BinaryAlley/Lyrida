@@ -8,11 +8,24 @@
         <img src="~/images/ui/next.svg" title="@translationService.Translate(Terms.Forward)" alt="@translationService.Translate(Terms.Forward)" />
         <img src="~/images/ui/up.svg" id="btnUpOneLevel" title="@translationService.Translate(Terms.UpOneLevel)" alt="@translationService.Translate(Terms.UpOneLevel)" />
     </div>
-    <img src="~/images/ui/tree-view.svg" id="btnTreeView" alt="Tree view" title="Tree view" style="width: 24px; height: 24px; cursor: pointer;" />
-    <img src="~/images/ui/preview.svg" id="btnPreview" alt="Preview" title="Preview" style="width: 24px; height: 24px; cursor: pointer;" />
-    <img src="~/images/ui/split-view.svg" id="btnSplitView" alt="Split view" title="Split view" style="width: 24px; height: 24px; cursor: pointer;" />
+    <img src="~/images/ui/tree-view.svg" id="btnTreeView" alt="Tree view" title="Tree view" class="icon" />
+    <img src="~/images/ui/preview.svg" id="btnPreview" alt="Preview" title="Preview" class="icon" />
+    <img src="~/images/ui/split-view.svg" id="btnSplitView" alt="Split view" title="Split view" class="icon" />
 </div>
-
+<div id="navigationMiscellaneousGroup">
+    <div id="selectionIconContainer">
+        <img src="~/images/ui/select.svg" id="btnSelection" alt="Selection" title="Selection" class="icon" />
+        <div id="selectionDropdown" class="hidden">
+            <div id="selectionDropdownArrow"></div>
+            <ul>            
+                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectionMode)</a></li>
+                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectAll)</a></li>
+                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectNone)</a></li>
+                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectInverse)</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
 <div id="addressBarGroup">
     <div id="navigator">
         <input type="text" class="enlightenment-input" id="addressBarInput" />
@@ -22,7 +35,7 @@
                 <div class="shine-effect" style="top: 1px;"></div>
                 <input type="checkbox" id="environmentsDropdownToggle" class="enlightenment-toggle-checkbox" />
                 <label class="enlightenment-toggle" for="environmentsDropdownToggle" style="padding: 0 13px 0px 16px; background-position: right 0px top 50%, left 7px top 50%, 0 0; background-size: 0px 0px, 3px auto, 100%;">
-                    <img src="~/images/ui/os.svg" alt="Local File System" data-platform-id="2" style="width: 23px;">
+                    <img id="imgPlatformPlaceholder" src="~/images/ui/os.svg" alt="@translationService.Translate(Terms.SelectAPlatform)" title="@translationService.Translate(Terms.SelectAPlatform)" data-default-text="@translationService.Translate(Terms.SelectAPlatform)" style="width: 23px;">
                 </label>
                 <div class="enlightenment-dropdown" id="environmentsDropdown">
                     <div class="shine-effect" style="top: -4px;"></div>

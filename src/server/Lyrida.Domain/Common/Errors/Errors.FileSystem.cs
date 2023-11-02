@@ -15,8 +15,8 @@ public static partial class Errors
     public static class FileSystem
     {
         #region ==================================================================== PROPERTIES =================================================================================
-        public static Error InvalidPath => Error.Failure(nameof(InvalidPath));
-        public static Error CannotNavigateUp => Error.Failure(nameof(CannotNavigateUp));
+        public static Error InvalidPathError => Error.Failure(nameof(InvalidPathError));
+        public static Error CannotNavigateUpError => Error.Failure(nameof(CannotNavigateUpError));
         #endregion
     }
 }
