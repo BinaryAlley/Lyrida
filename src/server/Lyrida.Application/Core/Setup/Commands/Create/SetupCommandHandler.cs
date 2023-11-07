@@ -174,6 +174,10 @@ public class SetupCommandHandler : IRequestHandler<SetupCommand, ErrorOr<Registr
             Use2fa = use2fa,
             FullImageQuality = 90,
             ImagePreviewsQuality = 70,
+            ThumbnailsRetrievalBatchSize = 20,
+            ScrollThumbnailRetrievalTimeout = 1000,
+            EnableConsoleDebugMessages = false,
+            InspectFileForThumbnails = false,
             RememberOpenTabs = true,
             ShowImagePreviews = true,
             UserId = userId

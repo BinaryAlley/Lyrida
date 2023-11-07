@@ -108,7 +108,7 @@ public class Program
             ICryptography? cryptographyService = app.Services.GetRequiredService<ICryptography>();
             if (environment is not null)
                 configService.Application!.IsProductionMedium = environment == "Production";
-            string connectionString = "Server=" + databaseHost + ";Port=" + databasePort + ";Database=" + databaseName + ";Uid=" + databaseUser + 
+            string connectionString = "Server=" + databaseHost + ";Port=" + databasePort + ";Database=" + databaseName + ";Uid=" + databaseUser +
                 ";Pwd=" + databasePassword + ";Convert Zero Datetime=True;Allow User Variables=True;IgnoreCommandTransaction=True";
             configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"] = cryptographyService.Encrypt(connectionString);
         }

@@ -20,9 +20,11 @@ public class UpdateProfilePreferenceCommandValidator : AbstractValidator<UpdateP
     public UpdateProfilePreferenceCommandValidator()
     {
         RuleFor(x => x.ProfilePreferences).NotNull().WithMessage(Terms.ProfilePreferencesCannotBeEmpty.ToString());
-        RuleFor(x => x.ProfilePreferences.ImagePreviewsQuality).InclusiveBetween(1, 100).WithMessage("Value must be between 0 and 100.").When(x => x.ProfilePreferences.ShowImagePreviews)
+        RuleFor(x => x.ProfilePreferences.ImagePreviewsQuality).InclusiveBetween(1, 100).When(x => x.ProfilePreferences.ShowImagePreviews)
             .WithMessage(Terms.ValueBetweenZeroAndOneHundred.ToString()); // only apply the rule when ShowImagePreviews is true
         RuleFor(x => x.ProfilePreferences.FullImageQuality).InclusiveBetween(1, 100).WithMessage(Terms.ValueBetweenZeroAndOneHundred.ToString());
+        RuleFor(x => x.ProfilePreferences.ThumbnailsRetrievalBatchSize).GreaterThan(0).WithMessage(Terms.ValueGreaterThanZero.ToString());
+        RuleFor(x => x.ProfilePreferences.ScrollThumbnailRetrievalTimeout).GreaterThan(0).WithMessage(Terms.ValueGreaterThanZero.ToString());
     }
     #endregion
 }

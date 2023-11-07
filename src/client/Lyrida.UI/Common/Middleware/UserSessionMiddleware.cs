@@ -38,17 +38,17 @@ internal class UserSessionMiddleware
     /// Middleware pipeline method to manage user sessions.
     /// Starts a new lifetime scope for the user session, then passes the control to the next middleware in the pipeline.
     /// </summary>
-    /// <param name="context">The current HttpContext for the middleware pipeline</param>
-    /// <param name="lifetimeScope">The lifetime scope associated with the current context</param>
-    /// <returns>A Task representing the completion of the middleware operation</returns>
+    /// <param name="context">The current HttpContext for the middleware pipeline.</param>
+    /// <param name="lifetimeScope">The lifetime scope associated with the current context.</param>
+    /// <returns>A Task representing the completion of the middleware operation.</returns>
     public async Task InvokeAsync(HttpContext context, ILifetimeScope lifetimeScope)
     {
-        // Begin a new lifetime scope for the user session
+        // begin a new lifetime scope for the user session
         using (var scope = lifetimeScope.BeginLifetimeScope("userSession"))
         {
-            // Assign the new service provider to the HttpContext's RequestServices to handle service requests within the user session's lifetime scope
+            // assign the new service provider to the HttpContext's RequestServices to handle service requests within the user session's lifetime scope
             context.RequestServices = new AutofacServiceProvider(scope);
-            // Pass control to the next middleware in the pipeline
+            // pass control to the next middleware in the pipeline
             await next(context);
         }
     }

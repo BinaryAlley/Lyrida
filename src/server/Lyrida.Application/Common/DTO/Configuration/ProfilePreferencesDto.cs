@@ -20,6 +20,10 @@ public sealed class ProfilePreferencesDto
     public bool Use2fa { get; set; } = true;
     public int ImagePreviewsQuality { get; set; }
     public int FullImageQuality { get; set; }
+    public int ScrollThumbnailRetrievalTimeout { get; set; }
+    public int ThumbnailsRetrievalBatchSize { get; set; }
+    public bool InspectFileForThumbnails { get; set; }
+    public bool EnableConsoleDebugMessages { get; set; }
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================

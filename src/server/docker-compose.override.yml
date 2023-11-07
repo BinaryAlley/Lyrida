@@ -15,8 +15,8 @@ services:
       - "18137:18137"
     volumes:
       - ./bin/Debug/appsettings.json:/app/appsettings.json
-
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
       - A:\docker\Lyrida\src\client\Lyrida.UI\wwwroot\images\icons\Lyra:/app/v
       - C:\Users\Andromeda:/app/v2
+      - C:/:/C

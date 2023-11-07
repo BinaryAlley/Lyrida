@@ -6,4 +6,5 @@
 /// <remarks>
 /// Creation Date: 25th of October, 2023
 /// </remarks>
-public record ProfilePreferenceRequestDto(bool RememberOpenTabs, bool ShowImagePreviews, bool Use2fa, int ImagePreviewsQuality, int FullImageQuality);
+public record ProfilePreferenceRequestDto(bool RememberOpenTabs, bool ShowImagePreviews, bool Use2fa, int ImagePreviewsQuality, int FullImageQuality, bool InspectFileForThumbnails,
+    bool EnableConsoleDebugMessages, int ScrollThumbnailRetrievalTimeout, int ThumbnailsRetrievalBatchSize);

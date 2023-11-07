@@ -57,21 +57,21 @@ internal sealed class SetupRepository : ISetupRepository
         OpenTransaction();
         response.Error = (await dataAccess.ExecuteAsync(
            // create the tables
-           @"CREATE TABLE `permissions` (
+           @"CREATE TABLE `Permissions` (
               `id` int(9) UNSIGNED NOT NULL,
               `permission_name` varchar(250) NOT NULL,
               `created` timestamp NOT NULL DEFAULT current_timestamp(),
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `roles` (
+            CREATE TABLE `Roles` (
               `id` int(9) UNSIGNED NOT NULL,
               `role_name` varchar(250) NOT NULL,
               `created` timestamp NOT NULL DEFAULT current_timestamp(),
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `users` (
+            CREATE TABLE `Users` (
               `id` int(9) UNSIGNED NOT NULL,
               `email` varchar(255) NOT NULL,
               `password` varchar(255) NOT NULL,
@@ -84,7 +84,7 @@ internal sealed class SetupRepository : ISetupRepository
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `rolepermissions` (
+            CREATE TABLE `RolePermissions` (
               `id` int(9) UNSIGNED NOT NULL,
               `role_id` int(9) UNSIGNED NOT NULL,
               `permission_id` int(9) UNSIGNED NOT NULL,
@@ -92,7 +92,7 @@ internal sealed class SetupRepository : ISetupRepository
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `userpermissions` (
+            CREATE TABLE `UserPermissions` (
               `id` int(9) UNSIGNED NOT NULL,
               `user_id` int(9) UNSIGNED NOT NULL,
               `permission_id` int(9) UNSIGNED NOT NULL,
@@ -100,7 +100,7 @@ internal sealed class SetupRepository : ISetupRepository
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `userroles` (
+            CREATE TABLE `UserRoles` (
               `id` int(9) UNSIGNED NOT NULL,
               `user_id` int(9) UNSIGNED NOT NULL,
               `role_id` int(9) UNSIGNED NOT NULL,
@@ -108,19 +108,23 @@ internal sealed class SetupRepository : ISetupRepository
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `userpreferences` (
+            CREATE TABLE `UserPreferences` (
               `id` int(9) UNSIGNED NOT NULL,
               `user_id` int(9) UNSIGNED NOT NULL,
               `use_2fa` tinyint(1) UNSIGNED NOT NULL,
               `remember_open_tabs` tinyint(1) UNSIGNED NOT NULL,
               `show_image_previews` tinyint(1) UNSIGNED NOT NULL,
+              `inspect_file_for_thumbnails` tinyint(1) UNSIGNED NOT NULL,
+              `enable_console_debug_messages` tinyint(1) UNSIGNED NOT NULL,
               `image_previews_quality` int(3) UNSIGNED NOT NULL,
               `full_image_quality` int(3) UNSIGNED NOT NULL,
+              `scroll_thumbnail_retrieval_timeout` int(5) UNSIGNED NOT NULL,
+              `thumbnails_retrieval_batch_size` int(3) UNSIGNED NOT NULL,
               `created` timestamp NOT NULL DEFAULT current_timestamp(),
               `updated` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-            CREATE TABLE `userpages` (
+            CREATE TABLE `UserPages` (
               `id` int(9) UNSIGNED NOT NULL,
               `user_id` int(9) UNSIGNED NOT NULL,
               `page_id` varchar(36) NOT NULL,
@@ -132,90 +136,90 @@ internal sealed class SetupRepository : ISetupRepository
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"))?.Error;
         // create primary keys
         response.Error = (await dataAccess.ExecuteAsync(
-           @"ALTER TABLE `permissions`
+           @"ALTER TABLE `Permissions`
               ADD PRIMARY KEY (`id`);
 
-            ALTER TABLE `rolepermissions`
+            ALTER TABLE `RolePermissions`
               ADD PRIMARY KEY (`id`);
 
-            ALTER TABLE `roles`
+            ALTER TABLE `Roles`
               ADD PRIMARY KEY (`id`);            
 
-            ALTER TABLE `userpermissions`
+            ALTER TABLE `UserPermissions`
               ADD PRIMARY KEY (`id`);
 
-            ALTER TABLE `userroles`
+            ALTER TABLE `UserRoles`
               ADD PRIMARY KEY (`id`);
 
-            ALTER TABLE `users`
+            ALTER TABLE `Users`
               ADD PRIMARY KEY (`id`),
               ADD UNIQUE KEY `email` (`email`);
 
-            ALTER TABLE `userpreferences`
+            ALTER TABLE `UserPreferences`
               ADD PRIMARY KEY (`id`);
 
-            ALTER TABLE `userpages`
+            ALTER TABLE `UserPages`
               ADD PRIMARY KEY (`id`),
               ADD UNIQUE KEY `page_id` (`page_id`);
 
-            ALTER TABLE `permissions`
+            ALTER TABLE `Permissions`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
-            ALTER TABLE `rolepermissions`
+            ALTER TABLE `RolePermissions`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
-            ALTER TABLE `roles`
+            ALTER TABLE `Roles`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;            
 
-            ALTER TABLE `userpermissions`
+            ALTER TABLE `UserPermissions`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
-            ALTER TABLE `userroles`
+            ALTER TABLE `UserRoles`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
-            ALTER TABLE `users`
+            ALTER TABLE `Users`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
-            ALTER TABLE `userpreferences`
+            ALTER TABLE `UserPreferences`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
-            ALTER TABLE `userpages`
+            ALTER TABLE `UserPages`
               MODIFY `id` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
             "))?.Error;
         // create foreign keys
         response.Error = (await dataAccess.ExecuteAsync(
-           @"ALTER TABLE `rolepermissions`
+           @"ALTER TABLE `RolePermissions`
             ADD CONSTRAINT `fk_rolepermissions_role_id`
-                FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`)
+                FOREIGN KEY (`role_id`) REFERENCES `Roles`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE,
             ADD CONSTRAINT `fk_rolepermissions_permission_id`
-                FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`)
+                FOREIGN KEY (`permission_id`) REFERENCES `Permissions`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE;
 
-            ALTER TABLE `userpermissions`
+            ALTER TABLE `UserPermissions`
             ADD CONSTRAINT `fk_userpermissions_user_id`
-                FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+                FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE,
             ADD CONSTRAINT `fk_userpermissions_permission_id`
-                FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`)
+                FOREIGN KEY (`permission_id`) REFERENCES `Permissions`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE;
 
-            ALTER TABLE `userroles`
+            ALTER TABLE `UserRoles`
             ADD CONSTRAINT `fk_userroles_user_id`
-                FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+                FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE,
             ADD CONSTRAINT `fk_userroles_role_id`
-                FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`)
+                FOREIGN KEY (`role_id`) REFERENCES `Roles`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE;
 
-            ALTER TABLE `userpreferences`
+            ALTER TABLE `UserPreferences`
             ADD CONSTRAINT `fk_userpreferences_user_id`
-                FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+                FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE;
 
-            ALTER TABLE `userpages`
+            ALTER TABLE `UserPages`
             ADD CONSTRAINT `fk_userpages_user_id`
-                FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+                FOREIGN KEY (`user_id`) REFERENCES `Users`(`id`)
                 ON DELETE CASCADE ON UPDATE CASCADE;"))?.Error;
         CloseTransaction();
         return response;

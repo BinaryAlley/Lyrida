@@ -23,6 +23,14 @@ public sealed class ProfilePreferencesDto : IStorageDto
     public bool RememberOpenTabs { get; set; } = true;
     [MapsTo(Name = "show_image_previews")]
     public bool ShowImagePreviews { get; set; } = true;
+    [MapsTo(Name = "inspect_file_for_thumbnails")]
+    public bool InspectFileForThumbnails { get; set; } = true;
+    [MapsTo(Name = "enable_console_debug_messages")]
+    public bool EnableConsoleDebugMessages { get; set; } = false;
+    [MapsTo(Name = "scroll_thumbnail_retrieval_timeout")]
+    public int ScrollThumbnailRetrievalTimeout { get; set; }
+    [MapsTo(Name = "thumbnails_retrieval_batch_size")]
+    public int ThumbnailsRetrievalBatchSize { get; set; }
     [MapsTo(Name = "use_2fa")]
     public bool Use2fa { get; set; } = true;
     [MapsTo(Name = "image_previews_quality")]

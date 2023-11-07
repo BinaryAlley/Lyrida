@@ -345,6 +345,10 @@ public class AccountController : Controller
             return Json(new { success = false, imagePreviewQualityError = translationService.Translate(Terms.ValueBetweenZeroAndOneHundred) });
         if (data.FullImageQuality <= 0 || data.FullImageQuality > 100)
             return Json(new { success = false, fullImageQualityError = translationService.Translate(Terms.ValueBetweenZeroAndOneHundred) });
+        if (data.ThumbnailsRetrievalBatchSize <= 0)
+            return Json(new { success = false, thumbnailsRetrievalBatchSizeError = translationService.Translate(Terms.ValueGreaterThanZero) });
+        if (data.ScrollThumbnailRetrievalTimeout <= 0)
+            return Json(new { success = false, scrollThumbnailRetrievalTimeoutError = translationService.Translate(Terms.ValueGreaterThanZero) });
         var response = await apiHttpClient.PutAsync("account/updatePreferences/", data, HttpContext.Items["UserToken"]?.ToString(), language: translationService.Language);
         var responseDto = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
         return Json(new { success = true, preferences = responseDto });

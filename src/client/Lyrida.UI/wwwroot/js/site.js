@@ -1,4 +1,6 @@
-﻿// test placeholders
+﻿// TODO: when directory title is too long, use elipsis on tab headers
+
+// test placeholders
 const environmentTypes = [
     // ORDER OF ENVIRONMENTS MATTERS! (or, at least, their ID's must remain unchanged..)
     { id: 1, title: "Local File System", "name": "local", platformType: "Unix", initialPath: "/app/" },
@@ -10,12 +12,6 @@ const environmentTypes = [
 // ==================================
 // Constants
 // ==================================
-// Development mode
-const IS_DEBUG = true;
-// Customizable timeout duration for scroll actions.
-const SCROLL_TIMEOUT_DURATION = 1000;
-// Determines the batch size for thumbnails retrieval.
-const THUMBNAILS_RETRIEVAL_BATCH_SIZE = 20;
 // Current icon pack theme
 const CURRENT_ICON_THEME = "Lyra";
 // Mapping of file extensions to SVG image paths
@@ -102,6 +98,8 @@ const btnPreview = document.getElementById('btnPreview');
 const btnSplitView = document.getElementById('btnSplitView');
 const btnNavigate = document.getElementById('btnNavigate');
 const btnEditPath = document.getElementById('btnEditPath');
+const btnNavigateBack = document.getElementById('btnNavigateBack');
+const btnNavigateForward = document.getElementById('btnNavigateForward');
 const btnUpOneLevel = document.getElementById('btnUpOneLevel');
 const visibleSelectionRectangle = document.getElementById('visibleSelectionRectangle');
 const selectionRectangle = document.getElementById('selectionRectangle');
@@ -159,8 +157,16 @@ if (typeof window.imagePreviewsQuality === "undefined")
     window.imagePreviewsQuality = 70; // the quality used for image thumbnails
 if (typeof window.fullImageQuality === "undefined")
     window.fullImageQuality = 90; // the quality used for full images
+if (typeof window.scrollThumbnailRetrievalTimeout === "undefined")
+    window.scrollThumbnailRetrievalTimeout = 1000; // the time span to wait after the last scroll, before getting thumbnails
+if (typeof window.thumbnailsRetrievalBatchSize === "undefined")
+    window.thumbnailsRetrievalBatchSize = 20; // the number of thumbnails to ask from the server, concurrently
 if (typeof window.rememberOpenTabs === "undefined")
     window.rememberOpenTabs = true; // whether to keep track of open tabs or not
+if (typeof window.inspectFileForThumbnails === "undefined")
+    window.inspectFileForThumbnails = false; // whether to check the actual header bytes in order to determine if a file is an image, rather than its extension
+if (typeof window.enableConsoleDebugMessages === "undefined")
+    window.enableConsoleDebugMessages = false; // whether to display debug messages at the developer console, or not
 
 let scrollTimeout; // timeout to delay thumbnail loading after scrolling
 let resizeTimeout; // timeout to delay thumbnail loading after resizing
@@ -173,7 +179,10 @@ let addressBarCachedScroll = 0;
 let selectionStartPosition = { x: 0, y: 0 };
 let isSelecting = false;
 let currentMousePosition = { x: 0, y: 0 };
-let initialPages = []; // TODO: rename to openTabs
+let openTabs = []; 
+
+let navigationHistory = {};
+
 window.Permissions = [];
 
 // ==================================
@@ -191,7 +200,7 @@ function bindEventsToActiveExplorer() {
     explorer.addEventListener('scroll', handleScrollEvent);
     explorerContainer.addEventListener('scroll', handleScrollEvent);
     explorer.addEventListener('wheel', scrollHorizontally, { passive: false });
-    if (IS_DEBUG)
+    if (enableConsoleDebugMessages)
         console.info(getCurrentTime() + " Bound events to explorer with Id " + activeTabId);
 }
 
@@ -204,7 +213,7 @@ function unbindEventsFromExplorer(explorer, explorerContainer) {
     explorer.removeEventListener('scroll', handleScrollEvent);
     explorerContainer.removeEventListener('scroll', handleScrollEvent);
     explorer.removeEventListener('wheel', scrollHorizontally, { passive: false });
-    if (IS_DEBUG)
+    if (enableConsoleDebugMessages)
         console.info(getCurrentTime() + " Unbound events from explorer with Id " + activeTabId);
 }
 
@@ -224,7 +233,7 @@ function handleScrollEvent() {
     scrollTimeout = setTimeout(() => {
         if (showThumbnails)
             getVisibleItems();
-    }, SCROLL_TIMEOUT_DURATION);
+    }, scrollThumbnailRetrievalTimeout);
     hasScrolledAfterModeChange = true;
 }
 
@@ -244,7 +253,7 @@ function handleResizeEvent() {
     resizeTimeout = setTimeout(() => {
         if (showThumbnails)
             getVisibleItems();
-    }, SCROLL_TIMEOUT_DURATION);
+    }, scrollThumbnailRetrievalTimeout);
 }
 
 /**
@@ -302,7 +311,7 @@ if (btnSplitView)
 */
 if (btnNavigate)
     btnNavigate.addEventListener('click', function () {
-        parsePath(true);
+        parsePath(true, false, false);
         addressBarInput.style.display = 'none';
         addressBar.style.display = 'block';
     });
@@ -325,6 +334,29 @@ if (btnUpOneLevel)
         goUpOneLevel();
     });
 
+/**
+ * Event handler for the navigate back button click.
+ */
+if (btnNavigateBack)
+    btnNavigateBack.addEventListener('click', function () {       
+        var tabHistory = navigationHistory[activeTabId];
+        if (tabHistory && tabHistory.backStack.length > 0) {
+            addressBarInput.value = tabHistory.backStack.pop();
+            parsePath(true, true, true); 
+        }
+    });
+
+/**
+ * Event handler for the navigate forward button click.
+ */
+if (btnNavigateForward)
+    btnNavigateForward.addEventListener('click', function () {
+        var tabHistory = navigationHistory[activeTabId];
+        if (tabHistory && tabHistory.forwardStack.length > 0) {
+            addressBarInput.value = tabHistory.forwardStack.pop();
+            parsePath(true, true, false);
+        }
+    });
 /**
  * Event handler for the account icon click.
  */
@@ -356,7 +388,7 @@ if (addressBarInput)
     addressBarInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter') {  // 13 is the key code for "enter"
             event.preventDefault();  // prevent any default action
-            parsePath(true);
+            parsePath(true, false, false);
         }
     });
 
@@ -395,12 +427,12 @@ if (environmentsDropdownToggle)
     environmentsDropdownToggle.addEventListener('change', handleEnvironemtComboboxChange);
 
 // button click handlers for different view modes.
-$('#detailsView').click(() => switchViewMode(setDetailsViewMode));
-$('#listView').click(() => switchViewMode(setListViewMode));
-$('#smallIconsView').click(() => switchViewMode(() => setIconsViewMode('small')));
-$('#mediumIconsView').click(() => switchViewMode(() => setIconsViewMode('medium')));
-$('#largeIconsView').click(() => switchViewMode(() => setIconsViewMode('large')));
-$('#extraLargeIconsView').click(() => switchViewMode(() => setIconsViewMode('extra-large')));
+$('#detailsView').click(() => switchViewMode(setDetailsViewMode, true));
+$('#listView').click(() => switchViewMode(setListViewMode, true));
+$('#smallIconsView').click(() => switchViewMode(() => setIconsViewMode('small'), true));
+$('#mediumIconsView').click(() => switchViewMode(() => setIconsViewMode('medium'), true));
+$('#largeIconsView').click(() => switchViewMode(() => setIconsViewMode('large'), true));
+$('#extraLargeIconsView').click(() => switchViewMode(() => setIconsViewMode('extra-large'), true));
 
 // ==================================
 // Functions
@@ -422,13 +454,15 @@ function getCurrentTime() {
 /**
  * Switches to a different view mode based on a given callback.
  * @param {Function} callback - The function to switch to a specific view mode.
+ * @param {boolean} isManualSet - Indicates whether the mode change is triggered by manually clicking a mode change icon, or automatic
  */
-function switchViewMode(callback) {
+function switchViewMode(callback, isManualSet) {
     hasScrolledAfterModeChange = false; // reset the flag indicating a mode change
     callback(); // execute the view mode switch
-    // check if content has been scrolled after the mode change 
+    // check if content has been scrolled after the mode change; since scroll is the one triggering thumbnails retrieval,
+    // and there is no initial scroll when mode is changed, we need to trigger the retrieval manually
     setTimeout(() => {
-        if (!hasScrolledAfterModeChange && showThumbnails) getVisibleItems();
+        if (!hasScrolledAfterModeChange && showThumbnails && isManualSet) getVisibleItems();
     }, 50); // wait 50ms to ensure all other events have processed
 }
 
@@ -456,7 +490,7 @@ function setDetailsViewMode() {
         });
         // display the extended item details
         showExtraDetails();
-        if (IS_DEBUG)
+        if (enableConsoleDebugMessages)
             console.info(getCurrentTime() + " Set Details View mode to explorer with Id " + activeTabId);
     }
 }
@@ -484,7 +518,7 @@ function setListViewMode() {
         });
         // hide the extended item details
         hideExtraDetails();
-        if (IS_DEBUG)
+        if (enableConsoleDebugMessages)
             console.info(getCurrentTime() + " Set List View mode to explorer with Id " + activeTabId);
     }
 }
@@ -513,7 +547,7 @@ function setIconsViewMode(size) {
         });
         // hide the extended item details
         hideExtraDetails();
-        if (IS_DEBUG)
+        if (enableConsoleDebugMessages)
             console.info(getCurrentTime() + " Set " + size + " Icons View mode to explorer with Id " + activeTabId);
     }
 }
@@ -573,7 +607,8 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
                                     files: filesData.files
                                 };
                                 callback(combinedData);
-                                if (IS_DEBUG)
+
+                                if (enableConsoleDebugMessages)
                                     console.info(getCurrentTime() + " Got the directories and files for: " + path);
                             }
                         },
@@ -595,7 +630,7 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
  * Navigates up one level from the current path
  */
 function goUpOneLevel() {
-    const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+    const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId); // TODO: check if implementation can be simplified
     const foundEnvironmentPlatformType = foundEnvironment.platformType;
     const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
     if (!addressBarInput.value.endsWith(separator))
@@ -610,8 +645,8 @@ function goUpOneLevel() {
         success: function (data) {
             if (data.success) {
                 renderAddressBar(data.pathSegments);
-                addressBarInput.style.display = 'none'; 
-                addressBar.style.display = 'block'; 
+                addressBarInput.style.display = 'none';
+                addressBar.style.display = 'block';
                 // find the last directory in the list of path segments
                 var lastDirectory = null;
                 for (var i = data.pathSegments.length - 1; i >= 0; i--) {
@@ -622,10 +657,27 @@ function goUpOneLevel() {
                 }
                 const concatenatedPath = (foundEnvironmentPlatformType === "Unix" ? '/' : '') + data.pathSegments.map(segment => segment.name).join(separator);
                 addressBarInput.value = concatenatedPath + (!concatenatedPath.endsWith(separator) ? separator : '');
-                updateCurrentTab(concatenatedPath, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"));
+                updateCurrentTab(concatenatedPath, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"), false, false);
             }
-            else
-                console.error(data.errorMessage);
+            else {
+                if (enableConsoleDebugMessages)
+                    console.error(data.errorMessage);
+                const Toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: data.errorMessage
+                });
+            }
         },
         error: function (error) {
             console.error('Failed to fetch files:', error);
@@ -642,15 +694,13 @@ function goUpOneLevel() {
  * @param {string} uuid - The UUID associated with the current explorer instance.
 */
 function addNewTab(title, path, platformId, uuid) {
-    if (IS_DEBUG)
-        console.info("======== add tab ========")
     if (platformId !== null)
         activeEnvironmentId = platformId;
     // determine the tab ID
     const currentTabId = nextTabId++;
     // construct the new page object
     const newPage = { title: title, path: path, tabId: currentTabId, platformId: activeEnvironmentId };
-    initialPages.push(newPage);
+    openTabs.push(newPage);
     // render the new tab's header
     renderTabHeader(newPage);
     // set the current path as the title of the tab header
@@ -660,16 +710,19 @@ function addNewTab(title, path, platformId, uuid) {
         // render the tab's content and bind events.
         renderTabPage(currentTabId, data, uuid);
         bindEventsToActiveExplorer();
-        switchViewMode(setListViewMode);
+        switchViewMode(setListViewMode, false);
     });
+    addToNavigationStack(path, currentTabId, false, true);
 }
 
 /**
  * Updates the content of the currently active tab with the data from the provided path.
  * @param {string} path - The file system path to fetch data from.
  * @param {string} title - The title of the active tab.
+ * @param {boolean} isHistoryNavigation - Whether the navigation to the current path happens as a result of navigation history (back or forward buttons), or not.
+ * @param {boolean} isBackNavigation - Whether the history navigation is forward or backward.
  */
-function updateCurrentTab(path, title) {
+function updateCurrentTab(path, title, isHistoryNavigation, isBackNavigation) {
     const explorer = getActiveExplorer();
     if (explorer) {
         // if there was a job for thumbnails retrieval, cancel it
@@ -687,13 +740,45 @@ function updateCurrentTab(path, title) {
             updateTabContent(activeTabId, data);
             // rebind necessary event handlers to the updated content
             bindEventsToActiveExplorer();
-            switchViewMode(setListViewMode);
+            switchViewMode(setListViewMode, true);
         });
         // set the current path as the title of the tab header
         document.getElementById(`tabHeader${activeTabId}`).setAttribute("title", path);
+        // add navigation history for current tab, but only if its not already navigating to entry from navigation history
+        addToNavigationStack(path, activeTabId, isHistoryNavigation, isBackNavigation);
     }
     else
         addNewTab(title, path, null, null);
+}
+
+/**
+ * Facilitates the storage of navigation history.
+ * @param {any} path - The path to be added to the navigation history.
+ * @param {any} tabId - The id of the tab for which to add the navigation history.
+ * @param {any} isHistoryNavigation - Whether this storage was triggered by the history navigation buttons (Back/Forward), or not.
+ * @param {any} isBackNavigation - Whether this storage was triggered by the Back navigation button, or the Forward one.
+ */
+function addToNavigationStack(path, tabId, isHistoryNavigation, isBackNavigation) {
+    if (!navigationHistory[tabId]) { // if there is no navigation stack for current explorer, initialize one
+        navigationHistory[tabId] = {
+            backStack: [],
+            forwardStack: [],
+            current: null
+        };
+    }
+    // add the new location to the navigation history of the current tab
+    var tabHistory = navigationHistory[tabId];
+    // check if there's a current path and it's different from the new path
+    if (tabHistory.current !== null && tabHistory.current !== path) {
+        // push the current path
+        if (isBackNavigation)
+            tabHistory.forwardStack.push(tabHistory.current);
+        else
+            tabHistory.backStack.push(tabHistory.current);
+    }
+    tabHistory.current = path; 
+    if (!isHistoryNavigation && !isBackNavigation)
+        tabHistory.forwardStack.length = 0; // clear the forward stack when the user navigates to a new location
 }
 
 /**
@@ -731,13 +816,12 @@ function switchTab(tabId) {
     const path = explorer.getAttribute('data-path');
     if (path !== null && path !== "null") {
         addressBarInput.value = path;
-        parsePath(false);
+        parsePath(false, false, false);
         environmentsDropdownToggle.checked = false; // toggle the checkbox state
     } else {
         addressBarInput.value = '';
         environmentsDropdownToggle.checked = true; // toggle the checkbox state
         renderAddressBar(null);
-        console.log(activeTabId);
     }
     environmentsDropdownToggle.dispatchEvent(new Event('change'));
     // update the active tab id
@@ -779,10 +863,10 @@ function renderTabHeader(page) {
         // remove current tab header and content
         tabHeader.remove();
         $(`#tabPage${page.tabId}`).remove();
-        // remove tab data from initialPages array
-        const index = initialPages.findIndex(p => p.tabId === page.tabId);
+        // remove tab data from openTabs array
+        const index = openTabs.findIndex(p => p.tabId === page.tabId);
         if (index !== -1)
-            initialPages.splice(index, 1);
+            openTabs.splice(index, 1);
         // switch to an adjacent tab if current tab was active
         if (isActive) {
             if (prevTab.length) {
@@ -794,7 +878,7 @@ function renderTabHeader(page) {
             }
         }
         // if there are no more tabs, set the mode for selecting an environment
-        if (initialPages.length === 0) {
+        if (openTabs.length === 0) {
             addressBarInput.value = '';
             renderAddressBar(null);
             const environmentsCombobox = document.getElementById('environmentsCombobox');
@@ -1072,7 +1156,7 @@ function createExplorer(tabId, path, uuid) {
         }
     });
     if (rememberOpenTabs && uuid === null) { // only store pages when the option is enabled and its a brand new page, not one already stored
-        const lastAddedPage = initialPages[initialPages.length - 1];
+        const lastAddedPage = openTabs[openTabs.length - 1];
         addNewPageToStorage(guid, lastAddedPage.title, lastAddedPage.path, lastAddedPage.platformId);
     }
     return explorer;
@@ -1201,13 +1285,111 @@ function handleFileSystemEntityClick(event) {
     // if time difference is less than 300ms, treat it as a double-click
     if (timeDifference < 300) { 
         if (event.currentTarget.dataset.type === 'directory') { // directories
-            if (IS_DEBUG)
+            if (enableConsoleDebugMessages)
                 console.info(getCurrentTime() + " Double clicked: " + event.currentTarget.dataset.path);
             addressBarInput.value = event.currentTarget.dataset.path;
-            parsePath(true); // TODO: add to undo 
+            parsePath(true, false, false); // TODO: add to undo 
             return;
         } else { // files
+            // check if the file is an image
+            if (isImageFile(event.currentTarget.dataset.path)) {
+                const explorer = getActiveExplorer();
+                const imageElements = Array.from(explorer.querySelectorAll('.e[data-type="file"] img')).filter(isVisibleImage);
+                const images = imageElements
+                    .map(imgEl => ({
+                        src: imgEl.src,
+                        path: imgEl.parentElement.parentElement.dataset.path
+                    }))
+                    .filter(image => isImageFile(image.path));
 
+                // get the path of the double-clicked image
+                const clickedImagePath = event.currentTarget.dataset.path;
+                // find the index of the clicked image in the images array
+                const index = images.findIndex(image => image.path === clickedImagePath);
+
+                // create an in-memory div to hold the images for the viewer
+                const imagesDiv = document.createElement('div');
+                images.forEach(file => {
+                    const imgEl = document.createElement('img');
+                    imgEl.src = file.src; // or however you get the actual image source
+                    imgEl.alt = file.path;
+                    //imgEl.alt = file.querySelector('.text .f t').textContent; // get the name of the file as alt text
+                    imagesDiv.appendChild(imgEl);
+                });
+
+                // Create a map to track the loading state of each image
+                const highResImageLoaded = new Map();
+                const viewer = new Viewer(imagesDiv, {
+                    url: 'src',
+                    alt: '',
+                    inline: false,
+                    button: true,
+                    navbar: true,
+                    title: [2, (image, imageData) => `${image.alt} (${imageData.naturalWidth} × ${imageData.naturalHeight})`],
+                    toolbar: true,
+                    tooltip: true,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: true,
+                    scalable: true,
+                    transition: false,
+                    fullscreen: true,
+                    keyboard: true,
+                    backdrop: true,
+                    loading: true,
+                    loop: true,
+                    toolbar: {
+                        zoomIn: 1,
+                        zoomOut: 1,
+                        oneToOne: 1,
+                        reset: 1,
+                        prev: 1,
+                        play: {
+                            show: 4,
+                            size: 'large',
+                        },
+                        next: 1,
+                        rotateLeft: 1,
+                        rotateRight: 1,
+                        flipHorizontal: 1,
+                        flipVertical: 1,
+                        download: function () {
+                            const a = document.createElement('a');
+                            a.href = viewer.image.src;
+                            a.download = viewer.image.alt;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        },
+                    },                   
+                    viewed: function (event) {
+                        const index = event.detail.index; // the index of the image in the viewer
+                        // if the high-res image for this index has been loaded, return early
+                        if (highResImageLoaded.get(index)) 
+                            return;
+                        const imageElements = imagesDiv.getElementsByTagName('img');                        
+                        // fetch the high-quality image from the server
+                        getThumbnailApiCall(images[index].path, fullImageQuality).then(data => {
+                            const highQualityImageSrc = `data:${data.mimeType};base64,${data.base64Data}`;
+                            // set the flag to true for this image index
+                            highResImageLoaded.set(index, true);
+                            // update the `src` of the actual <img> element in the HTML
+                            imageElements.item(index).src = highQualityImageSrc;
+                            // call viewer.update() to refresh the internal state of the Viewer.js
+                            viewer.update();
+                        }).catch(error => {
+                            console.error('Error fetching high-quality image:', error);
+                        });
+                    },
+                    hidden: function () {
+                        highResImageLoaded.clear(); // clear the high res map when the viewer is closed
+                        viewer.destroy();
+                    }
+                });
+
+                viewer.show();
+                viewer.view(index); // use the found index to display the clicked image
+            }
         }
         // reset the timestamp used to track double clicks
         event.currentTarget.dataset.selectionStartTime = 0;
@@ -1260,7 +1442,11 @@ function getVisibleItems() {
         const containerRect = explorerContainer.getBoundingClientRect();
         const visibleItems = [];
         // go through each .e item which has not had its thumbnail retrieved yet
-        explorer.querySelectorAll('.e:not([data-thumbnail-retrieved])[data-type="file"]').forEach(item => {
+        const fileElements = Array.from(explorer.querySelectorAll('.e:not([data-thumbnail-retrieved])[data-type="file"]'));
+        // if the option for checking file header bytes is disabled, filter images by extension
+        const itemsToProcess = inspectFileForThumbnails ? fileElements : fileElements.filter(item => isImageFile(item.getAttribute('data-path')));
+        itemsToProcess.forEach(item => {
+            const itemPath = item.getAttribute('data-path');
             const itemRect = item.getBoundingClientRect();
             // check if the item is fully or partially visible horizontally and vertically
             const isFullyVisibleHorizontally = itemRect.left >= containerRect.left && itemRect.right <= containerRect.right;
@@ -1272,7 +1458,7 @@ function getVisibleItems() {
                 (isFullyVisibleVertically || isPartiallyVisibleVertically)) {
                 const imgElement = item.querySelector('img');
                 visibleItems.push({
-                    path: item.getAttribute('data-path'),
+                    path: itemPath,
                     img: imgElement
                 });
             }
@@ -1293,7 +1479,7 @@ function getVisibleItems() {
  */
 async function processItem(item, visibleItems) {
     try {
-        const result = await getThumbnailApiCall(item.path);
+        const result = await getThumbnailApiCall(item.path, imagePreviewsQuality);
         // update the item's thumbnail using the retrieved data
         if (typeof result.base64Data !== "undefined")
             item.img.src = `data:${result.mimeType};base64,${result.base64Data}`;
@@ -1325,11 +1511,11 @@ async function processItem(item, visibleItems) {
  * @returns {Promise<object>} - Returns a Promise resolving to an object containing base64Data and mimeType.
  * @throws {Error} - Throws an error if the API call fails.
  */
-async function getThumbnailApiCall(path) {
+async function getThumbnailApiCall(path, quality) {
     // URL encode the path to ensure it's safely transmitted in the URL
     const encodedItem = encodeURIComponent(path);
     // fetch the thumbnail for the given item from the server
-    const response = await fetch(baseUrl + '/FileSystem/GetThumbnail?path=' + encodeURIComponent(path) + '&quality=' + imagePreviewsQuality, {
+    const response = await fetch(baseUrl + '/FileSystem/GetThumbnail?path=' + encodeURIComponent(path) + '&quality=' + quality, {
         headers: {
             'X-Environment-Type': activeEnvironmentId.toString()
         },
@@ -1339,6 +1525,8 @@ async function getThumbnailApiCall(path) {
         throw new Error('Failed to fetch the thumbnail');
     // convert the response to a JSON object
     const jsonResponse = await response.json();
+    //if (enableConsoleDebugMessages)
+    //    console.info(getCurrentTime() + " Retrieved thumbnail for: " + path);
     // return the base64 thumbnail data and its MIME type
     return {
         base64Data: jsonResponse.data,
@@ -1347,14 +1535,14 @@ async function getThumbnailApiCall(path) {
 }
 
 /**
- * Initiates the processing of visible items. Processing is batched based on THUMBNAILS_RETRIEVAL_BATCH_SIZE. * 
+ * Initiates the processing of visible items. Processing is batched based on thumbnailsRetrievalBatchSize. * 
  * @param {Array} visibleItemsList - List of visible items to be processed.
  */
 async function processVisibleItems(visibleItemsList) {
     const visibleItems = [...visibleItemsList];
     abortController = new AbortController(); // create a new AbortController
-    // process items in batches determined by THUMBNAILS_RETRIEVAL_BATCH_SIZE
-    for (let i = 0; i < Math.min(THUMBNAILS_RETRIEVAL_BATCH_SIZE, visibleItems.length); i++) {
+    // process items in batches determined by thumbnailsRetrievalBatchSize
+    for (let i = 0; i < Math.min(thumbnailsRetrievalBatchSize, visibleItems.length); i++) {
         const item = visibleItems.shift();
         processItem(item, visibleItems);
     }
@@ -1388,17 +1576,19 @@ function getEnvironmentIconPath(type) {
 }
 
 /**
- * Parses the current path
- * @param {any} needsContentRefresh - Whether the current tab needs updating or not
+ * Parses the current path.
+ * @param {boolean} needsContentRefresh - Whether the current tab needs updating or not.
+ * @param {boolean} isHistoryNavigation - Whether the navigation to the current path happens as a result of navigation history (back or forward buttons), or not.
+ * @param {boolean} isBackNavigation - Whether the history navigation is forward or backward.
  */
-function parsePath(needsContentRefresh) {
+function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
     const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
     const foundEnvironmentPlatformType = foundEnvironment.platformType;
     const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
     if (!addressBarInput.value.endsWith(separator))
         addressBarInput.value = addressBarInput.value + separator;
     const path = addressBarInput.value;
-    if (IS_DEBUG)
+    if (enableConsoleDebugMessages)
         console.info(getCurrentTime() + " Preparing to parse path: " + path);
     if (needsContentRefresh) {
         // if there was a job for thumbnails retrieval, cancel it
@@ -1415,7 +1605,7 @@ function parsePath(needsContentRefresh) {
         },
         success: function (data) {
             if (data.success) {
-                if (IS_DEBUG)
+                if (enableConsoleDebugMessages)
                     console.info(getCurrentTime() + " Checked path for: " + path);
                 $.ajax({
                     url: baseUrl + '/FileSystem/ParsePath?path=' + encodeURIComponent(path),
@@ -1425,7 +1615,7 @@ function parsePath(needsContentRefresh) {
                     },
                     success: function (data) {
                         if (data.success) {
-                            if (IS_DEBUG)
+                            if (enableConsoleDebugMessages)
                                 console.info(getCurrentTime() + " Parsed path for: " + path);
                             renderAddressBar(data.pathSegments);
                             addressBarInput.style.display = 'none'; // hide #addressBarInput
@@ -1438,8 +1628,8 @@ function parsePath(needsContentRefresh) {
                                     break;
                                 }
                             }
-                            if (needsContentRefresh)
-                                updateCurrentTab(path, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"));
+                            if (needsContentRefresh) 
+                                updateCurrentTab(path, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"), isHistoryNavigation, isBackNavigation);
                         }
                         else
                             console.error(data.errorMessage);
@@ -1552,7 +1742,7 @@ function handlePathSegmentComboboxChange(event) {
                         currentDirectoryDiv.textContent = ".";
                         currentDirectoryDiv.addEventListener('click', function (event) {
                             addressBarInput.value = pathValue;
-                            parsePath(true);
+                            parsePath(true, false, false);
                             console.log('Current directory option clicked:', event.target.textContent);
                         });
                         dropdown.appendChild(currentDirectoryDiv);
@@ -1578,7 +1768,7 @@ function handlePathSegmentComboboxChange(event) {
                                 const foundEnvironmentPlatformType = foundEnvironment.platformType;
                                 const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
                                 addressBarInput.value = pathValue + (!pathValue.endsWith(separator) ? separator : '') + option.name + separator;
-                                parsePath(true);
+                                parsePath(true, false, false);
                                 console.log('Current directory option clicked:', addressBarInput.value);
                             });
                             dropdown.appendChild(directoryDiv);
@@ -1886,6 +2076,24 @@ function getScrollbarWidth() {
 }
 
 /**
+ * Determines if the given file path corresponds to an image file.
+ * @param {string} filePath - The path to the file to be checked.
+ * @returns {boolean} True if the file path ends with an image file extension, false otherwise.
+ */
+function isImageFile(filePath) {
+    // Adjust the regex pattern to match the image file extensions you support
+    return /\.(jpe?g|png|gif|bmp|svg|ico|webp)$/i.test(filePath);
+}
+
+/**
+ *  Checks if the img element is a visible image (not a placeholder or icon)
+ * @param {Object} imgEl - The image element.
+ */
+function isVisibleImage(imgEl) {
+    return imgEl.parentElement.parentElement.matches('.e[data-thumbnail-retrieved="true"]');
+}
+
+/**
  * Generates a UUID conforming to RFC4122 version 4.
  * @returns {string} A version 4 UUID string.
  */
@@ -1936,13 +2144,12 @@ $(document).ready(function () {
         const imgElement = combobox.find("label.enlightenment-toggle img");
         imgElement.attr('title', titleValue);
         imgElement.attr('alt', titleValue);
-        // TODO: store the selected platform id and use it for creating new explorer tabs,  navigating current ones to default platform path, etc
         const explorer = getActiveExplorer();
         if (explorer) 
             explorer.setAttribute('data-environment', environment.id);
         addressBarInput.value = environment.initialPath;
         activeEnvironmentId = environment.id;
-        parsePath(true);
+        parsePath(true, false, false);
     });
 
     /**

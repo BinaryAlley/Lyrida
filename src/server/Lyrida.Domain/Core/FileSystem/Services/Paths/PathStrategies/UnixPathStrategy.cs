@@ -81,10 +81,10 @@ public class UnixPathStrategy : IUnixPathStrategy
         // find the last occurrence of a slash
         int lastIndex = path.LastIndexOf('/');
         // if there's no slash found (shouldn't happen due to previous steps), or if we are at the root level after trimming, return error
-        if (lastIndex <= 0)
+        if (lastIndex < 0)
             return Errors.FileSystem.CannotNavigateUpError;
-        // return the path up to the last slash
-        return ParsePath(path[..lastIndex]);
+        // return the path up to the last slash, or, if there's only the root slash, return that one instead
+        return ParsePath(lastIndex > 0 ? path[..lastIndex] : path[..1]);
     }
 
     /// <summary>

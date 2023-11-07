@@ -16,12 +16,17 @@ Several icons used in this project were adapted from icons sourced from [OnlineW
 
 - [`os.svg`](https://www.onlinewebfonts.com/icon/241211)
 - [`ftp.svg`](https://www.onlinewebfonts.com/icon/248291)
+- [`download.svg`](https://www.onlinewebfonts.com/icon/574052)
+
+### Image viewer
+
+The image viewer used in this application is provided by [ViewerJs](https://github.com/fengyuanchen/viewerjs).
 
 ### Notification system
 
 The notification system used in this application is provided by [SweetAlert](https://sweetalert.js.org/).
 
-I greatly appreciate the creators and contributors for providing these assets.
+**I greatly appreciate the creators and contributors for providing these assets.**
 
 ## License
 

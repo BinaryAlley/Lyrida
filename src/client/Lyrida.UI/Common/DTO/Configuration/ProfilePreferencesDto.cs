@@ -20,6 +20,10 @@ public class ProfilePreferencesDto
     public bool Use2fa { get; set; } = true;
     public int ImagePreviewsQuality { get; set; } = 70;
     public int FullImageQuality { get; set; } = 90;
+    public int ScrollThumbnailRetrievalTimeout { get; set; } = 1000;
+    public int ThumbnailsRetrievalBatchSize { get; set; } = 20;
+    public bool InspectFileForThumbnails { get; set; } = false;
+    public bool EnableConsoleDebugMessages { get; set; } = false;
     public List<PageDto> OpenTabs { get; set; } = new();
     #endregion
 }

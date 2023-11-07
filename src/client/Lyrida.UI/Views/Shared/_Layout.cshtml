@@ -15,11 +15,26 @@
     <link rel="stylesheet" href="~/css/colorpicker.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/scrollbar.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/treeview.css" asp-append-version="true">
-    <link rel="stylesheet" href="~/css/sweetalert2.min.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/filesystem.css" asp-append-version="true" />
-    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
-    <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+
+    <environment include="Development">
+        <link rel="stylesheet" href="~/css/sweetalert2.css" asp-append-version="true">
+        <link rel="stylesheet" href="~/css/viewer.css" asp-append-version="true">
+        
+        <script src="~/lib/jquery/dist/jquery.js" asp-append-version="true"></script>
+        <script src="~/lib/viewerjs/viewer.js" asp-append-version="true"></script>
+        <script src="~/lib/sweetalert2/sweetalert2.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/css/sweetalert2.min.css" asp-append-version="true">
+        <link rel="stylesheet" href="~/css/viewer.min.css" asp-append-version="true">
+
+        <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+        <script src="~/lib/viewerjs/viewer.min.js" asp-append-version="true"></script>
+        <script src="~/lib/sweetalert2/sweetalert2.min.js" asp-append-version="true"></script>
+    </environment>
+
     <script type="text/javascript">
         let baseUrl = "@Configuration["BASE_URL"]" || ""; 
     </script>
