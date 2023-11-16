@@ -1,4 +1,5 @@
 ﻿#region ========================================================================= USING =====================================================================================
+using Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Files.FileTypeStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Files.FileProviderStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Directories.DirectoryProviderStrategies;
@@ -15,8 +16,9 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Environment;
 public interface IEnvironmentContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    IFileProviderStrategy FileProvider { get; }
-    IFileTypeStrategy FileTypeService { get; }
-    IDirectoryProviderStrategy DirectoryProvider { get; }
+    //IPathStrategy PathStrategy { get; }
+    IFileTypeStrategy FileTypeStrategy { get; }
+    IFileProviderStrategy FileProviderStrategy { get; }
+    IDirectoryProviderStrategy DirectoryProviderStrategy { get; }
     #endregion
 }

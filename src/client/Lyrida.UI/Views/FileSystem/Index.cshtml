@@ -3,29 +3,29 @@
 @using Lyrida.Infrastructure.Common.Enums;
 @using Lyrida.Infrastructure.Localization;
 @using Lyrida.UI.Common.DTO.Configuration;
-@inject ITranslationService translattionService
+@inject ITranslationService translationService
 @{
     if (ViewData["Preferences"] is ProfilePreferencesDto profilePreference)
     {
-        <script>
+    <script>
             let nextTabId = 0;
             $(document).ready(() => {
                 @if (profilePreference.RememberOpenTabs)
+            {
+                if (ViewData["InitialPages"] is List<PageDto> initialPages)// TODO: "remember" view mode for each tab (if enabled as user preference)
                 {
-                    if (ViewData["InitialPages"] is List<PageDto> initialPages)// TODO: "remember" view mode for each tab (if enabled as user preference)
+                    for (int i = 0; i < initialPages.Count; i++)
                     {
-                        for (int i = 0; i < initialPages.Count; i++)
-                        {
-                            var title = Json.Serialize(initialPages[i].Title);
-                            var path = Json.Serialize(initialPages[i].Path);
-                            var platformId = initialPages[i].PlatformId;
-                            var uuid = Json.Serialize(initialPages[i].Uuid);
+                        var title = Json.Serialize(initialPages[i].Title);
+                        var path = Json.Serialize(initialPages[i].Path);
+                        var platformId = initialPages[i].PlatformId;
+                        var uuid = Json.Serialize(initialPages[i].Uuid);
                             <text>
                                 addNewTab(@title, @path, @platformId, @uuid);
                             </text>
-                        }
                     }
                 }
+            }
                 showThumbnails = @profilePreference.ShowImagePreviews.ToString().ToLower();
                 imagePreviewsQuality = @profilePreference.ImagePreviewsQuality.ToString().ToLower();
                 fullImageQuality = @profilePreference.FullImageQuality.ToString().ToLower();
@@ -36,7 +36,7 @@
                 thumbnailsRetrievalBatchSize = @profilePreference.ThumbnailsRetrievalBatchSize.ToString().ToLower();
                 // let USE_2FA = @profilePreference.Use2fa.ToString().ToLower();
             });
-        </script>
+    </script>
     }
 }
 <div class="dynTab-container">
@@ -50,6 +50,23 @@
 <div id="dynTab_tabPages"></div>
 <div id="visibleSelectionRectangle"></div>
 <div id="selectionRectangle"></div>
+<input id="renameInput" type="text" class="enlightenment-input hidden">
+
+<div id="dropContextMenu" class="enlightenment-dropdown hidden" style="position: absolute; top: 31.5px; left: 421px; display: block; width: 154px;">
+    <div class="shine-effect" style="top: -4px;"></div>
+    <div id="btnMenuCopy" class="enlightenment-option" style="padding: 0px;">
+        <img src="/images/ui/copy.svg" alt="@translationService.Translate(Terms.CopyHere)" title="@translationService.Translate(Terms.CopyHere)" class="icon" style="display: inline-block; vertical-align: middle;">
+        <span>@translationService.Translate(Terms.CopyHere)</span>
+    </div>
+    <div id="btnMenuMove" class="enlightenment-option" style="padding: 0px;">
+        <img src="/images/ui/move.svg" alt="@translationService.Translate(Terms.MoveHere)" title="@translationService.Translate(Terms.MoveHere)" class="icon" style="display: inline-block; vertical-align: middle;">
+        <span>@translationService.Translate(Terms.MoveHere)</span>
+    </div>
+    <div id="btnMenuLink" class="enlightenment-option" style="padding: 0px;">
+        <img src="/images/ui/link.svg" alt="@translationService.Translate(Terms.LinkHere)" title="@translationService.Translate(Terms.LinkHere)" class="icon" style="display: inline-block; vertical-align: middle;">
+        <span>@translationService.Translate(Terms.LinkHere)</span>
+    </div>
+</div>
 
 @section Scripts {
     <script type="text/javascript">
@@ -58,6 +75,57 @@
             activeEnvironmentId = 0;
             addNewTab("New Tab", null, null, null);
             e.stopPropagation();
+        });
+        $('#renameInput').on('blur', function () {
+            renameInput.classList.add('hidden');
+            if (!isEscapePressed) {
+                const explorer = getActiveExplorer();
+                if (explorer) {
+                    // there should be one item selected
+                    const selectedItems = explorer.querySelectorAll('.e.selected');
+                    if (selectedItems.length > 0)
+                        renameFileSystemElement(selectedItems[0], renameInput.value);
+                }
+            }
+            isEscapePressed = false;
+        });
+        $('#btnMenuCopy').click(function (event) {
+            clipboard = [];
+            dropContextMenu.classList.add('hidden');
+            draggedItems.forEach(element => {
+                clipboard.push({ path: element.path, name: element.name, type: element.type, action: "copy" });
+            });
+            document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+                element.classList.remove('cut');
+            });
+            pasteElements();
+            draggedItems = [];
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $('#btnMenuMove').click(function (event) {
+            clipboard = [];
+            dropContextMenu.classList.add('hidden');
+            document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+                element.classList.remove('cut');
+            });
+            draggedItems.forEach(element => {
+                clipboard.push({ path: element.path, name: element.name, type: element.type, action: "cut" });
+            });
+            pasteElements();
+            draggedItems = [];
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $('#btnMenuLink').click(function (event) {
+            Swal.fire({
+                title: 'STOP!', icon: 'error', buttonsStyling: false, text: "Not yet implemented!", confirmButtonText: 'OK',
+                customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+            });
+            dropContextMenu.classList.add('hidden');
+            draggedItems = [];
+            event.preventDefault();
+            event.stopPropagation();
         });
     </script>
 }

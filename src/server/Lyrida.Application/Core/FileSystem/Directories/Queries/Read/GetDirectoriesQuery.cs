@@ -13,4 +13,4 @@ namespace Lyrida.Application.Core.FileSystem.Directories.Queries.Read;
 /// <remarks>
 /// Creation Date: 25th of September, 2023
 /// </remarks>
-public record GetFoldersQuery(string Path) : IRequest<ErrorOr<IEnumerable<DirectoryDto>>>;
+public record GetDirectoriesQuery(string Path) : IRequest<ErrorOr<IEnumerable<DirectoryDto>>>;

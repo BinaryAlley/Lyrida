@@ -35,16 +35,15 @@ header {
     background-image: linear-gradient(180deg, #505050, #464646, #404040, #363636);
 }
 
-#accountIconContainer {
+#accountIconContainer, #selectionIconContainer, #actionsIconContainer {
     position: relative;
     display: inline-block;
+    height: 26px;
     margin-left: 5px;
 }
 
-#selectionIconContainer {
-    position: relative;
-    display: inline-block;
-    margin-top: 5px;
+#actionsIconContainer {
+    margin-left: 0px;
 }
 
 .icon {
@@ -76,7 +75,7 @@ header {
     left: 3px;
 }
 
-#selectionDropdown {
+#selectionDropdown, #actionsDropdown {
     position: absolute;
     left: 0; 
     top: calc(100% + 10px);
@@ -88,7 +87,7 @@ header {
     z-index: 999;
 }
 
-#selectionDropdownArrow {
+#selectionDropdownArrow, #actionsDropdownArrow {
     width: 0;
     height: 0;
     border-left: 10px solid transparent;
@@ -103,32 +102,41 @@ header {
     display: none;
 }
 
-#accountDropdown ul, #selectionDropdown ul {
+#accountDropdown ul, #selectionDropdown ul, #actionsDropdown ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-#accountDropdown li a, #selectionDropdown li a {
+#accountDropdown li a, #selectionDropdown li a, #actionsDropdown li a {
     display: block;
     padding: 8px 12px;
     text-decoration: none;
     color: #039BFC;
 }
 
+#selectionDropdown li a, #actionsDropdown li a {
+    text-align: left;
+}
+
+#selectionDropdown li a img, #selectionDropdown li a span, #actionsDropdown li a img, #actionsDropdown li a span {
+    display: inline-block; 
+    vertical-align: middle;
+}
+
 /* rounded corners for the first link */
-#accountDropdown li:first-child a, #selectionDropdown li:first-child a {
+#accountDropdown li:first-child a, #selectionDropdown li:first-child a, #actionsDropdown li:first-child a {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
 }
 
 /* rounded corners for the last link */
-#accountDropdown li:last-child a, #selectionDropdown li:last-child a {
+#accountDropdown li:last-child a, #selectionDropdown li:last-child a, #actionsDropdown li:last-child a {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
 }
 
-#accountDropdown li a:hover, #selectionDropdown li a:hover {
+#accountDropdown li a:hover, #selectionDropdown li a:hover, #actionsDropdown li a:hover {
     background-color: #232323;
 }
 
@@ -139,6 +147,10 @@ header {
     border-right: 1px solid #000 !important;
     border-bottom: 1px solid #000 !important;
     box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.8);
+}
+
+.swal2-popup {
+    max-height: 90vh;
 }
 
 .swal-title {
@@ -158,6 +170,8 @@ header {
     margin: 22px;
     text-align: center;
     color: #039BFC;
+    overflow: auto !important;
+    max-height: 70vh;
 }
 
 .swal-button:focus {
@@ -218,6 +232,7 @@ footer {
     border-top-style: solid;
     border-top-width: 1px;
 
+    display: flex;
     background: rgb(10, 11, 11);
     background-image: linear-gradient(180deg, #505050, #464646, #404040, #363636);
 }
@@ -244,6 +259,27 @@ footer {
     border-right: 1px solid #000;
     border-bottom: 1px solid #000;
     padding: 10px;
+}
+
+.context-menu {
+    position: absolute;
+    z-index: 1000;
+    width: 150px;
+}
+
+.context-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.context-menu ul li {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.context-menu ul li:hover {
+    background-color: #f7f7f7;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
@@ -273,7 +309,7 @@ footer {
 
 #navigationMiscellaneousGroup {
     margin-left: 5px;
-    width: 35px;
+    width: 60px;
     display: flex;
     align-items: center;
 }
@@ -433,6 +469,23 @@ header #btnNavigate, header #btnEditPath {
     margin: 6px !important;
     width: 12px;
     height: 12px;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#progressIndicator {
+    width: 37px;
+    height: 37px;
+    margin: auto;
+    content: url('../images/ui/atom.svg');  
+    animation: rotate 1.5s linear infinite;
 }
 
 .text-light-one {

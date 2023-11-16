@@ -6,6 +6,7 @@ using Mono.Unix.Native;
 using System.Security.Principal;
 using Lyrida.Domain.Common.Enums;
 using System.Security.AccessControl;
+using Lyrida.Domain.Core.FileSystem.ValueObjects;
 using Lyrida.Domain.Core.FileSystem.Services.Platform;
 #endregion
 
@@ -42,13 +43,13 @@ internal class FileSystemPermissionsService : IFileSystemPermissionsService
     /// <param name="accessMode">The mode in which to access the path.</param>
     /// <param name="isFile">Indicates whether the path represents a file or directory.</param>
     /// <returns><see langword="true"/>, if <paramref name="path"/> can be accessed, <see langword="false"/> otherwise.</returns>
-    public bool CanAccessPath(string path, FileAccessMode accessMode, bool isFile = true)
+    public bool CanAccessPath(FileSystemPathId path, FileAccessMode accessMode, bool isFile = true)
     {
         PlatformType platformType = platformContextManager.GetCurrentContext().Platform;
         if (platformType == PlatformType.Unix)
-            return CanAccessPathLinux(path, accessMode);
+            return CanAccessPathLinux(path.Path, accessMode);
         else if (platformType == PlatformType.Windows)
-            return CanAccessPathWindows(path, accessMode, isFile);
+            return CanAccessPathWindows(path.Path, accessMode, isFile);
         else
             throw new PlatformNotSupportedException("Support for this platform is not compiled into this assembly.");
     }
@@ -83,6 +84,18 @@ internal class FileSystemPermissionsService : IFileSystemPermissionsService
             case FileAccessMode.ListDirectory:
                 modes = AccessModes.F_OK;  // check existence, not an exact match but the closest
                 break;
+            case FileAccessMode.Delete:
+                if (fileInfo.FileType == FileTypes.Directory)                   
+                    return fileInfo.CanAccess(AccessModes.W_OK | AccessModes.X_OK); // to delete a directory, we need write and execute permissions on the directory itself
+                else
+                {
+                    // to delete a file, we need write permission on the parent directory
+                    string? parentDirectoryPath = Path.GetDirectoryName(path);
+                    if (string.IsNullOrEmpty(parentDirectoryPath))
+                        return false; // if path is a root directory or has no parent, deletion is not possible
+                    UnixDirectoryInfo parentDirectoryInfo = new(parentDirectoryPath);
+                    return parentDirectoryInfo.CanAccess(AccessModes.W_OK);
+                }
             default:
                 throw new ArgumentOutOfRangeException(nameof(accessMode), "Unknown FileAccessMode");
         }
@@ -104,32 +117,45 @@ internal class FileSystemPermissionsService : IFileSystemPermissionsService
         {
             FileAccessMode.ReadProperties => FileSystemRights.ReadAttributes,
             FileAccessMode.ReadContents => FileSystemRights.ReadData | FileSystemRights.ReadExtendedAttributes,
-            FileAccessMode.Write => FileSystemRights.Write,
+            FileAccessMode.Write => FileSystemRights.WriteData | FileSystemRights.AppendData,
             FileAccessMode.Execute => FileSystemRights.ExecuteFile,
             FileAccessMode.ListDirectory => FileSystemRights.ListDirectory,
+            FileAccessMode.Delete => FileSystemRights.Delete,
             _ => throw new ArgumentOutOfRangeException(nameof(accessMode), "Unknown FileAccessMode"),
         };
-        if (HasAccess(rights, path, isFile))
+        if (rights == FileSystemRights.Delete)
         {
-            try
+            // when checking for delete permissions, we need to check the directory the file or directory resides in
+            string? parentDirectory = Directory.GetParent(path)?.FullName;
+            if (string.IsNullOrEmpty(parentDirectory))
+                return false; // the path is either a root directory or has no parent, which we cannot delete
+            // checking for modify permission on the parent directory since delete requires modifying the parent contents
+            return HasAccess(FileSystemRights.Modify, parentDirectory, false);
+        }
+        else
+        {
+            if (HasAccess(rights, path, isFile))
             {
-                switch (accessMode)
+                try
                 {
-                    case FileAccessMode.ReadProperties:
-                        // just accessing file info for properties, without opening it
-                        FileSystemInfo fileSystemInfo = isFile ? new FileInfo(path) : new DirectoryInfo(path);
-                        _ = fileSystemInfo.CreationTime;  // trigger potential access denial
-                        break;
-                    case FileAccessMode.ReadContents:
-                        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                            stream.Close();
-                        break;
+                    switch (accessMode)
+                    {
+                        case FileAccessMode.ReadProperties:
+                            // just accessing file info for properties, without opening it
+                            FileSystemInfo fileSystemInfo = isFile ? new FileInfo(path) : new DirectoryInfo(path);
+                            _ = fileSystemInfo.CreationTime;  // trigger potential access denial
+                            break;
+                        case FileAccessMode.ReadContents:
+                            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                stream.Close();
+                            break;
+                    }
+                    return true;
                 }
-                return true;
-            }
-            catch 
-            {
-                return false;
+                catch
+                {
+                    return false;
+                }
             }
         }
         return false;

@@ -68,7 +68,7 @@ public class Program
                        OnChallenge = context => // event triggered when authentication is not successful for whatever reason
                        {
                            context.HandleResponse(); // prevent the default 401 response
-                                                     // set the response status code to 401 Unauthorized
+                                                     // set the response status code to 401 UnauthorizedAccess
                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                            var problemDetailsFactory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                            var problemDetails = problemDetailsFactory.CreateProblemDetails(

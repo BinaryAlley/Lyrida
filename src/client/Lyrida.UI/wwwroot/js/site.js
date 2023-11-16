@@ -1,4 +1,6 @@
-﻿// TODO: when directory title is too long, use elipsis on tab headers
+﻿// TODO: - when directory title is too long, use elipsis on tab headers
+//       - save history to db, so that getting logged out doesn't clear it, upon re-login
+//       - add user preference to refresh current dirrectory after cut/copy/paste/delete operation (slower, but accurate)
 
 // test placeholders
 const environmentTypes = [
@@ -81,10 +83,20 @@ const FILE_ICONS = {
 // ==================================
 // DOM Elements
 // ==================================
+const btnActions = document.getElementById('btnActions');
+const renameInput = document.getElementById('renameInput');
 const btnSelection = document.getElementById('btnSelection');
+const btnSelectionMode = document.getElementById('btnSelectionMode');
+const btnSelectAll = document.getElementById('btnSelectAll');
+const btnSelectNone = document.getElementById('btnSelectNone');
+const btnSelectInverse = document.getElementById('btnSelectInverse');
+const btnCopy = document.getElementById('btnCopy');
+const btnPaste = document.getElementById('btnPaste');
+const btnNewFile = document.getElementById('btnNewFile');
 const accountIcon = document.getElementById('accountIcon');
 const accountDropdown = document.getElementById('accountDropdown');
 const selectionDropdown = document.getElementById('selectionDropdown');
+const actionsDropdown = document.getElementById('actionsDropdown');
 const addressBarInput = document.getElementById('addressBarInput');
 const addressBar = document.getElementById('addressBar');
 const pathSegmentsContainer = document.getElementById('pathSegments');
@@ -93,6 +105,7 @@ const navigatorContainer = document.getElementById('navigator');
 const addressBarGroup = document.getElementById('addressBarGroup');
 const environmentsDropdownToggle = document.getElementById('environmentsDropdownToggle');
 const environmentsCombobox = document.getElementById('environmentsCombobox');
+const dropContextMenu = document.getElementById('dropContextMenu');
 const btnTreeView = document.getElementById('btnTreeView');
 const btnPreview = document.getElementById('btnPreview');
 const btnSplitView = document.getElementById('btnSplitView');
@@ -103,8 +116,14 @@ const btnNavigateForward = document.getElementById('btnNavigateForward');
 const btnUpOneLevel = document.getElementById('btnUpOneLevel');
 const visibleSelectionRectangle = document.getElementById('visibleSelectionRectangle');
 const selectionRectangle = document.getElementById('selectionRectangle');
+const progressIndicator = document.getElementById('progressIndicator');
 const scrollbarHeight = getScrollbarHeight();
 const scrollbarWidth = getScrollbarWidth();
+
+const successToast = swal.mixin({
+    toast: true, position: 'bottom-left', iconColor: 'green', allowEscapeKey: true, timer: 5000,
+    timerProgressBar: true, showConfirmButton: false, showCloseButton: true, customClass: { popup: 'colored-toast', htmlContainer: 'swal-text' },
+});
 
 /**
  * Retrieves the active's tab explorer container element.
@@ -178,8 +197,16 @@ let addressBarWidth;
 let addressBarCachedScroll = 0;
 let selectionStartPosition = { x: 0, y: 0 };
 let isSelecting = false;
+let isSelectionMode = false;
+let isEscapePressed = false;
 let currentMousePosition = { x: 0, y: 0 };
-let openTabs = []; 
+let openTabs = [];
+let clipboard = [];
+let draggedItems = [];
+let overrideExisting = null;
+let overrideAll = null;
+let toastContent = '';
+var ajaxCallCounter = 0;
 
 let navigationHistory = {};
 
@@ -275,7 +302,7 @@ if (addressBar)
     }, { passive: false });
 
 /**
- * Toggles the visibility of the folders treeview panel.
+ * Toggles the visibility of the directories treeview panel.
  */
 if (btnTreeView)
     btnTreeView.addEventListener('click', function () {
@@ -338,11 +365,11 @@ if (btnUpOneLevel)
  * Event handler for the navigate back button click.
  */
 if (btnNavigateBack)
-    btnNavigateBack.addEventListener('click', function () {       
+    btnNavigateBack.addEventListener('click', function () {
         var tabHistory = navigationHistory[activeTabId];
         if (tabHistory && tabHistory.backStack.length > 0) {
             addressBarInput.value = tabHistory.backStack.pop();
-            parsePath(true, true, true); 
+            parsePath(true, true, true);
         }
     });
 
@@ -357,16 +384,35 @@ if (btnNavigateForward)
             parsePath(true, true, false);
         }
     });
+
 /**
  * Event handler for the account icon click.
  */
 if (accountIcon)
     accountIcon.addEventListener('click', function (event) {
-        if (accountDropdown.classList.contains('hidden'))
+        if (accountDropdown.classList.contains('hidden')) {
             accountDropdown.classList.remove('hidden');
+            actionsDropdown.classList.add('hidden');
+            selectionDropdown.classList.add('hidden');
+        }
         else
             accountDropdown.classList.add('hidden');
         event.stopPropagation(); // this is important to prevent the document click event from hiding it immediately
+    });
+
+/**
+* Event handler for the actions icon click.
+*/
+if (btnActions)
+    btnActions.addEventListener('click', function (event) {
+        if (actionsDropdown.classList.contains('hidden')) {
+            accountDropdown.classList.add('hidden');
+            actionsDropdown.classList.remove('hidden');
+            selectionDropdown.classList.add('hidden');
+        }
+        else
+            actionsDropdown.classList.add('hidden');
+        event.stopPropagation();
     });
 
 /**
@@ -374,11 +420,82 @@ if (accountIcon)
  */
 if (btnSelection)
     btnSelection.addEventListener('click', function (event) {
-        if (selectionDropdown.classList.contains('hidden'))
+        if (selectionDropdown.classList.contains('hidden')) {
+            accountDropdown.classList.add('hidden');
+            actionsDropdown.classList.add('hidden');
             selectionDropdown.classList.remove('hidden');
+        }
         else
             selectionDropdown.classList.add('hidden');
-        event.stopPropagation(); // this is important to prevent the document click event from hiding it immediately
+        event.stopPropagation();
+    });
+
+/**
+* Event handler for the selection mode icon click.
+*/
+if (btnSelectionMode)
+    btnSelectionMode.addEventListener('click', function (event) {
+        isSelectionMode = !isSelectionMode;
+        selectionDropdown.classList.add('hidden');
+        event.preventDefault();
+        event.stopPropagation();        
+    });
+
+/**
+ * Event handler for the select all icon click.
+ */
+if (btnSelectAll)
+    btnSelectAll.addEventListener('click', function (event) {
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            // go through each .e item and mark it as selected
+            explorer.querySelectorAll('.e').forEach(item => {
+                item.classList.add('selected');
+                item.classList.remove('selectionHover');
+            });
+        }
+        selectionDropdown.classList.add('hidden');
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
+/**
+ * Event handler for the select none icon click.
+ */
+if (btnSelectNone)
+    btnSelectNone.addEventListener('click', function (event) {
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            // go through each .e item and deselect it
+            explorer.querySelectorAll('.e').forEach(item => {
+                item.classList.remove('selected');
+                item.classList.remove('selectionHover');
+            });
+        }
+        selectionDropdown.classList.add('hidden');
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
+/**
+ * Event handler for the select inverse icon click.
+ */
+if (btnSelectInverse)
+    btnSelectInverse.addEventListener('click', function (event) {
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            // go through each .e item and inverse their selection state
+            explorer.querySelectorAll('.e').forEach(item => {
+                if (item.classList.contains('selected'))
+                    item.classList.remove('selected');
+                else
+                    item.classList.add('selected');
+                item.classList.remove('selectionHover');
+            });
+        }
+        selectionDropdown.classList.add('hidden');
+        event.preventDefault();
+        event.stopPropagation();
     });
 
 /**
@@ -386,9 +503,23 @@ if (btnSelection)
  */
 if (addressBarInput)
     addressBarInput.addEventListener('keypress', function (event) {
-        if (event.key === 'Enter') {  // 13 is the key code for "enter"
-            event.preventDefault();  // prevent any default action
+        if (event.key === 'Enter') {  
+            event.preventDefault();  
             parsePath(true, false, false);
+        }
+    });
+
+/**
+ * Event handler for the rename input keypress events.
+ */
+if (renameInput)
+    renameInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            renameInput.blur();
+        } else if (event.key === 'Escape') {
+            isEscapePressed = true;
+            renameInput.blur();
         }
     });
 
@@ -556,7 +687,7 @@ function setIconsViewMode(size) {
  * Hides additional item details such as date modified, type, and size.
  */
 function hideExtraDetails() {
-    document.querySelectorAll('.date-modified, .type, .size').forEach(el => {
+    document.querySelectorAll('.date-modified, .type, .size').forEach(el => { // TODO: switch to explorer-based implementation, instead of document
         el.style.display = 'none';
     });
 }
@@ -565,7 +696,7 @@ function hideExtraDetails() {
  * Shows additional item details such as date modified, type, and size.
  */
 function showExtraDetails() {
-    document.querySelectorAll('.date-modified, .type, .size').forEach(el => {
+    document.querySelectorAll('.date-modified, .type, .size').forEach(el => { // TODO: switch to explorer-based implementation, instead of document
         el.style.display = 'flex';
     });
 }
@@ -580,6 +711,7 @@ function showExtraDetails() {
  */
 function fetchDataForPath(path, environmentId, uuid, title, callback) {
     if (path !== null) {
+        startOperation();
         // fetch directory data for the path.
         $.ajax({
             url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(path),
@@ -589,7 +721,7 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
             },
             success: function (directoriesData) {
                 if (directoriesData.success) {
-                    if (rememberOpenTabs) 
+                    if (rememberOpenTabs)
                         updatePageInStorage(uuid, path, environmentId, title);
                     // fetch file data, upon successful directory fetch.
                     $.ajax({
@@ -607,19 +739,26 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
                                     files: filesData.files
                                 };
                                 callback(combinedData);
-
                                 if (enableConsoleDebugMessages)
                                     console.info(getCurrentTime() + " Got the directories and files for: " + path);
                             }
                         },
-                        error: function (error) {
-                            console.error('Failed to fetch files:', error);
+                        error: function (jqXHR, textStatus, error) {
+                            if (jqXHR.status === 401)
+                                window.location.href = "/Account/Login";
+                            else
+                                console.error('Failed to fetch files:', error);
                         }
                     });
                 }
+                endOperation();
             },
-            error: function (error) {
-                console.error('Failed to fetch directories:', error);
+            error: function (jqXHR, textStatus, error) {
+                if (jqXHR.status === 401)
+                    window.location.href = "/Account/Login";
+                else
+                    console.error('Failed to fetch directories:', error);
+                endOperation();
             }
         });
     } else
@@ -636,6 +775,7 @@ function goUpOneLevel() {
     if (!addressBarInput.value.endsWith(separator))
         addressBarInput.value = addressBarInput.value + separator;
     const path = addressBarInput.value;
+    startOperation();
     $.ajax({
         url: baseUrl + '/FileSystem/GoUpOneLevel?path=' + encodeURIComponent(path),
         type: 'GET',
@@ -678,9 +818,14 @@ function goUpOneLevel() {
                     title: data.errorMessage
                 });
             }
+            endOperation();
         },
-        error: function (error) {
-            console.error('Failed to fetch files:', error);
+        error: function (jqXHR, textStatus, error) {
+            endOperation();
+            if (jqXHR.status === 401)
+                window.location.href = "/Account/Login";
+            else
+                console.error('Failed to fetch files:', error);
         }
     });
 }
@@ -776,7 +921,7 @@ function addToNavigationStack(path, tabId, isHistoryNavigation, isBackNavigation
         else
             tabHistory.backStack.push(tabHistory.current);
     }
-    tabHistory.current = path; 
+    tabHistory.current = path;
     if (!isHistoryNavigation && !isBackNavigation)
         tabHistory.forwardStack.length = 0; // clear the forward stack when the user navigates to a new location
 }
@@ -874,7 +1019,7 @@ function renderTabHeader(page) {
                 switchTab(prevTab.attr('id').replace('tabHeader', ''));
             } else if (nextTab.length && nextTab.attr('id') !== 'dynTab_addTab') {
                 nextTab.addClass('active');
-                switchTab(nextTab.attr('id').replace('tabHeader', '')); 
+                switchTab(nextTab.attr('id').replace('tabHeader', ''));
             }
         }
         // if there are no more tabs, set the mode for selecting an environment
@@ -898,6 +1043,32 @@ function renderTabHeader(page) {
         event.stopPropagation(); // prevent tab selection post close
         switchTab(page.tabId)
     });
+    let dragEnterTime = null;
+    tabHeader.addEventListener('dragover', function (event) {
+        event.preventDefault(); 
+        event.dataTransfer.dropEffect = 'move';
+        // check if the tab is not already active
+        if (!tabHeader.classList.contains('active')) {
+            // only set the timer if it hasn't been set yet
+            if (!dragEnterTime) 
+                dragEnterTime = new Date(); // set the current time
+            const currentTime = new Date();
+            // if 1 second have passed and the tab isn't active, switch the tab
+            if (currentTime - dragEnterTime >= 1000 && !tabHeader.classList.contains('active')) {
+                switchTab(page.tabId);
+                dragEnterTime = null; // reset the timer
+            }
+        }
+    });
+    tabHeader.addEventListener('dragleave', function (event) {
+        // reset the timer because the drag has left the element
+        dragEnterTime = null;
+    });
+    tabHeader.addEventListener('drop', function (event) {
+        // clear the timer, because the drop has occurred
+        dragEnterTime = null;
+    });
+
     // create tab content container
     let tabPage = document.createElement("div");
     tabPage.id = `tabPage${page.tabId}`;
@@ -932,9 +1103,9 @@ function renderTabPage(tabId, data, uuid) {
             const explorerScrollbars = hasScrollbars(explorer);
             const containerExplorerScrollbars = hasScrollbars(explorerContainer);
             // check if clicked on the horizontal or vertical scrollbar
-            if (explorerScrollbars.horizontal && event.clientY > $(explorer).offset().top + $(explorer).height() - scrollbarHeight) 
+            if (explorerScrollbars.horizontal && event.clientY > $(explorer).offset().top + $(explorer).height() - scrollbarHeight)
                 return;
-            if (containerExplorerScrollbars.vertical && event.clientX > $(explorerContainer).offset().left + $(explorerContainer).width() - scrollbarWidth) 
+            if (containerExplorerScrollbars.vertical && event.clientX > $(explorerContainer).offset().left + $(explorerContainer).width() - scrollbarWidth)
                 return;
             // store information about selection start
             isSelecting = true;
@@ -942,7 +1113,7 @@ function renderTabPage(tabId, data, uuid) {
             document.documentElement.style.overflowY = 'hidden';
             selectionStartPosition.x = event.pageX + $(explorer).scrollLeft();
             selectionStartPosition.y = event.pageY + $(explorerContainer).scrollTop(); // not a mistake - in vertical mode, this is the overflow container!
-           
+
             visibleSelectionRectangle.style.left = event.pageX + 'px';
             visibleSelectionRectangle.style.top = event.pageY + 'px';
             visibleSelectionRectangle.style.width = '0px';
@@ -963,7 +1134,7 @@ function renderTabPage(tabId, data, uuid) {
         handleSelection(explorerContainer);
     });
 
-    $(explorerContainer).on('mouseup', function (event) {        
+    $(explorerContainer).on('mouseup', function (event) {
         // selection ended, hide the selection rectangle
         isSelecting = false;
         document.body.style.removeProperty('overflow-y');
@@ -984,7 +1155,7 @@ function renderTabPage(tabId, data, uuid) {
         const explorer = getActiveExplorer();
         if (explorer) {
             // go through each .e item that was inside the selection rectangle, and mark it as selected
-            explorer.querySelectorAll('.e.selectionHover').forEach(item => {                
+            explorer.querySelectorAll('.e.selectionHover').forEach(item => {
                 item.classList.add('selected');
                 item.classList.remove('selectionHover');
             });
@@ -1014,7 +1185,7 @@ function handleSelection(explorerContainer) {
         return;
     const explorer = getActiveExplorer();
     if (explorer) {
-         // calculate dimensions of the selection rectangle
+        // calculate dimensions of the selection rectangle
         const currentX = currentMousePosition.x;
         const currentY = currentMousePosition.y;
         const width = currentX - (selectionStartPosition.x - $(explorer).scrollLeft());
@@ -1055,7 +1226,7 @@ function handleSelection(explorerContainer) {
             visibleSelectionRectangle.style.width = (parseFloat(visibleSelectionRectangle.style.width) - difference) + 'px';
             visibleSelectionRectangle.style.left = containerRect.left + 'px';
         }
-        if (right > containerRect.right) 
+        if (right > containerRect.right)
             visibleSelectionRectangle.style.width = (containerRect.right - left) + 'px';
 
         if (top < containerRect.top) {
@@ -1063,8 +1234,8 @@ function handleSelection(explorerContainer) {
             visibleSelectionRectangle.style.height = (parseFloat(visibleSelectionRectangle.style.height) - difference) + 'px';
             visibleSelectionRectangle.style.top = containerRect.top + 'px';
         }
-        if (bottom > containerRect.bottom) 
-            visibleSelectionRectangle.style.height = (containerRect.bottom - top) + 'px';  
+        if (bottom > containerRect.bottom)
+            visibleSelectionRectangle.style.height = (containerRect.bottom - top) + 'px';
 
         // change color of items that fall within selection rectangle            
         const selectionRect = selectionRectangle.getBoundingClientRect();
@@ -1146,7 +1317,7 @@ function createExplorer(tabId, path, uuid) {
         // check if clicked on the horizontal scrollbar
         if (explorerScrollbars.horizontal && event.clientY > $(explorer).offset().top + $(explorer).height() - scrollbarHeight)
             return;
-        if (!event.ctrlKey && !event.shiftKey) {
+        if (!event.ctrlKey && !event.shiftKey && !isSelectionMode) {
             // deselect all file system elements when their explorer is clicked
             explorer.querySelectorAll('.e.selected').forEach(item => {
                 item.classList.remove('selected');
@@ -1154,6 +1325,25 @@ function createExplorer(tabId, path, uuid) {
             // do not store information about what item was clicked first, in context of Shift-selection
             explorer.removeAttribute('data-selection-start');
         }
+    });
+    explorer.addEventListener('dragover', function (event) {
+        event.preventDefault(); // allow dropping
+        explorer.classList.add('dragged'); // visual feedback
+    });
+    explorer.addEventListener('dragleave', function (event) {
+        // get the element that is being entered
+        let relatedTarget = event.relatedTarget;
+        // check if the related target is not a child of the explorer (avoid triggering dragleave when moving over child files and folders)
+        if (!explorer.contains(relatedTarget)) 
+            explorer.classList.remove('dragged'); // reset background color
+    });
+    explorer.addEventListener('drop', function (event) {
+        draggedItems = JSON.parse(event.dataTransfer.getData('text/plain'));
+        // position the context menu at the mouse coordinates
+        dropContextMenu.style.left = event.pageX + 'px';
+        dropContextMenu.style.top = event.pageY + 'px';
+        dropContextMenu.classList.remove('hidden'); // show the context menu
+        explorer.classList.remove('dragged');
     });
     if (rememberOpenTabs && uuid === null) { // only store pages when the option is enabled and its a brand new page, not one already stored
         const lastAddedPage = openTabs[openTabs.length - 1];
@@ -1192,11 +1382,40 @@ function createFileSystemEntity(entity, type) {
     const entityDiv = document.createElement("div");
     entityDiv.className = "e list-icons"; // TODO: change "list-icons" with customizable property
     entityDiv.dataset.path = entity.path;
-    entityDiv.dataset.type = type;    
+    entityDiv.dataset.type = type;
+    entityDiv.draggable = true;
     entityDiv.addEventListener('mouseup', handleFileSystemEntityClick);
     entityDiv.addEventListener('mousedown', function (event) {
         // stop the event from bubbling up to the explorer - we dont want to start selection rectangles when clicking files or directories
         event.stopPropagation();
+    });
+    entityDiv.addEventListener('dragstart', function (event) {
+        const explorer = getActiveExplorer();
+        if (explorer) {
+            // if the drag originated on a non-selected item, deselect any other element, mark it as selected, and start selection drag from it
+            if (!event.target.classList.contains('selected')) {
+                explorer.querySelectorAll('.e.selected').forEach(element => {
+                    element.classList.remove('selected');
+                });
+                event.target.classList.add('selected');
+            }
+            // if this entity is part of a selection, we want to drag all selected entities
+            const selectedEntities = explorer.querySelectorAll('.e.selected');
+            if (selectedEntities.length > 1 && entityDiv.classList.contains('selected')) {
+                // handle multiple items
+                const items = Array.from(selectedEntities).map(el => {
+                    return { path: el.dataset.path, name: $(el).find('.t.f, .t.d').text(), type: el.dataset.type };
+                });
+                event.dataTransfer.setData('text/plain', JSON.stringify(items));
+            } else { // handle a single item                
+                const item = { path: entityDiv.dataset.path, name: $(entityDiv).find('.t.f, .t.d').text(), type: entityDiv.dataset.type };
+                event.dataTransfer.setData('text/plain', JSON.stringify([item]));
+            }
+            event.dataTransfer.effectAllowed = 'move';
+            const dragImage = createDragImage(selectedEntities.length);
+            event.dataTransfer.setDragImage(dragImage, -15, 0); // sets the custom drag image
+            setTimeout(() => document.body.removeChild(dragImage), 0); // remove the element after the drag starts
+        }
     });
     // create and append child divs to the entityDiv
     entityDiv.appendChild(createIconDiv(entity.path, type));
@@ -1270,9 +1489,9 @@ function createSizeDiv(size, type) {
  */
 function handleFileSystemEntityClick(event) {
     event.preventDefault();
+    renameInput.classList.add('hidden');
     if (!isSelecting)
         event.stopPropagation();
-
     const explorer = getActiveExplorer();
     const allEClassElements = Array.from(explorer.querySelectorAll('.e'));
     const currentIndex = allEClassElements.indexOf(event.currentTarget);
@@ -1281,6 +1500,9 @@ function handleFileSystemEntityClick(event) {
     const previousTime = parseInt(event.currentTarget.dataset.selectionStartTime || 0);
     const currentTime = new Date().getTime();
     const timeDifference = currentTime - previousTime;
+
+    // TODO: needs to account for when the element is already selected, and a double click occurs - on first click it would check the difference and go to rename -
+    // maybe just wait half second before performing action
 
     // if time difference is less than 300ms, treat it as a double-click
     if (timeDifference < 300) { 
@@ -1317,7 +1539,7 @@ function handleFileSystemEntityClick(event) {
                     imagesDiv.appendChild(imgEl);
                 });
 
-                // Create a map to track the loading state of each image
+                // create a map to track the loading state of each image
                 const highResImageLoaded = new Map();
                 const viewer = new Viewer(imagesDiv, {
                     url: 'src',
@@ -1361,13 +1583,13 @@ function handleFileSystemEntityClick(event) {
                             a.click();
                             document.body.removeChild(a);
                         },
-                    },                   
+                    },
                     viewed: function (event) {
                         const index = event.detail.index; // the index of the image in the viewer
                         // if the high-res image for this index has been loaded, return early
-                        if (highResImageLoaded.get(index)) 
+                        if (highResImageLoaded.get(index))
                             return;
-                        const imageElements = imagesDiv.getElementsByTagName('img');                        
+                        const imageElements = imagesDiv.getElementsByTagName('img');
                         // fetch the high-quality image from the server
                         getThumbnailApiCall(images[index].path, fullImageQuality).then(data => {
                             const highQualityImageSrc = `data:${data.mimeType};base64,${data.base64Data}`;
@@ -1396,13 +1618,13 @@ function handleFileSystemEntityClick(event) {
         return;
     }
 
-    if (event.ctrlKey) { // when CTRL key is pressed
+    if (event.ctrlKey || isSelectionMode) { // when CTRL key is pressed
         // toggle selection for the current clicked item
         event.currentTarget.classList.toggle('selected');
-        // Set the selection start if it's not already set
-        if (explorer.dataset.selectionStart === undefined) 
-            explorer.dataset.selectionStart = currentIndex;      
-    } else if (event.shiftKey && explorer.dataset.selectionStart !== undefined) { // when SHIFT key is pressed
+        // set the selection start if it's not already set
+        if (explorer.dataset.selectionStart === undefined)
+            explorer.dataset.selectionStart = currentIndex;
+    } else if ((event.shiftKey && explorer.dataset.selectionStart !== undefined) || isSelectionMode) { // when SHIFT key is pressed
         const start = parseInt(explorer.dataset.selectionStart);
         // remove all selections
         allEClassElements.forEach(elem => {
@@ -1411,21 +1633,32 @@ function handleFileSystemEntityClick(event) {
         // define the range to select items from and to
         const [from, to] = start < currentIndex ? [start, currentIndex] : [currentIndex, start];
         // add the 'selected' class to items in the range
-        for (let i = from; i <= to; i++) 
-            allEClassElements[i].classList.add('selected');       
+        for (let i = from; i <= to; i++)
+            allEClassElements[i].classList.add('selected');
     } else { // when neither CTRL nor SHIFT keys are pressed
-        // deselect all items
-        allEClassElements.forEach(elem => {
-            elem.classList.remove('selected');
-            // remove selectionStartTime from all items
-            delete elem.dataset.selectionStartTime;
-        });
-        // add 'selected' class to the current clicked item
-        event.currentTarget.classList.add('selected');
-        // set the current item as the selection start
-        explorer.dataset.selectionStart = currentIndex;
-        // store the current timestamp for future double-click checks
-        event.currentTarget.dataset.selectionStartTime = currentTime;
+        if (!isSelectionMode) {
+            // get all elements that are selected
+            const selectedElements = allEClassElements.filter(element => element.classList.contains('selected'));
+            // add 'selected' class to the current clicked item
+            event.currentTarget.classList.add('selected');
+            // if there are no selected elements, or if there are more than one, deselect all of them, and select just the clicked one
+            if ((selectedElements.length === 1 && event.currentTarget !== selectedElements[0]) || selectedElements.length !== 1) {
+                // deselect all items
+                selectedElements.forEach(elem => {
+                    if (elem !== event.currentTarget) {
+                        elem.classList.remove('selected');
+                        // remove selectionStartTime from all items
+                        delete elem.dataset.selectionStartTime;
+                    }
+                });
+                // set the current item as the selection start
+                explorer.dataset.selectionStart = currentIndex;
+                // store the current timestamp for future double-click checks
+                event.currentTarget.dataset.selectionStartTime = currentTime;
+            } else if (selectedElements.length === 1)  // if its only one element that is selected, and we click it, enter rename mode
+                enterRenameMode(event.currentTarget);
+        } else // if its selection mode, just toggle selection of item, when clicked
+            event.currentTarget.classList.toggle('selected');
     }
 }
 
@@ -1479,7 +1712,9 @@ function getVisibleItems() {
  */
 async function processItem(item, visibleItems) {
     try {
+        startOperation();
         const result = await getThumbnailApiCall(item.path, imagePreviewsQuality);
+        endOperation();
         // update the item's thumbnail using the retrieved data
         if (typeof result.base64Data !== "undefined")
             item.img.src = `data:${result.mimeType};base64,${result.base64Data}`;
@@ -1491,6 +1726,7 @@ async function processItem(item, visibleItems) {
             processItem(nextItem, visibleItems);
         }
     } catch (error) {
+        endOperation();
         if (error.name === 'AbortError') {
             // console.log('Fetch operation was aborted.');
         } else {
@@ -1511,7 +1747,7 @@ async function processItem(item, visibleItems) {
  * @returns {Promise<object>} - Returns a Promise resolving to an object containing base64Data and mimeType.
  * @throws {Error} - Throws an error if the API call fails.
  */
-async function getThumbnailApiCall(path, quality) {
+async function getThumbnailApiCall(path, quality) { // endOperation();
     // URL encode the path to ensure it's safely transmitted in the URL
     const encodedItem = encodeURIComponent(path);
     // fetch the thumbnail for the given item from the server
@@ -1521,12 +1757,12 @@ async function getThumbnailApiCall(path, quality) {
         },
         signal: abortController.signal // use the abort signal 
     });
-    if (!response.ok)
+    if (!response.ok) 
         throw new Error('Failed to fetch the thumbnail');
     // convert the response to a JSON object
     const jsonResponse = await response.json();
-    //if (enableConsoleDebugMessages)
-    //    console.info(getCurrentTime() + " Retrieved thumbnail for: " + path);
+    if (enableConsoleDebugMessages)
+        console.info(getCurrentTime() + " Retrieved thumbnail for: " + path);
     // return the base64 thumbnail data and its MIME type
     return {
         base64Data: jsonResponse.data,
@@ -1597,6 +1833,7 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
             abortController = null;
         }
     }
+    startOperation();
     $.ajax({
         url: baseUrl + '/FileSystem/CheckPath?path=' + encodeURIComponent(path),
         type: 'GET',
@@ -1607,6 +1844,7 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
             if (data.success) {
                 if (enableConsoleDebugMessages)
                     console.info(getCurrentTime() + " Checked path for: " + path);
+                startOperation();
                 $.ajax({
                     url: baseUrl + '/FileSystem/ParsePath?path=' + encodeURIComponent(path),
                     type: 'GET',
@@ -1628,28 +1866,32 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
                                     break;
                                 }
                             }
-                            if (needsContentRefresh) 
+                            if (needsContentRefresh)
                                 updateCurrentTab(path, lastDirectory ? lastDirectory.name : (data.pathSegments.length > 0 ? data.pathSegments[data.pathSegments.length - 1].name + separator : "New Tab"), isHistoryNavigation, isBackNavigation);
                         }
                         else
                             console.error(data.errorMessage);
+                        endOperation();
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
-                        if (jqXHR.status === 401) 
+                        if (jqXHR.status === 401)
                             window.location.href = "/Account/Login";
-                        else 
+                        else
                             console.error('Failed to fetch files:', errorThrown);
+                        endOperation();
                     }
                 });
             }
             else
                 console.error(data.errorMessage);
+            endOperation();
         },
         error: function (jqXHR, textStatus, errorThrown) {
             if (jqXHR.status === 401) // TODO: perhaps, update the last location of current tab, so that it returns to it after login?
-                window.location.href = "/Account/Login"; 
-            else 
+                window.location.href = "/Account/Login";
+            else
                 console.error('Failed to fetch files:', errorThrown);
+            endOperation();
         }
     });
 }
@@ -1721,12 +1963,12 @@ function handlePathSegmentComboboxChange(event) {
         const dropdown = document.getElementById(dropdownId);
         reattachDropdown();
         if (event.target.checked) {
-            console.log('Dropdown opened!');
             const comboboxElement = event.target.closest('.navigator-combobox'); // get the closest parent (or self) with the specified class
             const pathValue = comboboxElement.getAttribute('data-path');  // retrieve the data-path attribute value
             // clear any existing dropdown elements
             dropdown.innerHTML = "";
             // fetch directory data for the path.
+            startOperation();
             $.ajax({
                 url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(pathValue),
                 type: 'GET',
@@ -1769,14 +2011,18 @@ function handlePathSegmentComboboxChange(event) {
                                 const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
                                 addressBarInput.value = pathValue + (!pathValue.endsWith(separator) ? separator : '') + option.name + separator;
                                 parsePath(true, false, false);
-                                console.log('Current directory option clicked:', addressBarInput.value);
                             });
                             dropdown.appendChild(directoryDiv);
                         });
                     }
+                    endOperation();
                 },
-                error: function (error) {
-                    console.error('Failed to fetch directories:', error);
+                error: function (jqXHR, textStatus, error) {
+                    if (jqXHR.status === 401)
+                        window.location.href = "/Account/Login";
+                    else
+                        console.error('Failed to fetch directories:', error);
+                    endOperation();
                 }
             });
             // when drop down opens, need to show address bar overflow, otherwise clipping of drop down occurs
@@ -1793,9 +2039,6 @@ function handlePathSegmentComboboxChange(event) {
             dropdown.style.display = 'block';
             // handle addressBar scroll to adjust dropdown position
             addressBar.addEventListener('scroll', adjustDropdownPosition);
-            console.log("added event");
-        } else {
-            console.log('Dropdown closed!');
         }
     }
 }
@@ -1855,15 +2098,15 @@ function handleEnvironemtComboboxChange(event) {
         environmentDropdown.style.left = position.left + 'px';
         environmentDropdown.style.display = 'block';
         environmentDropdown.style.width = '54px';
-    } 
+    }
 }
 
 /**
  * Adds a new user page to storage
- * @param {any} guid - The unique id of the page to add
- * @param {any} title - The title of the page to add
- * @param {any} path - The path of the page to add
- * @param {any} platformId - The id of the platform of the page to add
+ * @param {guid} guid - The unique id of the page to add
+ * @param {string} title - The title of the page to add
+ * @param {string} path - The path of the page to add
+ * @param {int} platformId - The id of the platform of the page to add
  */
 function addNewPageToStorage(guid, title, path, platformId) {
     const page = {
@@ -1872,6 +2115,7 @@ function addNewPageToStorage(guid, title, path, platformId) {
         path: path,
         platformId: platformId
     };
+    startOperation();
     $.ajax({
         url: baseUrl + '/FileSystem/AddPage',
         type: 'POST',
@@ -1879,24 +2123,26 @@ function addNewPageToStorage(guid, title, path, platformId) {
         contentType: "application/json; charset=utf-8",
         headers: {
             "X-Environment-Type": activeEnvironmentId.toString()
-        },   
-        error: function (jqXHR, textStatus, errorThrown) {
-            swal("STOP!", textStatus + " " + errorThrown, "error", {
-                button: {
-                    text: "OK",
-                    className: "confirm-button",
-                }
-            });
+        },
+        success: function () {
+            endOperation();
+        },
+        error: function (jqXHR, textStatus, error) {
+            if (jqXHR.status === 401)
+                window.location.href = "/Account/Login";
+            else
+                swal("STOP!", textStatus + " " + error, "error", { button: { text: "OK", className: "confirm-button", } });
+            endOperation();
         }
     });
 }
 
 /**
  * Updates a page in the storage
- * @param {any} guid - The unique id of the page to update
- * @param {any} path - The path of the page to update
- * @param {any} environmentId - The id of the platform of the page to update
- * @param {any} title - The title of the page to update
+ * @param {guid} guid - The unique id of the page to update
+ * @param {string} path - The path of the page to update
+ * @param {int} environmentId - The id of the platform of the page to update
+ * @param {string} title - The title of the page to update
  */
 function updatePageInStorage(guid, path, environmentId, title) {
     const page = {
@@ -1905,6 +2151,7 @@ function updatePageInStorage(guid, path, environmentId, title) {
         path: path,
         platformId: environmentId
     };
+    startOperation();
     $.ajax({
         url: baseUrl + '/FileSystem/UpdatePage',
         type: 'POST',
@@ -1913,22 +2160,25 @@ function updatePageInStorage(guid, path, environmentId, title) {
         headers: {
             "X-Environment-Type": activeEnvironmentId.toString()
         },
-        error: function (jqXHR, textStatus, errorThrown) {
-            swal("STOP!", textStatus + " " + errorThrown, "error", {
-                button: {
-                    text: "OK",
-                    className: "confirm-button",
-                }
-            });
+        success: function () {
+            endOperation();
+        },
+        error: function (jqXHR, textStatus, error) {
+            if (jqXHR.status === 401)
+                window.location.href = "/Account/Login";
+            else
+                swal("STOP!", textStatus + " " + error, "error", { button: { text: "OK", className: "confirm-button", } });
+            endOperation();
         }
     });
 }
 
 /**
  * Deletes a page from the storage
- * @param {any} guid - The unique id of the page to delete
+ * @param {guid} guid - The unique id of the page to delete
  */
 function removePageFromStorage(guid) {
+    startOperation();
     $.ajax({
         url: baseUrl + '/FileSystem/RemovePage',
         type: 'POST',
@@ -1937,13 +2187,375 @@ function removePageFromStorage(guid) {
         headers: {
             "X-Environment-Type": activeEnvironmentId.toString()
         },
-        error: function (jqXHR, textStatus, errorThrown) {
-            swal("STOP!", textStatus + " " + errorThrown, "error", {
-                button: {
-                    text: "OK",
-                    className: "confirm-button",
+        success: function () {
+            endOperation();
+        },
+        error: function (jqXHR, textStatus, error) {
+            if (jqXHR.status === 401)
+                window.location.href = "/Account/Login";
+            else
+                swal("STOP!", textStatus + " " + errorThrown, "error", { button: { text: "OK", className: "confirm-button", } });
+            endOperation();
+        }
+    });
+}
+
+/**
+ * Displays the input field that allows users to rename a filesystem element
+ * @param {HTMLElement} selectedElement - The element to be renamed
+ */
+function enterRenameMode(selectedElement) {
+    // get the target element's position and size
+    const rect = selectedElement.getBoundingClientRect();
+    renameInput.classList.remove('hidden');
+    renameInput.style.width = rect.width + 'px';
+    renameInput.style.height = rect.height + 'px';
+    renameInput.style.top = rect.top + 'px';
+    renameInput.style.left = rect.left + 'px';
+    renameInput.value = $(selectedElement).find('.t.f, .t.d').text(); // get the text element of either the file or directory
+    renameInput.focus();
+    // calculate the position of the last period
+    const lastPeriodPos = renameInput.value.lastIndexOf('.');
+    // if there is no period, set the selection to the end of the text
+    const selectionEnd = selectedElement.dataset.type === 'file' && lastPeriodPos !== -1 ? lastPeriodPos : renameInput.value.length;
+    // set the selection range from the start of the text to the last period (or to the end if no period)
+    renameInput.setSelectionRange(0, selectionEnd);
+}
+
+/**
+ * Performs the rename operation on the specified element.
+ * @param {HTMLElement} renamedElement - The element being renamed.
+ * @param {string} newName - The new name to give to the renamed element.
+ */
+function renameFileSystemElement(renamedElement, newName) {
+    document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+        element.classList.remove('cut');
+    });
+    if ($(renamedElement).find('.t.f, .t.d').text() !== newName) { // don't rename if name did not change
+        startOperation();
+        $.ajax({
+            url: baseUrl + '/FileSystem/RenameElement',
+            type: 'POST',
+            data: JSON.stringify({ path: renamedElement.dataset.path, name: newName, isFile: renamedElement.dataset.type === 'file' }),
+            contentType: 'application/json',
+            headers: {
+                "X-Environment-Type": activeEnvironmentId.toString()
+            },
+            success: function (data) {
+                if (data.success) {
+                    // remove the element from the UI
+                    $(renamedElement).replaceWith($(createFileSystemEntity(data.directory, renamedElement.dataset.type)));
+                    const toast = swal.mixin({
+                        toast: true, position: 'bottom-left', iconColor: 'green', showConfirmButton: false, timer: 5000,
+                        allowEscapeKey: true, showCloseButton: true, timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                    });
+                    toast.fire({ icon: 'success', title: data.message });
+                } else {
+                    const toast = swal.mixin({
+                        toast: true, position: 'bottom-left', iconColor: 'red', showConfirmButton: false, timer: 5000,
+                        timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                    });
+                    toast.fire({ icon: 'error', title: data.errorMessage });
                 }
-            });
+                endOperation();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.status === 401)
+                    window.location.href = "/Account/Login";
+                else
+                    Swal.fire({
+                        title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
+                        customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                    });
+                endOperation();
+            }
+        });
+    }
+}
+
+/**
+ * Performs the cut operation on specified elements.
+ * @param {HTMLElement[]} elements - The elements that are being cut.
+ */
+function cutElements(elements) {
+    clipboard = [];
+    document.querySelectorAll('.e').forEach(element => { // unmark any previous items as "cut"
+        element.classList.remove('cut');
+    });
+    elements.forEach(element => {
+        clipboard.push({ path: element.getAttribute('data-path'), name: $(element).find('.t.f, .t.d').text(), type: element.getAttribute('data-type'), action: "cut" });
+        element.classList.add('cut');
+    });
+}
+
+/**
+ * Performs the copy operation on specified elements.
+ * @param {HTMLElement[]} elements - The elements that are being copied.
+ */
+function copyElements(elements) {
+    clipboard = [];
+    elements.forEach(element => {
+        clipboard.push({ path: element.getAttribute('data-path'), name: $(element).find('.t.f, .t.d').text(), type: element.getAttribute('data-type'), action: "copy" });
+    });
+    document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+        element.classList.remove('cut');
+    });
+}
+
+/**
+ * Performs the paste operation on specified elements.
+ */
+function pasteElements() {
+    document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+        element.classList.remove('cut');
+    });
+    const explorer = getActiveExplorer();
+    if (explorer) {
+        overrideExisting = null;
+        overrideAll = null;
+        toastContent = '';
+        processClipboardItem(0, explorer.dataset.path); // start with the first item
+    }
+}
+
+/**
+ * Processes the items in the clipboard memory, pasting them at the specified destination, one by one, based on the index.
+ * @param {int} index - The index of the clipboard memory to process.
+ * @param {string} destinationPath - The path where the clipboard items should be pasted.
+ * @returns - When the last element in the clipboard has been processed.
+ */
+function processClipboardItem(index, destinationPath) {
+    // if all items have been processed, exit the function
+    if (index >= clipboard.length)
+        return;
+    const element = clipboard[index];
+    pasteElement(element, destinationPath, (shouldContinue) => {
+        // shouldContinue is a boolean indicating whether to move to the next item
+        processClipboardItem(index + (shouldContinue ? 1 : 0), destinationPath); // callback function to process the next item or retry the current item without incrementing the index
+    });
+}
+
+/**
+ * Pastes a clipboard element at the specified destination.
+ * @param {HTMLElement} element - The DOM element containing the data needed for the paste operation.
+ * @param {string} destinationPath - The path where the clipboard element will be pasted.
+ * @param {Function} callback - The function to execute after the item is pasted.
+ */
+function pasteElement(element, destinationPath, callback) {
+    let dataPayload = {
+        fileName: element.name,
+        sourcePath: element.path,
+        destinationPath: destinationPath,
+        isFile: element.type === 'file',
+        overrideExisting: overrideAll === null ? overrideExisting : true
+    };
+    startOperation();
+    $.ajax({
+        url: baseUrl + '/FileSystem/' + (element.action === 'copy' ? (element.type === 'file' ? 'CopyFile' : 'CopyDirectory') : (element.type === 'file' ? 'MoveFile' : 'MoveDirectory')),
+        type: 'POST',
+        data: JSON.stringify(dataPayload),
+        contentType: 'application/json',
+        headers: {
+            "X-Environment-Type": activeEnvironmentId.toString()
+        },
+        success: function (data) {
+            if (data.success) {
+                overrideExisting = null;
+                // refresh the explorer items
+                //$(renamedElement).replaceWith($(createFileSystemEntity(data.directory, renamedElement.dataset.type)));
+
+                // update the toast content with the path of the copied item
+                toastContent += `${data.file.path}\n`; // add the path to the toast content, newline for readability
+                // show or update the toast with the new content
+                successToast.fire({
+                    icon: 'success', title: data.message + ":", html: toastContent.replace(/\n/g, '<br>'), // Replace newlines with line breaks for HTML
+                });
+                if (enableConsoleDebugMessages)
+                    console.info('pasted with success ' + element.path);               
+                if (typeof callback === 'function') // call the callback function to process the next item
+                    callback(true);
+            } else {
+                if (data.errorMessage == 'file exists' && overrideAll === null) {
+                    if (enableConsoleDebugMessages)
+                        console.info('file exists, paste failed for ' + element.path);
+                    Swal.fire({
+                        title: data.title,
+                        iconColor: 'red',
+                        icon: 'question',
+                        customClass: {
+                            popup: 'colored-toast text-light-one',
+                            confirmButton: ''
+                        },
+                        html: `
+                            <a href="#" id="swal-yes" class="confirm-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.replaceText + `</a>
+                            <a href="#" id="swal-yesToAll" class="confirm-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.replaceAllText + `</a>
+                            <a href="#" id="swal-skip" class="abort-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.skipText + `</a>
+                            <a href="#" id="swal-keepBoth" class="abort-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.keepText + `</a>
+                            `,
+                        showConfirmButton: false,
+                        showCancelButton: false,
+                        didOpen: () => {
+                            document.getElementById('swal-yes').addEventListener('click', handleYes);
+                            document.getElementById('swal-yesToAll').addEventListener('click', handleYesToAll);
+                            document.getElementById('swal-skip').addEventListener('click', handleSkip);
+                            document.getElementById('swal-keepBoth').addEventListener('click', handleKeepBoth);
+                        }
+                    });
+                    // define handlers                        
+                    function handleYes(event) {
+                        event.preventDefault();
+                        overrideExisting = true;
+                        Swal.close();
+                        if (enableConsoleDebugMessages)
+                            console.info('user chose Yes for paste conflict');
+                        if (typeof callback === 'function') 
+                            callback(false);
+                    }
+                    function handleYesToAll(event) {
+                        event.preventDefault();
+                        overrideAll = true;                        
+                        Swal.close();
+                        if (enableConsoleDebugMessages)
+                            console.info('user chose Yes To All for paste conflict');
+                        if (typeof callback === 'function') 
+                            callback(false); // continue with the next item
+                    }
+                    function handleSkip(event) {
+                        event.preventDefault();
+                        overrideExisting = null;
+                        Swal.close();
+                        if (enableConsoleDebugMessages)
+                            console.info('user chose Skip for paste conflict');
+                        if (typeof callback === 'function')
+                            callback(true); // continue with the next item
+                    }
+                    function handleKeepBoth(event) {
+                        event.preventDefault();
+                        // TODO: to be implemented
+                        if (enableConsoleDebugMessages)
+                            console.info('user chose Keep Both for paste conflict');
+                        Swal.close();
+                    }
+                }
+                else
+                {
+                    if (enableConsoleDebugMessages)
+                        console.info('error pasting file' + element.path);
+                    const toast = swal.mixin({
+                        toast: true, position: 'bottom-left', iconColor: 'red', showConfirmButton: false, timer: 5000,
+                        timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                    });
+                    toast.fire({ icon: 'error', title: data.errorMessage });
+                }
+            }
+            endOperation();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (enableConsoleDebugMessages)
+                console.info('error pasting file' + element.path);
+            if (jqXHR.status === 401)
+                window.location.href = "/Account/Login";
+            else
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            endOperation();
+        }
+    });
+}
+
+/**
+ * Performs the delete operation on specified elements.
+ * @param {HTMLElement[]} elements - The elements that are being deleted.
+ */
+function deleteElements(elements) {
+    document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+        element.classList.remove('cut');
+    });
+    toastContent = '';
+    // iterate over each selected item and send a delete request
+    elements.forEach(element => {
+        var path = element.getAttribute('data-path');
+        var type = element.getAttribute('data-type');        
+        var endpoint = type === 'directory' ? '/FileSystem/DeleteDirectory?path=' : '/FileSystem/DeleteFile?path=';
+        startOperation();
+        $.ajax({
+            url: baseUrl + endpoint + encodeURIComponent(path),
+            type: 'DELETE',
+            contentType: 'application/json',
+            headers: {
+                "X-Environment-Type": activeEnvironmentId.toString()
+            },
+            success: function (data) {
+                // remove the element from the UI
+                element.remove();
+                // update the toast content with the path of the deleted item
+                toastContent += `${path}\n`; // add the path to the toast content, newline for readability
+                // show or update the toast with the new content
+                successToast.fire({ icon: 'success', title: data.message + ":", html: toastContent.replace(/\n/g, '<br>'), // Replace newlines with line breaks for HTML
+                });
+                endOperation();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (jqXHR.status === 401)
+                    window.location.href = "/Account/Login";
+                else
+                    Swal.fire({ title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
+                        customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                    });
+                endOperation();
+            }
+        });
+    });
+}
+
+/**
+ * Creates a new directory.
+ * @param {HTMLElement} explorer - The explorer element to which the new directory is added.
+ * @param {string} path - The path where the directory will be created.
+ * @param {string} name - The name of the new directory.
+ */
+function createNewDirectory(explorer, path, name) {
+    document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+        element.classList.remove('cut');
+    });
+    startOperation();
+    $.ajax({
+        url: baseUrl + '/FileSystem/CreateDirectory',
+        type: 'POST',
+        data: JSON.stringify({ path: path, name: name }),
+        contentType: 'application/json',
+        headers: {
+            "X-Environment-Type": activeEnvironmentId.toString()
+        },
+        success: function (data) {
+            if (data.success) {
+                // remove the element from the UI
+                const directoryDiv = createFileSystemEntity(data.directory, "directory");
+                explorer.appendChild(directoryDiv);
+                const toast = swal.mixin({
+                    toast: true, position: 'bottom-left', iconColor: 'green', showConfirmButton: false, timer: 5000,
+                    allowEscapeKey: true, showCloseButton: true, timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                });
+                toast.fire({ icon: 'success', title: data.message });
+            } else {
+                const toast = swal.mixin({
+                    toast: true, position: 'bottom-left', iconColor: 'red', showConfirmButton: false, timer: 5000,
+                    timerProgressBar: true, customClass: { popup: 'colored-toast' }                    
+                });
+                toast.fire({ icon: 'error', title: data.errorMessage });
+            }
+            endOperation();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 401)
+                window.location.href = "/Account/Login";
+            else
+                Swal.fire({ title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            endOperation();
         }
     });
 }
@@ -1984,7 +2596,7 @@ function getUserPermissions() {
                                                             text: "OK",
                                                             className: "confirm-button",
                                                         }
-                                                    }); 
+                                                    });
                                             }
                                         }
                                     });
@@ -2018,6 +2630,36 @@ function getUserPermissions() {
 // note: chill, this is for UI visual manipulation purposes ONLY, the permissions are checked server side anyway!
 function setUserPermissions(permissions) {
     window.Permissions = [...new Set([...window.Permissions, ...permissions])];
+}
+
+/**
+ * Starts progress indicator
+ */
+function startOperation() {
+    if (ajaxCallCounter === 0)
+        progressIndicator.classList.remove('hidden');
+    ajaxCallCounter++;
+    console.info("++" + ajaxCallCounter);
+}
+
+/**
+ * Uodates the progress indicator
+ * @param {int} completed - Number of completed elements
+ * @param {int} total - Number of total elements
+ */
+function updateOperationProgress(completed, total) {
+    //var progress = (completed / total) * 100;
+    //Pace.set(progress); 
+}
+
+/**
+ * Stops progress indicator
+ */
+function endOperation() {
+    ajaxCallCounter--;
+    if (ajaxCallCounter === 0) 
+        progressIndicator.classList.add('hidden');
+    console.info("--" + ajaxCallCounter);
 }
 
 /**
@@ -2073,6 +2715,25 @@ function getScrollbarWidth() {
     // cleanup and calculate the difference
     outer.parentNode.removeChild(outer);
     return widthNoScroll - widthWithScroll;
+}
+
+/**
+ * Creates a small image used to indicate number of dragged elements
+ * @param {int} count - The number of dragged items
+ * @returns {HTMLElement} - The created image
+ */
+function createDragImage(count) {
+    const dragImage = document.createElement('div');
+    dragImage.textContent = count + ' item' + (count === 1 ? '' : 's'); // text showing the count of items
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-100px'; // position off-screen
+    dragImage.style.backgroundColor = '#f0f0f0';
+    dragImage.style.padding = '5px';
+    dragImage.style.borderRadius = '5px';
+    dragImage.style.fontSize = '12px';
+    dragImage.style.fontFamily = 'Arial, sans-serif';
+    document.body.appendChild(dragImage);
+    return dragImage;
 }
 
 /**
@@ -2140,12 +2801,12 @@ $(document).ready(function () {
         combobox.find(".enlightenment-toggle-checkbox").prop("checked", false);
         const titleValue = (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title;
 
-        combobox.attr('title', titleValue); 
+        combobox.attr('title', titleValue);
         const imgElement = combobox.find("label.enlightenment-toggle img");
         imgElement.attr('title', titleValue);
         imgElement.attr('alt', titleValue);
         const explorer = getActiveExplorer();
-        if (explorer) 
+        if (explorer)
             explorer.setAttribute('data-environment', environment.id);
         addressBarInput.value = environment.initialPath;
         activeEnvironmentId = environment.id;
@@ -2166,8 +2827,8 @@ $(document).ready(function () {
      * will ensure all other comboboxes are closed.
      */
     $(document).on('change', '.enlightenment-toggle-checkbox, .navigator-toggle-checkbox', function () {
-        if ($(this).prop('checked')) 
-            closeAllComboboxesExcept($(this)); 
+        if ($(this).prop('checked'))
+            closeAllComboboxesExcept($(this));
     });
 
     /**
@@ -2188,6 +2849,12 @@ $(document).ready(function () {
             reattachDropdown();
         }
         accountDropdown.classList.add('hidden');
+        if (actionsDropdown) {
+            dropContextMenu.classList.add('hidden');
+            actionsDropdown.classList.add('hidden');
+            selectionDropdown.classList.add('hidden');
+            draggedItems = [];
+        }
     });
 
     /**
@@ -2210,7 +2877,7 @@ $(document).ready(function () {
             }
         });
     }
-    
+
     if (environmentDropdown)
         // add the available environments to the environments combobox in the navigator
         environmentTypes.forEach((type, index, array) => {

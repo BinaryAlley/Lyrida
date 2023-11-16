@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+ <style type="text/css" id="current-color-scheme">
+            .ColorScheme-Text {
+                color:#039bfc;
+            }
+        </style>
+
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feComponentTransfer in="SourceAlpha" result="adjustedAlpha">
+                <feFuncA type="table" tableValues="0 0.5 1"/>
+            </feComponentTransfer>
+            <feGaussianBlur in="adjustedAlpha" stdDeviation="2" result="blur"/>
+            <feFlood flood-color="#039bfc" result="color"/>
+            <feComposite in="color" in2="blur" operator="in" result="softGlowColored"/>
+            <feMerge>
+                <feMergeNode in="softGlowColored"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+  <linearGradient id="b" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -723.44 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="b-3" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -753.02 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="linearGradient1299" x1="5" x2="195" y1="174.76" y2="174.76" gradientTransform="matrix(.32632 0 0 .095367 -.63187 42.834)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#039bfc" stop-opacity="0" offset="0"/>
+   <stop stop-color="#039bfc" offset=".225"/>
+   <stop stop-color="#039bfc" offset=".5"/>
+   <stop stop-color="#039bfc" offset=".775"/>
+   <stop stop-color="#039bfc" stop-opacity="0" offset="1"/>
+  </linearGradient>
+ </defs>
+
+ <circle cx="134.94" cy="32.044" r="0" fill="url(#b)" stroke-width="1.5715"/>
+ <circle cx="105.36" cy="32.044" r="0" fill="url(#b-3)" stroke-width="1.5715"/>
+ <rect x=".99971" y="59" width="62.001" height="1" ry="0" fill="url(#linearGradient1299)" stroke-width="3.7796" style="mix-blend-mode:normal;paint-order:stroke fill markers" filter="url(#glow)"/>
+ <g stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9.5" y="9.5" width="45" height="45" ry="5" fill="none" stroke="#039bfc" style="paint-order:stroke fill markers" filter="url(#glow)"/>
+ </g>
+ <g transform="translate(13,13) scale(0.15)">
+	<path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M10,47v22.1h110.6h110.6v-7.4v-7.4h-73.7H83.8l-7.4-14.8L69,24.9H39.5H10V47z"/><path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M10.1,151.9l0.1,68.1l1.2,2.5c1.5,3.2,4.1,5.8,7.3,7.3l2.5,1.2h106.5c104,0,106.5,0,108.8-0.9c3-1.2,6.8-4.7,8.1-7.8l1.1-2.4l0.1-68.1l0.1-68.1H128H10L10.1,151.9z M157.5,113.4v14.8h14.8H187v29.5v29.5h-14.8h-14.8v14.8v14.8H128H98.5v-14.8v-14.8H83.8H69v-29.5v-29.5h14.8h14.8v-14.8V98.6H128h29.5V113.4z"/><path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M113.3,128.1v14.8H98.5H83.8v14.8v14.8h14.8h14.8v14.8v14.8H128h14.8v-14.8v-14.8h14.8h14.8v-14.8v-14.8h-14.8h-14.8v-14.8v-14.8H128h-14.8V128.1z"/>
+ </g>
+</svg>

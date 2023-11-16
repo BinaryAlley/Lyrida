@@ -45,12 +45,27 @@ internal class FtpFileProviderStrategy : IFtpFileProviderStrategy
     /// </summary>
     /// <param name="path">The path for which to retrieve the list of files.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either a task representing the asynchronous operation for retrieving a collection of file paths or an error.</returns>
-    public ErrorOr<Task<IEnumerable<string>>> GetFilePathsAsync(string path)
+    public ErrorOr<Task<IEnumerable<FileSystemPathId>>> GetFilePathsAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ListDirectory))
             return Errors.Permission.UnauthorizedAccess;
-        return Task.Run(() => fileSystem.Directory.GetFiles(path).OrderBy(path => path).AsEnumerable());
+        return Task.Run(() => fileSystem.Directory.GetFiles(path.Path)
+                                                  .OrderBy(p => p)
+                                                  .Select(p => FileSystemPathId.Create(p))
+                                                  .Where(errorOrPathId => !errorOrPathId.IsError)
+                                                  .Select(errorOrPathId => errorOrPathId.Value) 
+                                                  .AsEnumerable());
+    }
+
+    /// <summary>
+    /// Checks if a file with the specified path exists.
+    /// </summary>
+    /// <param name="path">The path of the file whose existance is checked.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the result of checking the existance of a file, or an error.</returns>
+    public ErrorOr<bool> FileExists(FileSystemPathId path)
+    {
+        return fileSystem.File.Exists(path.Path);
     }
 
     /// <summary>
@@ -58,9 +73,9 @@ internal class FtpFileProviderStrategy : IFtpFileProviderStrategy
     /// </summary>
     /// <param name="path">The path to extract the file name from.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the name of the file without the path, or the last segment of the path if no file name is found, or an error.</returns>
-    public ErrorOr<string> GetFileName(string path)
+    public ErrorOr<string> GetFileName(FileSystemPathId path)
     {
-        return fileSystem.Path.GetFileName(path);
+        return fileSystem.Path.GetFileName(path.Path);
     }
 
     /// <summary>
@@ -71,7 +86,7 @@ internal class FtpFileProviderStrategy : IFtpFileProviderStrategy
     public ErrorOr<Task<byte[]>> GetFileAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
-        if (!fileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadContents))
             return Errors.Permission.UnauthorizedAccess;
         return Task.Run(() => System.IO.File.ReadAllBytes(path.Path));
     }
@@ -81,12 +96,12 @@ internal class FtpFileProviderStrategy : IFtpFileProviderStrategy
     /// </summary>
     /// <param name="path">The path of the file to retrieve the last write time for.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the last write time of <paramref name="path"/>, or null if not available, or an error.</returns>
-    public ErrorOr<DateTime?> GetLastWriteTime(string path)
+    public ErrorOr<DateTime?> GetLastWriteTime(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
-        return fileSystem.File.GetLastWriteTime(path);
+        return fileSystem.File.GetLastWriteTime(path.Path);
     }
 
     /// <summary>
@@ -94,12 +109,12 @@ internal class FtpFileProviderStrategy : IFtpFileProviderStrategy
     /// </summary>
     /// <param name="path">The path of the file to retrieve the creation time for.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the creation time of <paramref name="path"/>, or null if not available, or an error.</returns>
-    public ErrorOr<DateTime?> GetCreationTime(string path)
+    public ErrorOr<DateTime?> GetCreationTime(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
-        return fileSystem.File.GetCreationTime(path);
+        return fileSystem.File.GetCreationTime(path.Path);
     }
 
     /// <summary>
@@ -107,12 +122,57 @@ internal class FtpFileProviderStrategy : IFtpFileProviderStrategy
     /// </summary>
     /// <param name="path">The path of the file to retrieve the size for.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the size of <paramref name="path"/> or an error.</returns>
-    public ErrorOr<long?> GetSize(string path)
+    public ErrorOr<long?> GetSize(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
-        return fileSystem.FileInfo.New(path)?.Length ?? 0;
+        return fileSystem.FileInfo.New(path.Path)?.Length ?? 0;
+    }
+
+    /// <summary>
+    /// Copies a file located at <paramref name="sourceFilePath"/> to <paramref name="destinationDirectoryPath"/>.
+    /// </summary>
+    /// <param name="sourceFilePath">Identifier for the path where the file to be copied is located.</param>
+    /// <param name="destinationDirectoryPath">Identifier for the path of the directory where the file will be copied.</param>
+    /// <param name="overrideExisting">Whether to override existing files, or not.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the copied file, or an error.</returns>
+    public ErrorOr<FileSystemPathId> CopyFile(FileSystemPathId sourceFilePath, FileSystemPathId destinationDirectoryPath, bool overrideExisting)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Moves a file located at <paramref name="sourceFilePath"/> to <paramref name="destinationDirectoryPath"/>.
+    /// </summary>
+    /// <param name="sourceFilePath">Identifier for the path where the file to be moved is located.</param>
+    /// <param name="destinationDirectoryPath">Identifier for the path of the directory where the file will be moved.</param>
+    /// <param name="overrideExisting">Whether to override existing files, or not.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a moved file, or an error.</returns>
+    public ErrorOr<FileSystemPathId> MoveFile(FileSystemPathId sourceFilePath, FileSystemPathId destinationDirectoryPath, bool overrideExisting)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Renames a file at the specified path.
+    /// </summary>
+    /// <param name="path">The path of the file to be renamed.</param>
+    /// <param name="name">The new name of the file.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the absolute path of the renamed file, or an error.</returns>
+    public ErrorOr<FileSystemPathId> RenameFile(FileSystemPathId path, string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Deletes a file at the specified path.
+    /// </summary>
+    /// <param name="path">The path of the file to be deleted.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the result of deleting a file, or an error.</returns>
+    public ErrorOr<bool> DeleteFile(FileSystemPathId path)
+    {
+        throw new NotImplementedException();
     }
     #endregion
 }

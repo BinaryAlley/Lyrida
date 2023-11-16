@@ -45,12 +45,27 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     /// </summary>
     /// <param name="path">The path for which to retrieve the list of files.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either a task representing the asynchronous operation for retrieving a collection of file paths or an error.</returns>
-    public ErrorOr<Task<IEnumerable<string>>> GetFilePathsAsync(string path)
+    public ErrorOr<Task<IEnumerable<FileSystemPathId>>> GetFilePathsAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ListDirectory))
             return Errors.Permission.UnauthorizedAccess;
-        return Task.Run(() => fileSystem.Directory.GetFiles(path).OrderBy(path => path).AsEnumerable());
+        return Task.Run(() => fileSystem.Directory.GetFiles(path.Path)
+                                                  .OrderBy(p => p)
+                                                  .Select(p => FileSystemPathId.Create(p))
+                                                  .Where(errorOrPathId => !errorOrPathId.IsError)
+                                                  .Select(errorOrPathId => errorOrPathId.Value)
+                                                  .AsEnumerable());
+    }
+
+    /// <summary>
+    /// Checks if a file with the specified path exists.
+    /// </summary>
+    /// <param name="path">The path of the file whose existance is checked.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the result of checking the existance of a file, or an error.</returns>
+    public ErrorOr<bool> FileExists(FileSystemPathId path)
+    {
+        return fileSystem.File.Exists(path.Path);
     }
 
     /// <summary>
@@ -58,9 +73,9 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     /// </summary>
     /// <param name="path">The path to extract the file name from.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the name of the file without the path, or the last segment of the path if no file name is found, or an error.</returns>
-    public ErrorOr<string> GetFileName(string path)
+    public ErrorOr<string> GetFileName(FileSystemPathId path)
     {
-        return fileSystem.Path.GetFileName(path);
+        return fileSystem.Path.GetFileName(path.Path);
     }
 
     /// <summary>
@@ -71,7 +86,7 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     public ErrorOr<Task<byte[]>> GetFileAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
-        if (!fileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadContents))
             return Errors.Permission.UnauthorizedAccess;
         return Task.Run(() => System.IO.File.ReadAllBytes(path.Path));
     }
@@ -81,12 +96,12 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     /// </summary>
     /// <param name="path">The path of the file to retrieve the last write time for.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the last write time of <paramref name="path"/>, or null if not available, or an error.</returns>
-    public ErrorOr<DateTime?> GetLastWriteTime(string path)
+    public ErrorOr<DateTime?> GetLastWriteTime(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
-        return fileSystem.File.GetLastWriteTime(path);
+        return fileSystem.File.GetLastWriteTime(path.Path);
     }
 
     /// <summary>
@@ -94,12 +109,12 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     /// </summary>
     /// <param name="path">The path of the file to retrieve the creation time for.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the creation time of <paramref name="path"/>, or null if not available, or an error.</returns>
-    public ErrorOr<DateTime?> GetCreationTime(string path)
+    public ErrorOr<DateTime?> GetCreationTime(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
-        return fileSystem.File.GetCreationTime(path);
+        return fileSystem.File.GetCreationTime(path.Path);
     }
 
     /// <summary>
@@ -107,12 +122,151 @@ internal class LocalSystemFileProviderStrategy : ILocalSystemFileProviderStrateg
     /// </summary>
     /// <param name="path">The path of the file to retrieve the size for.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the size of <paramref name="path"/> or an error.</returns>
-    public ErrorOr<long?> GetSize(string path)
+    public ErrorOr<long?> GetSize(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
         if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadProperties))
             return Errors.Permission.UnauthorizedAccess;
-        return fileSystem.FileInfo.New(path)?.Length ?? 0;
+        return fileSystem.FileInfo.New(path.Path)?.Length ?? 0;
+    }
+
+    /// <summary>
+    /// Copies a file located at <paramref name="sourceFilePath"/> to <paramref name="destinationDirectoryPath"/>.
+    /// </summary>
+    /// <param name="sourceFilePath">Identifier for the path where the file to be copied is located.</param>
+    /// <param name="destinationDirectoryPath">Identifier for the path of the directory where the file will be copied.</param>
+    /// <param name="overrideExisting">Whether to override existing files, or not.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the copied file, or an error.</returns>
+    public ErrorOr<FileSystemPathId> CopyFile(FileSystemPathId sourceFilePath, FileSystemPathId destinationDirectoryPath, bool overrideExisting)
+    {
+        // check if the source file exists
+        if (!fileSystem.File.Exists(sourceFilePath.Path))
+            return Errors.FileSystem.FileNotFoundError;
+        string destinationFilePath;
+        string fileName = fileSystem.Path.GetFileName(sourceFilePath.Path);
+        // when copying a file to the same location, just copy it with a new name
+        if (fileSystem.Path.GetDirectoryName(sourceFilePath.Path) == destinationDirectoryPath.Path)
+            destinationFilePath = CreateUniqueFilePath(destinationDirectoryPath.Path);
+        else
+        {
+            // check if there is already a file with the same name as the copied file, in the destination directory
+            if (fileSystem.File.Exists(destinationDirectoryPath.Path + fileName))
+                if (!overrideExisting)
+                    return Errors.FileSystem.FileAlreadyExistsError;
+            destinationFilePath = destinationDirectoryPath.Path + fileName;
+        }
+        try
+        {           
+            fileSystem.File.Copy(sourceFilePath.Path, destinationFilePath, overrideExisting); // copy the file
+            fileSystem.File.SetAttributes(destinationFilePath, fileSystem.File.GetAttributes(sourceFilePath.Path)); // preserve file attributes
+            return FileSystemPathId.Create(destinationFilePath);
+        }
+        catch
+        {
+            return Errors.FileSystem.FileCopyError;
+        }
+    }
+
+    /// <summary>
+    /// Creates a file path that is unique
+    /// </summary>
+    /// <param name="destinationFilePath">The path from which to generate the unique file path.</param>
+    /// <returns>A unique directory path.</returns>
+    private string CreateUniqueFilePath(string destinationFilePath)
+    {
+        string? directory = fileSystem.Path.GetDirectoryName(destinationFilePath);
+        string? filename = fileSystem.Path.GetFileNameWithoutExtension(destinationFilePath);
+        string? extension = fileSystem.Path.GetExtension(destinationFilePath);
+        string destFilePath = destinationFilePath;
+        int copyNumber = 1;
+        // check if the destination file exists and create a unique file name
+        if (!string.IsNullOrEmpty(directory) && !string.IsNullOrEmpty(filename) && !string.IsNullOrEmpty(extension))
+            while (fileSystem.File.Exists(destFilePath))
+                destFilePath = fileSystem.Path.Combine(directory, $"{filename} - Copy ({copyNumber++}){extension}");
+        return destFilePath;
+    }
+
+    /// <summary>
+    /// Moves a file located at <paramref name="sourceFilePath"/> to <paramref name="destinationDirectoryPath"/>.
+    /// </summary>
+    /// <param name="sourceFilePath">Identifier for the path where the file to be moved is located.</param>
+    /// <param name="destinationDirectoryPath">Identifier for the path of the directory where the file will be moved.</param>
+    /// <param name="overrideExisting">Whether to override existing files, or not.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a moved file, or an error.</returns>
+    public ErrorOr<FileSystemPathId> MoveFile(FileSystemPathId sourceFilePath, FileSystemPathId destinationDirectoryPath, bool overrideExisting)
+    {
+        // check if the source file exists
+        if (!fileSystem.File.Exists(sourceFilePath.Path))
+            return Errors.FileSystem.FileNotFoundError;
+        try
+        {
+            string fileName = fileSystem.Path.GetFileName(sourceFilePath.Path);
+            string destinationFilePath = destinationDirectoryPath.Path + fileName;
+            // if the destination file does not exist, perform a simple move
+            if (!fileSystem.File.Exists(destinationFilePath))
+                fileSystem.File.Move(sourceFilePath.Path, destinationFilePath);
+            else
+            {
+                if (overrideExisting)
+                    fileSystem.File.Move(sourceFilePath.Path, destinationFilePath, overrideExisting);
+                else
+                    return Errors.FileSystem.FileAlreadyExistsError;
+            }
+            return FileSystemPathId.Create(destinationFilePath);
+        }
+        catch 
+        {
+            return Errors.FileSystem.FileMoveError;
+        }
+    }
+
+    /// <summary>
+    /// Renames a file at the specified path.
+    /// </summary>
+    /// <param name="path">The path of the file to be renamed.</param>
+    /// <param name="name">The new name of the file.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the absolute path of the renamed file, or an error.</returns>
+    public ErrorOr<FileSystemPathId> RenameFile(FileSystemPathId path, string name)
+    {
+        string? parentDirectory = fileSystem.FileInfo.New(path.Path)?.DirectoryName;
+        if (!string.IsNullOrEmpty(parentDirectory))
+        {
+            ErrorOr<FileSystemPathId> parendDirectoryResult = FileSystemPathId.Create(parentDirectory);
+            if (parendDirectoryResult.IsError)
+                return parendDirectoryResult.Errors;
+            string? newFile = fileSystem.Path.Combine(parendDirectoryResult.Value.Path, name);
+            if (!string.IsNullOrEmpty(newFile))
+            {
+                var newFilePathResult = FileSystemPathId.Create(newFile);
+                if (newFilePathResult.IsError)
+                    return newFilePathResult.Errors;
+                // check if the user has access permissions to the provided path
+                if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.Execute))
+                    return Errors.Permission.UnauthorizedAccess;
+                if (!fileSystemPermissionsService.CanAccessPath(parendDirectoryResult.Value, FileAccessMode.Write))
+                    return Errors.Permission.UnauthorizedAccess;
+                fileSystem.File.Move(path.Path, newFilePathResult.Value.Path);
+                return newFilePathResult;
+            }
+            else
+                return Errors.FileSystem.InvalidPathError;
+        }
+        else
+            return Errors.FileSystem.CannotNavigateUpError;
+    }
+
+    /// <summary>
+    /// Deletes a file at the specified path.
+    /// </summary>
+    /// <param name="path">The path of the file to be deleted.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either the result of deleting a file, or an error.</returns>
+    public ErrorOr<bool> DeleteFile(FileSystemPathId path)
+    {
+        // check if the user has access permissions to the provided path
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.Delete))
+            return Errors.Permission.UnauthorizedAccess;
+        fileSystem.File.Delete(path.Path);
+        return true;
     }
     #endregion
 }

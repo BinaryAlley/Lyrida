@@ -15,7 +15,7 @@ public class WindowsPlatformContext : IWindowsPlatformContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
     public PlatformType Platform { get; } = PlatformType.Windows;
-    public IPathStrategy PathService { get; private set; }
+    public IPathStrategy PathStrategy { get; private set; }
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -25,7 +25,7 @@ public class WindowsPlatformContext : IWindowsPlatformContext
     /// <param name="windowsPathStrategy">Injected service for creating path strategies for Windows platforms</param>
     public WindowsPlatformContext(IWindowsPathStrategy windowsPathStrategy)
     {
-        PathService = windowsPathStrategy;
+        PathStrategy = windowsPathStrategy;
     }
     #endregion
 }

@@ -63,13 +63,13 @@ public class ThumbnailService : IThumbnailService
     public async Task<ErrorOr<ThumbnailDto>> GetThumbnailAsync(FileSystemPathId path, int quality)
     {
         // first, get the type of the image file
-        var imageTypeResult = await environmentContext.FileTypeService.GetImageTypeAsync(path);
+        var imageTypeResult = await environmentContext.FileTypeStrategy.GetImageTypeAsync(path);
         if (imageTypeResult.IsError)
             return imageTypeResult.Errors;
         if (imageTypeResult.Value != ImageType.None)
         {
             // then, get its bytes
-            var resultFileContents = environmentContext.FileProvider.GetFileAsync(path);
+            var resultFileContents = environmentContext.FileProviderStrategy.GetFileAsync(path);
             if (resultFileContents.IsError)
                 return resultFileContents.Errors;
             byte[] fileContents = await resultFileContents.Value;

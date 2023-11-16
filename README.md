@@ -15,8 +15,18 @@ Most icons were taken from [Lyra Icon Theme](https://github.com/yeyushengfan258/
 Several icons used in this project were adapted from icons sourced from [OnlineWebFonts](https://www.onlinewebfonts.com/icon). These icons are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 - [`os.svg`](https://www.onlinewebfonts.com/icon/241211)
+- [`cut.svg`](https://www.onlinewebfonts.com/icon/52112)
 - [`ftp.svg`](https://www.onlinewebfonts.com/icon/248291)
+- [`atom.svg`](https://www.onlinewebfonts.com/icon/193445)
+- [`copy.svg`](https://www.onlinewebfonts.com/icon/569600)
+- [`move.svg`](https://www.onlinewebfonts.com/icon/233790)
+- [`link.svg`](https://www.onlinewebfonts.com/icon/389791)
+- [`paste.svg`](https://www.onlinewebfonts.com/icon/487532)
+- [`delete.svg`](https://www.onlinewebfonts.com/icon/564261)
+- [`rename.svg`](https://www.onlinewebfonts.com/icon/138529)
 - [`download.svg`](https://www.onlinewebfonts.com/icon/574052)
+- [`new-file.svg`](https://www.onlinewebfonts.com/icon/569609)
+- [`new-directory.svg`](https://www.onlinewebfonts.com/icon/572641)
 
 ### Image viewer
 
@@ -25,6 +35,14 @@ The image viewer used in this application is provided by [ViewerJs](https://gith
 ### Notification system
 
 The notification system used in this application is provided by [SweetAlert](https://sweetalert.js.org/).
+
+### Progress display
+
+The progress indicator used in this application is provided by [Pace](https://codebyzach.github.io/pace/).
+
+### Keyboard shortcuts
+
+The functionality for handling keyboard shortcuts is provided by [OpenJs](https://www.openjs.com/scripts/events/keyboard_shortcuts/).
 
 **I greatly appreciate the creators and contributors for providing these assets.**
 

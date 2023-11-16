@@ -14,6 +14,10 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Paths;
 /// </remarks>
 public interface IPathService
 {
+    #region ==================================================================== PROPERTIES =================================================================================
+    char PathSeparator { get; }
+    #endregion
+
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
     /// Checks if <paramref name="path"/> is a valid path.
@@ -21,6 +25,14 @@ public interface IPathService
     /// <param name="path">The path to be checked.</param>
     /// <returns><see langword="true"/> if <paramref name="path"/> is a valid path, <see langword="false"/> otherwise.</returns>
     bool IsValidPath(string path);
+
+    /// <summary>
+    /// Tries to combine <paramref name="path"/> with <paramref name="name"/>.
+    /// </summary>
+    /// <param name="path">The path to be combined.</param>
+    /// <param name="path">The name to be combined with the path.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing the combined path, or an error.</returns>
+    ErrorOr<string> CombinePath(string path, string name);
 
     /// <summary>
     /// Parses <paramref name="path"/> into path segments.
@@ -39,7 +51,7 @@ public interface IPathService
     /// <summary>
     /// Returns a collection of characters that are invalid for paths.
     /// </summary>
-    /// <returns>A collection of characters that are invalid in the context of paths</returns>
+    /// <returns>A collection of characters that are invalid in the context of paths.</returns>
     char[] GetInvalidPathCharsForPlatform();
     #endregion
 }

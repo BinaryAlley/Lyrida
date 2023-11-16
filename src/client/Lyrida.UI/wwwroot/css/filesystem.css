@@ -72,12 +72,12 @@ ul.dynTab-tabs > li:not(.active):hover {
     margin-left: 10px;
     vertical-align: middle;
     text-align: end;
-    display: inline-block; /* So width and height can be applied */
-    width: 15px;  /* Width of your image */
-    height: 15px;  /* Height of your image */
+    display: inline-block; /* so width and height can be applied */
+    width: 15px; 
+    height: 15px; 
     background-image: url('../images/ui/close_tab_unlit.png'); 
     background-repeat: no-repeat;
-    background-size: contain;  /* Resize image to fit the element */
+    background-size: contain;  /* resize image to fit the element */
 }
 
 .dynTab-tabs > li:hover > a.closeIcon, 
@@ -184,6 +184,11 @@ div[id^="explorer"]:not([id*="Container"]) {
     width: auto !important;
     overflow-x: auto;
     height: 100% !important;
+}
+
+.dragged {
+    background-color: darkblue;
+    cursor: grabbing !important;
 }
 
 /*filesystem element*/
@@ -467,6 +472,14 @@ div[id^="explorer"]:not([id*="Container"]) {
     background-color: #0048D7;
 }
 
+.e.cut {
+    background-color: #19233b;
+}
+
+.e.cut img {
+    opacity: 30%;
+}
+
 /*directory*/
 .d {
     color: #6DCBFE;
@@ -498,4 +511,9 @@ div[id^="previewContainer"] {
     border-left-color: #777777;
     border-left-style: solid;
     border-left-width: 1px;
+}
+
+#renameInput {
+  position: absolute;
+  z-index: 1000; 
 }

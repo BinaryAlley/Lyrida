@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Lyrida.Application.Common.DTO.FileSystem;
 
 /// <summary>
-/// Directory data transfer object
+/// Directory data transfer object.
 /// </summary>
 /// <remarks>
 /// Creation Date: 25th of September, 2023

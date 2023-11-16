@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace Lyrida.Application.Common.DTO.FileSystem;
 
 /// <summary>
-/// Generic filesystem data transfer object
+/// Generic filesystem data transfer object.
 /// </summary>
 /// <remarks>
 /// Creation Date: 25th of September, 2023

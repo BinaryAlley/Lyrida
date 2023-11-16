@@ -18,25 +18,48 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 /// </remarks>
 public class UnixPathStrategy : IUnixPathStrategy
 {
+    #region ==================================================================== PROPERTIES =================================================================================
+    public char PathSeparator
+    {
+        get { return '/'; }
+    }
+    #endregion
+
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
     /// Checks if <paramref name="path"/> is a valid path.
     /// </summary>
     /// <param name="path">The path to be checked.</param>
     /// <returns><see langword="true"/> if <paramref name="path"/> is a valid path, <see langword="false"/> otherwise.</returns>
-    public bool IsValidPath(string path)
+    public bool IsValidPath(FileSystemPathId path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-            return false;
         // check for invalid path characters
         char[] invalidChars = GetInvalidPathCharsForPlatform();
-        if (path.IndexOfAny(invalidChars) >= 0)
+        if (path.Path.IndexOfAny(invalidChars) >= 0)
             return false;
         // check for relative paths
-        if (path.StartsWith("./") || path.StartsWith("../"))
+        if (path.Path.StartsWith("./") || path.Path.StartsWith("../"))
             return false;
         var pathPattern = @"^\/([\w\-\.\~!$&'()*+,;=:@ ]+(\/[\w\-\.\~!$&'()*+,;=:@ ]+)*)?\/?$";
-        return Regex.IsMatch(path, pathPattern);
+        return Regex.IsMatch(path.Path, pathPattern);
+    }
+
+    /// <summary>
+    /// Tries to combine <paramref name="path"/> with <paramref name="name"/>.
+    /// </summary>
+    /// <param name="path">The path to be combined.</param>
+    /// <param name="name">The name to be combined with the path.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing the combined path, or an error.</returns>
+    public ErrorOr<FileSystemPathId> CombinePath(FileSystemPathId path, string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return Errors.FileSystem.NameCannotBeEmptyError;
+        // trim any directory separator characters from the end of the path
+        string subpath = path.Path.TrimEnd(PathSeparator);
+        // if the name begins with a directory separator, remove it
+        name = name.TrimStart(PathSeparator);
+        // combine the two parts with the Unix directory separator character
+        return FileSystemPathId.Create(subpath + PathSeparator + name);
     }
 
     /// <summary>
@@ -44,20 +67,18 @@ public class UnixPathStrategy : IUnixPathStrategy
     /// </summary>
     /// <param name="path">The path to be parsed.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments, or an error.</returns>
-    public ErrorOr<IEnumerable<PathSegment>> ParsePath(string path)
+    public ErrorOr<IEnumerable<PathSegment>> ParsePath(FileSystemPathId path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-            return Errors.FileSystem.InvalidPathError;
         // if path starts with anything other than '/', it's considered relative and invalid for this parser
-        if (!path.StartsWith('/'))
+        if (!path.Path.StartsWith(PathSeparator))
             return Errors.FileSystem.InvalidPathError;
         // get the path segments
-        var splitSegments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        var splitSegments = path.Path.Split(new[] { PathSeparator }, StringSplitOptions.RemoveEmptyEntries).ToList();
         IEnumerable<PathSegment> segments = splitSegments.Select((segment, index) =>
         {
             bool isDirectory;
             if (segment.Contains('.'))
-                isDirectory = (index != splitSegments.Count - 1) || path.EndsWith('/'); // check if it's the last segment or if the path ends with a '/'
+                isDirectory = (index != splitSegments.Count - 1) || path.Path.EndsWith(PathSeparator); // check if it's the last segment or if the path ends with a '/'
             else
                 isDirectory = true;
             return new PathSegment(segment, isDirectory, isDrive: false);
@@ -70,21 +91,25 @@ public class UnixPathStrategy : IUnixPathStrategy
     /// </summary>
     /// <param name="path">The path from which to navigate up one level.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments of the path up one level from <paramref name="path"/>, or an error.</returns>
-    public ErrorOr<IEnumerable<PathSegment>> GoUpOneLevel(string path)
+    public ErrorOr<IEnumerable<PathSegment>> GoUpOneLevel(FileSystemPathId path)
     {
         // validation: ensure the path is not null or empty
         if (!IsValidPath(path))
             return Errors.FileSystem.InvalidPathError;
         // trim trailing slash for consistent processing
-        if (path.EndsWith("/"))
-            path = path.TrimEnd('/');
+        string tempPath = path.Path;
+        if (tempPath.EndsWith("/"))
+            tempPath = tempPath.TrimEnd(PathSeparator);
         // find the last occurrence of a slash
-        int lastIndex = path.LastIndexOf('/');
+        int lastIndex = tempPath.LastIndexOf(PathSeparator);
         // if there's no slash found (shouldn't happen due to previous steps), or if we are at the root level after trimming, return error
         if (lastIndex < 0)
             return Errors.FileSystem.CannotNavigateUpError;
         // return the path up to the last slash, or, if there's only the root slash, return that one instead
-        return ParsePath(lastIndex > 0 ? path[..lastIndex] : path[..1]);
+        ErrorOr<FileSystemPathId> newPathResult = FileSystemPathId.Create(lastIndex > 0 ? tempPath[..lastIndex] : tempPath[..1]);
+        if (newPathResult.IsError)
+            return newPathResult.Errors;
+        return ParsePath(newPathResult.Value);
     }
 
     /// <summary>

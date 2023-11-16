@@ -37,7 +37,7 @@ public class CheckInitializationQueryHandler : IRequestHandler<CheckInitializati
     /// <summary>
     /// Checks if the application has been initialized or not
     /// </summary>
-    /// <returns><see langword="true"/> if the application has been initialized, <see langword="false"/> otherwise</returns>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean result, or an error.</returns>
     public async Task<ErrorOr<bool>> Handle(CheckInitializationQuery request, CancellationToken cancellationToken)
     {
         // if the repository reports an error, or there are no users, the application has not been initialized

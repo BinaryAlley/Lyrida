@@ -14,10 +14,7 @@ namespace Lyrida.Domain.Core.FileSystem.Services.Platform;
 public interface IPlatformContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    #endregion
-
-    #region ==================================================================== PROPERTIES =================================================================================
     PlatformType Platform { get; }
-    IPathStrategy PathService { get; }
+    IPathStrategy PathStrategy { get; }
     #endregion
 }

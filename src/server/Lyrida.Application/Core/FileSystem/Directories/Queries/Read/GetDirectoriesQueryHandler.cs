@@ -19,7 +19,7 @@ namespace Lyrida.Application.Core.FileSystem.Directories.Queries.Read;
 /// <remarks>
 /// Creation Date: 11th of August, 2023
 /// </remarks>
-public class GetFoldersQueryHandler : IRequestHandler<GetFoldersQuery, ErrorOr<IEnumerable<DirectoryDto>>>
+public class GetDirectoriesQueryHandler : IRequestHandler<GetDirectoriesQuery, ErrorOr<IEnumerable<DirectoryDto>>>
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IDirectoryService directoryService;
@@ -32,7 +32,7 @@ public class GetFoldersQueryHandler : IRequestHandler<GetFoldersQuery, ErrorOr<I
     /// </summary>
     /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
     /// <param name="authorizationService">Injected service for permissions</param>
-    public GetFoldersQueryHandler(IDirectoryService directoryService, IAuthorizationService authorizationService)
+    public GetDirectoriesQueryHandler(IDirectoryService directoryService, IAuthorizationService authorizationService)
     {
         this.directoryService = directoryService;
         this.authorizationService = authorizationService;
@@ -44,7 +44,7 @@ public class GetFoldersQueryHandler : IRequestHandler<GetFoldersQuery, ErrorOr<I
     /// Gets the list of directories at the specified path
     /// </summary>
     /// <returns>A list of directories</returns>
-    public async Task<ErrorOr<IEnumerable<DirectoryDto>>> Handle(GetFoldersQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<DirectoryDto>>> Handle(GetDirectoriesQuery request, CancellationToken cancellationToken)
     {
         ErrorOr<IEnumerable<Directory>> result = await directoryService.GetSubdirectoriesAsync(request.Path);            
         return result.Match(values => ErrorOrFactory.From(values.Adapt<IEnumerable<DirectoryDto>>()), errors => errors);

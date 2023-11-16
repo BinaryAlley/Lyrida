@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System;
 #endregion
 
 namespace Lyrida.UI.Common.Filters;
@@ -38,11 +39,14 @@ public class ApiExceptionFilter : IExceptionFilter
             }
             else
             {
+                string? error = apiException.Error?.Errors?.First();
+                string? validationError = apiException.Error?.ValidationErrors?.First().Value.First();
                 // return a JSON result with the error details
                 context.Result = new JsonResult(new
                 {
                     success = false,
-                    errorMessage = apiException.Message + " " + apiException.Error?.Errors?.First()
+                    errorMessage = apiException.Message + (!string.IsNullOrEmpty(error) ? Environment.NewLine + error : string.Empty) + 
+                        (!string.IsNullOrEmpty(validationError) ? Environment.NewLine + validationError : string.Empty)
                 });
             }
             // mark the exception as handled to prevent propagation

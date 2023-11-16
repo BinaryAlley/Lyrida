@@ -23,19 +23,16 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, ErrorOr<IEnum
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly IFileService fileService;
-    private readonly IAuthorizationService authorizationService;
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
-    /// <param name="authorizationService">Injected service for permissions</param>
-    public GetFilesQueryHandler(IAuthorizationService authorizationService, IFileService fileService)
+    /// <param name="fileService">Injected service for file related functionality.</param>
+    public GetFilesQueryHandler(IFileService fileService)
     {
         this.fileService = fileService;
-        this.authorizationService = authorizationService;
     }
     #endregion
 
@@ -44,9 +41,9 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, ErrorOr<IEnum
     /// Gets the list of files at the specified path
     /// </summary>
     /// <returns>A list of files</returns>
-    public async Task<ErrorOr<IEnumerable<FileDto>>> Handle(GetFilesQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<FileDto>>> Handle(GetFilesQuery query, CancellationToken cancellationToken)
     {
-        ErrorOr<IEnumerable<File>> result = await fileService.GetFilesAsync(request.Path);
+        ErrorOr<IEnumerable<File>> result = await fileService.GetFilesAsync(query.Path);
         return result.Match(values => ErrorOrFactory.From(values.Adapt<IEnumerable<FileDto>>()), errors => errors);
     }
     #endregion

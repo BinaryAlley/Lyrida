@@ -14,14 +14,84 @@
 </div>
 <div id="navigationMiscellaneousGroup">
     <div id="selectionIconContainer">
-        <img src="~/images/ui/select.svg" id="btnSelection" alt="Selection" title="Selection" class="icon" />
+        <img src="~/images/ui/select.svg" id="btnSelection" alt="@translationService.Translate(Terms.Selection)" title="@translationService.Translate(Terms.Selection)" class="icon" />
         <div id="selectionDropdown" class="hidden">
             <div id="selectionDropdownArrow"></div>
             <ul>            
-                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectionMode)</a></li>
-                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectAll)</a></li>
-                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectNone)</a></li>
-                <li><a class="menu-link text-light-one">@translationService.Translate(Terms.SelectInverse)</a></li>
+                <li>
+                    <a id="btnSelectionMode" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/select.svg" alt="@translationService.Translate(Terms.SelectionMode)" title="@translationService.Translate(Terms.SelectionMode)" class="icon" />
+                        <span>@translationService.Translate(Terms.SelectionMode)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnSelectAll" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/select-all.svg" alt="@translationService.Translate(Terms.SelectAll)" title="@translationService.Translate(Terms.SelectAll)" class="icon" />
+                        <span>@translationService.Translate(Terms.SelectAll)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnSelectNone" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/select-none.svg" alt="@translationService.Translate(Terms.SelectNone)" title="@translationService.Translate(Terms.SelectNone)" class="icon" />
+                        <span>@translationService.Translate(Terms.SelectNone)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnSelectInverse" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/select-invert.svg" alt="@translationService.Translate(Terms.SelectInverse)" title="@translationService.Translate(Terms.SelectInverse)" class="icon" />
+                        <span>@translationService.Translate(Terms.SelectInverse)</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div id="actionsIconContainer">
+        <img src="~/images/ui/actions.svg" id="btnActions" alt="@translationService.Translate(Terms.Actions)" title="@translationService.Translate(Terms.Actions)" class="icon" />
+        <div id="actionsDropdown" class="hidden">
+            <div id="actionsDropdownArrow"></div>
+            <ul>
+                <li>
+                    <a id="btnCut" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/cut.svg" alt="@translationService.Translate(Terms.Cut)" title="@translationService.Translate(Terms.Cut)" class="icon" /> 
+                        <span>@translationService.Translate(Terms.Cut)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnCopy" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/copy.svg" alt="@translationService.Translate(Terms.Copy)" title="@translationService.Translate(Terms.Copy)" class="icon" />
+                        <span>@translationService.Translate(Terms.Copy)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnPaste" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/paste.svg" alt="@translationService.Translate(Terms.Paste)" title="@translationService.Translate(Terms.Paste)" class="icon" />
+                        <span>@translationService.Translate(Terms.Paste)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnDelete" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/delete.svg" alt="@translationService.Translate(Terms.Delete)" title="@translationService.Translate(Terms.Delete)" class="icon" />
+                        <span>@translationService.Translate(Terms.Delete)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnRename" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/rename.svg" alt="@translationService.Translate(Terms.Rename)" title="@translationService.Translate(Terms.Rename)" class="icon" />
+                        <span>@translationService.Translate(Terms.Rename)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnNewDirectory" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/new-directory.svg" alt="@translationService.Translate(Terms.NewDirectory)" title="@translationService.Translate(Terms.NewDirectory)" class="icon" />
+                        <span>@translationService.Translate(Terms.NewDirectory)</span>
+                    </a>
+                </li>
+                <li>
+                    <a id="btnNewFile" class="menu-link text-light-one" href="#">
+                        <img src="~/images/ui/new-file.svg" alt="@translationService.Translate(Terms.NewTestFile)" title="@translationService.Translate(Terms.NewTestFile)" class="icon" />
+                        <span>@translationService.Translate(Terms.NewTestFile)</span>
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
@@ -59,3 +129,287 @@
         </svg>
     </button>
 </div>
+
+<script type="text/javascript">
+    $(function () {
+        shortcut.add("Ctrl+x", function () {
+            $('#btnCut').click();
+        }, {
+            'disable_in_input': true
+        });
+        shortcut.add("Ctrl+c", function () {
+            $('#btnCopy').click();
+        }, {
+            'disable_in_input': true
+        });
+        shortcut.add("Ctrl+v", function () {
+            $('#btnPaste').click();
+        }, {
+            'disable_in_input': true
+        });
+        shortcut.add("Ctrl+F10", function () {
+            $('#btnNewDirectory').click();
+        });
+        shortcut.add("Ctrl+F2", function () {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                const selectedItems = explorer.querySelectorAll('.e.selected');
+                if (selectedItems.length === 1)
+                    enterRenameMode(selectedItems[0]);
+            }
+        });
+        shortcut.add("Delete", function () {
+            $('#btnDelete').click();
+        }, {
+            'disable_in_input': true
+        });
+
+        $('#btnSelectionMode').click(function (event) {
+            if (isSelectionMode)
+                $(this).text('@translationService.Translate(Terms.NormalMode)');
+            else
+                $(this).text('@translationService.Translate(Terms.SelectionMode)');
+        });
+        $('#btnCut').click(function (event) {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                // make sure there are selected elements
+                const selectedItems = explorer.querySelectorAll('.e.selected');
+                if (selectedItems.length > 0) 
+                    cutElements(selectedItems);
+                else {
+                    const Toast = swal.mixin({
+                        toast: true,
+                        position: 'bottom-left',
+                        iconColor: 'red',
+                        customClass: {
+                            popup: 'colored-toast'
+                        },
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'error',
+                        title: '@translationService.Translate(Terms.NoFilesSelected)'
+                    });
+                }
+            } else {
+                const Toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: '@translationService.Translate(Terms.NavigateToALocationFirst)'
+                });
+            }
+            actionsDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $('#btnCopy').click(function (event) {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                // make sure there are selected elements
+                const selectedItems = explorer.querySelectorAll('.e.selected');
+                if (selectedItems.length > 0)
+                    copyElements(selectedItems);
+                else {
+                    const Toast = swal.mixin({
+                        toast: true,
+                        position: 'bottom-left',
+                        iconColor: 'red',
+                        customClass: {
+                            popup: 'colored-toast'
+                        },
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'error',
+                        title: '@translationService.Translate(Terms.NoFilesSelected)'
+                    });
+                }
+            } else {
+                const Toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: '@translationService.Translate(Terms.NavigateToALocationFirst)'
+                });
+            }
+            actionsDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $('#btnPaste').click(function (event) {
+            if (clipboard.length > 0)
+                pasteElements();
+            else {
+                const Toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: '@translationService.Translate(Terms.NoFilesCopied)'
+                });
+            }
+            actionsDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        $('#btnDelete').click(function (event) {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                // make sure there are selected elements
+                const selectedItems = explorer.querySelectorAll('.e.selected');
+                if (selectedItems.length > 0)
+                {
+                    Swal.fire({
+                        title: '@translationService.Translate(Terms.PleaseTypeDelete)',
+                        input: "text",
+                        buttonsStyling: false,
+                        heightAuto: false,
+                        customClass: {
+                            popup: 'colored-toast text-light-one',
+                            input: 'enlightenment-input',
+                            validationMessage: 'text-light-three transparent',
+                            confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10 mr-10',
+                            cancelButton: 'abort-button f-18 h-24px pl-10 pr-10',
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: '@translationService.Translate(Terms.Confirm)',
+                        cancelButtonText: '@translationService.Translate(Terms.Cancel)',
+                        inputValidator: (value) => { // ask user to type confirmation
+                            if (!value) 
+                                return '@translationService.Translate(Terms.YouNeedToWriteSomething)';
+                            else if (value.toLowerCase() !== "delete")
+                                return '@translationService.Translate(Terms.YouMustTypeDelete)';
+                            else
+                                deleteElements(selectedItems);
+                        }
+                    });
+                } else {
+                    const Toast = swal.mixin({
+                        toast: true,
+                        position: 'bottom-left',
+                        iconColor: 'red',
+                        customClass: {
+                            popup: 'colored-toast'
+                        },
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'error',
+                        title: '@translationService.Translate(Terms.NoFilesSelected)'
+                    });
+                }
+            } else {
+                const toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                toast.fire({
+                    icon: 'error',
+                    title: '@translationService.Translate(Terms.NavigateToALocationFirst)'
+                });
+            }
+            actionsDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $('#btnNewDirectory').click(function (event) {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                Swal.fire({
+                    title: '@translationService.Translate(Terms.EnterNewDirectoryName)',
+                    input: "text",
+                    buttonsStyling: false,
+                    heightAuto: false,
+                    customClass: {
+                        popup: 'colored-toast text-light-one',
+                        input: 'enlightenment-input',
+                        validationMessage: 'text-light-three transparent',
+                        confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10 mr-10',
+                        cancelButton: 'abort-button f-18 h-24px pl-10 pr-10',
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: '@translationService.Translate(Terms.Confirm)',
+                    cancelButtonText: '@translationService.Translate(Terms.Cancel)',
+                    inputValidator: (value) => { // ask user to type confirmation
+                        if (!value)
+                            return '@translationService.Translate(Terms.YouNeedToWriteSomething)';
+                        else
+                            createNewDirectory(explorer, explorer.getAttribute('data-path'), value);
+                    }
+                });                
+            } else {
+                const Toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: '@translationService.Translate(Terms.NavigateToALocationFirst)'
+                });
+            }
+            actionsDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $('#btnRename').click(function (event) {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                const selectedItems = explorer.querySelectorAll('.e.selected');
+                if (selectedItems.length === 1)
+                    enterRenameMode(selectedItems[0]);
+            }
+            actionsDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    });
+</script>

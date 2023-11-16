@@ -105,7 +105,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<R
     /// </summary>
     /// <param name="userId">The id of the user whose profile preferences are added</param>
     /// <param name="use2fa">Whether the user enabled 2fa or not when registering the account</param>
-    /// <returns><see langword="true"/>, or an error</returns>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean result, or an error.</returns>
     private async Task<ErrorOr<bool>> AddProfilePreferences(int userId, bool use2fa)
     {
         ProfilePreferencesDto preferences = new()

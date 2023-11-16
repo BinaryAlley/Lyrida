@@ -60,7 +60,7 @@ internal class LocalSystemFileTypeStrategy : ILocalSystemFileTypeStrategy
     public async Task<ErrorOr<ImageType>> GetImageTypeAsync(FileSystemPathId path)
     {
         // check if the user has access permissions to the provided path
-        if (!fileSystemPermissionsService.CanAccessPath(path.Path, FileAccessMode.ReadContents))
+        if (!fileSystemPermissionsService.CanAccessPath(path, FileAccessMode.ReadContents))
             return Errors.Permission.UnauthorizedAccess;
         Memory<byte> buffer = new byte[BUFFER_SIZE];
         using var stream = fileSystem.FileStream.New(path.Path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);

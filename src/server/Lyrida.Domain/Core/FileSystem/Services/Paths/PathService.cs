@@ -19,6 +19,13 @@ public class PathService : IPathService
     private readonly IPlatformContext platformContext;
     #endregion
 
+    #region ==================================================================== PROPERTIES =================================================================================
+    public char PathSeparator 
+    {
+        get { return platformContext.PathStrategy.PathSeparator; }
+    }
+    #endregion
+
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
     /// Overload C-tor
@@ -38,7 +45,27 @@ public class PathService : IPathService
     /// <returns><see langword="true"/> if <paramref name="path"/> is a valid path, <see langword="false"/> otherwise.</returns>
     public bool IsValidPath(string path)
     {
-        return platformContext.PathService.IsValidPath(path);
+        ErrorOr<FileSystemPathId> newPathResult = FileSystemPathId.Create(path);
+        if (newPathResult.IsError)
+            return false;
+        return platformContext.PathStrategy.IsValidPath(newPathResult.Value);
+    }
+
+    /// <summary>
+    /// Tries to combine <paramref name="path"/> with <paramref name="name"/>.
+    /// </summary>
+    /// <param name="path">The path to be combined.</param>
+    /// <param name="path">The name to be combined with the path.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing the combined path, or an error.</returns>
+    public ErrorOr<string> CombinePath(string path, string name)
+    {
+        ErrorOr<FileSystemPathId> newPathResult = FileSystemPathId.Create(path);
+        if (newPathResult.IsError)
+            return newPathResult.Errors;
+        ErrorOr<FileSystemPathId> combinedPathResult = platformContext.PathStrategy.CombinePath(newPathResult.Value, name);
+        if (combinedPathResult.IsError)
+            return combinedPathResult.Errors;
+        return combinedPathResult.Value.Path;
     }
 
     /// <summary>
@@ -48,7 +75,10 @@ public class PathService : IPathService
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments, or an error.</returns>
     public ErrorOr<IEnumerable<PathSegment>> ParsePath(string path)
     {
-        return platformContext.PathService.ParsePath(path);
+        ErrorOr<FileSystemPathId> newPathResult = FileSystemPathId.Create(path);
+        if (newPathResult.IsError)
+            return newPathResult.Errors;
+        return platformContext.PathStrategy.ParsePath(newPathResult.Value);
     }
 
     /// <summary>
@@ -58,7 +88,10 @@ public class PathService : IPathService
     /// <returns>An <see cref="ErrorOr{T}"/> containing the path segments of the path up one level from <paramref name="path"/>, or an error.</returns>
     public ErrorOr<IEnumerable<PathSegment>> GoUpOneLevel(string path)
     {
-        return platformContext.PathService.GoUpOneLevel(path);
+        ErrorOr<FileSystemPathId> newPathResult = FileSystemPathId.Create(path);
+        if (newPathResult.IsError)
+            return newPathResult.Errors;
+        return platformContext.PathStrategy.GoUpOneLevel(newPathResult.Value);
     }
 
     /// <summary>
@@ -67,7 +100,7 @@ public class PathService : IPathService
     /// <returns>A collection of characters that are invalid in the context of paths</returns>
     public char[] GetInvalidPathCharsForPlatform()
     {
-        return platformContext.PathService.GetInvalidPathCharsForPlatform();
+        return platformContext.PathStrategy.GetInvalidPathCharsForPlatform();
     }
     #endregion
 }

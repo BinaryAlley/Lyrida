@@ -12,10 +12,10 @@ using Lyrida.DataAccess.Repositories.UserPages;
 namespace Lyrida.Application.Core.Pages.Commands.Delete;
 
 /// <summary>
-/// Delete user command handler
+/// Delete user page command handler
 /// </summary>
 /// <remarks>
-/// Creation Date: 09th of August, 2023
+/// Creation Date: 02nd of November, 2023
 /// </remarks>
 public class DeletePageCommandHandler : IRequestHandler<DeletePageCommand, ErrorOr<bool>>
 {

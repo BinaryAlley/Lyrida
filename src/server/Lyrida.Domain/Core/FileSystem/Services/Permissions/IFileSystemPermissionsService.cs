@@ -1,5 +1,6 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using Lyrida.Domain.Common.Enums;
+using Lyrida.Domain.Core.FileSystem.ValueObjects;
 #endregion
 
 namespace Lyrida.Domain.Core.FileSystem.Services.Permissions;
@@ -20,6 +21,6 @@ internal interface IFileSystemPermissionsService
     /// <param name="accessMode">The mode in which to access the path.</param>
     /// <param name="isFile">Indicates whether the path represents a file or directory.</param>
     /// <returns><see langword="true"/>, if <paramref name="path"/> can be accessed, <see langword="false"/> otherwise.</returns>
-    bool CanAccessPath(string path, FileAccessMode accessMode, bool isFile = true);
+    bool CanAccessPath(FileSystemPathId path, FileAccessMode accessMode, bool isFile = true);
     #endregion
 }

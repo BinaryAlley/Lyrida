@@ -13,4 +13,5 @@ public enum FileAccessMode
     ReadContents,
     Write,
     Execute,
+    Delete,
 }

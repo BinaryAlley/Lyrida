@@ -35,9 +35,9 @@ public class ValidatePathQueryHandler : IRequestHandler<ValidatePathQuery, bool>
     /// Validates the validity of a path.
     /// </summary>
     /// <returns><see langword="true"/> if the provided path is valid, <see langword="false"/> otherwise.</returns>
-    public Task<bool> Handle(ValidatePathQuery request, CancellationToken cancellationToken)
+    public Task<bool> Handle(ValidatePathQuery query, CancellationToken cancellationToken)
     {
-         return Task.FromResult(pathService.IsValidPath(request.Path));
+         return Task.FromResult(pathService.IsValidPath(query.Path));
     }
     #endregion
 }

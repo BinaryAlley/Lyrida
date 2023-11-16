@@ -143,11 +143,11 @@ public class SetupCommandHandler : IRequestHandler<SetupCommand, ErrorOr<Registr
     }
 
     /// <summary>
-    /// Adds the admin role
+    /// Adds the admin role.
     /// </summary>
-    /// <param name="permissionIds">The list of permissions to assign to the admin role</param>
-    /// <param name="userId">The id of the user to assign the role of admin to</param>
-    /// <returns><see langword="true"/>, or an error</returns>
+    /// <param name="permissionIds">The list of permissions to assign to the admin role.</param>
+    /// <param name="userId">The id of the user to assign the role of admin to.</param>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean result, or an error.</returns>
     private async Task<ErrorOr<bool>> AddAdminRole(List<int> permissionIds, int userId)
     {
         // add the "Admin" role and assign all permissions to it
@@ -166,7 +166,7 @@ public class SetupCommandHandler : IRequestHandler<SetupCommand, ErrorOr<Registr
     /// </summary>
     /// <param name="userId">The id of the user whose profile preferences are added</param>
     /// <param name="use2fa">Whether the user enabled 2fa or not when registering the account</param>
-    /// <returns><see langword="true"/>, or an error</returns>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean result, or an error.</returns>
     private async Task<ErrorOr<bool>> AddAdminProfilePreferences(int userId, bool use2fa)
     {
         ProfilePreferencesDto preferences = new()

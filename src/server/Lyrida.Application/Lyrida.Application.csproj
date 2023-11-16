@@ -40,8 +40,6 @@
 
   <ItemGroup>
     <Folder Include="Common\Errors\" />
-    <Folder Include="Core\FileSystem\Directories\Commands\" />
-    <Folder Include="Core\FileSystem\Files\Commands\" />
   </ItemGroup>
 
   <ItemGroup>

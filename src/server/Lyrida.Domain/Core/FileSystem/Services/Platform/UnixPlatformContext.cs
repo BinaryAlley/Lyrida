@@ -15,7 +15,7 @@ internal class UnixPlatformContext : IUnixPlatformContext
 {
     #region ==================================================================== PROPERTIES =================================================================================
     public PlatformType Platform { get; } = PlatformType.Unix;
-    public IPathStrategy PathService { get; private set; }
+    public IPathStrategy PathStrategy { get; private set; }
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -25,7 +25,7 @@ internal class UnixPlatformContext : IUnixPlatformContext
     /// <param name="unixPathStrategy">Injected service for creating path strategies for UNIX platforms</param>
     public UnixPlatformContext(IUnixPathStrategy unixPathStrategy)
     {
-        PathService = unixPathStrategy;
+        PathStrategy = unixPathStrategy;
     }
     #endregion
 }

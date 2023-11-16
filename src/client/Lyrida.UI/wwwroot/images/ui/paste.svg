@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+ <style type="text/css" id="current-color-scheme">
+            .ColorScheme-Text {
+                color:#039bfc;
+            }
+        </style>
+
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feComponentTransfer in="SourceAlpha" result="adjustedAlpha">
+                <feFuncA type="table" tableValues="0 0.5 1"/>
+            </feComponentTransfer>
+            <feGaussianBlur in="adjustedAlpha" stdDeviation="2" result="blur"/>
+            <feFlood flood-color="#039bfc" result="color"/>
+            <feComposite in="color" in2="blur" operator="in" result="softGlowColored"/>
+            <feMerge>
+                <feMergeNode in="softGlowColored"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+  <linearGradient id="b" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -723.44 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="b-3" x1="399.57" x2="399.57" y1="545.8" y2="517.8" gradientTransform="matrix(2.1429 0 0 2.1429 -753.02 -1107.5)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#3889e9" offset="0"/>
+   <stop stop-color="#5ea5fb" offset="1"/>
+  </linearGradient>
+  <linearGradient id="linearGradient1299" x1="5" x2="195" y1="174.76" y2="174.76" gradientTransform="matrix(.32632 0 0 .095367 -.63187 42.834)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#039bfc" stop-opacity="0" offset="0"/>
+   <stop stop-color="#039bfc" offset=".225"/>
+   <stop stop-color="#039bfc" offset=".5"/>
+   <stop stop-color="#039bfc" offset=".775"/>
+   <stop stop-color="#039bfc" stop-opacity="0" offset="1"/>
+  </linearGradient>
+ </defs>
+
+ <circle cx="134.94" cy="32.044" r="0" fill="url(#b)" stroke-width="1.5715"/>
+ <circle cx="105.36" cy="32.044" r="0" fill="url(#b-3)" stroke-width="1.5715"/>
+ <rect x=".99971" y="59" width="62.001" height="1" ry="0" fill="url(#linearGradient1299)" stroke-width="3.7796" style="mix-blend-mode:normal;paint-order:stroke fill markers" filter="url(#glow)"/>
+ <g stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9.5" y="9.5" width="45" height="45" ry="5" fill="none" stroke="#039bfc" style="paint-order:stroke fill markers" filter="url(#glow)"/>
+ </g>
+ <g transform="translate(13,13) scale(0.15)">
+	<path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M114,11c-1.1,0.6-2.8,2-3.7,3.1c-1.5,2-1.7,2.7-1.8,8.8l-0.2,6.6l-6.6,0.2c-6.1,0.2-6.8,0.3-8.8,1.8c-3.8,2.9-4.2,4.4-4.2,17.6s0.5,15.2,4.4,18l2,1.4l32,0.2l32,0.2l2.8-1.4c2-1,3.1-2.2,4.2-4.2c1.2-2.5,1.4-3.5,1.4-14.1c0-10.6-0.1-11.6-1.4-14.1c-2.1-4.1-5.3-5.5-12.5-5.5h-5.7l-0.2-6.6c-0.3-7.6-1.2-9.6-5.5-11.8c-2.2-1.1-3.6-1.2-14.3-1.2C118.2,10,115.6,10.2,114,11z"/><path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M39.7,40.4c-1.8,0.5-4.4,1.5-5.8,2.2c-3.6,1.8-8.6,6.7-10.5,10.3c-3.6,6.7-3.5,3-3.5,89.9c0,85.8-0.1,82.9,3.1,89.2c1.8,3.6,6.8,8.6,10.3,10.5c6.8,3.7,2.5,3.5,94.8,3.5s88,0.2,94.8-3.5c3.5-1.9,8.5-6.9,10.3-10.5c3.3-6.3,3.1-3.4,3.1-89.2c0-86.9,0.1-83.2-3.5-89.9c-1.9-3.5-6.9-8.5-10.5-10.3c-5.5-2.8-8.5-3.1-27.3-3.1h-17.7v9.8V59l7.6,0.2c6,0.2,8.1,0.5,10.4,1.5c3.7,1.7,8.2,6.2,9.9,9.9l1.4,2.9v64.2v64.2l-1.4,2.9c-1.7,3.7-6.2,8.2-9.9,9.9l-2.9,1.4H128H63.8l-2.9-1.4c-3.7-1.7-8.2-6.2-9.9-9.9l-1.4-2.9v-64.2V73.6l1.7-3.5c2-4,5.5-7.4,9.6-9.3c2.3-1,4.4-1.4,10.4-1.5l7.5-0.2v-9.8v-9.8l-17.9,0.1C47.4,39.6,42.1,39.8,39.7,40.4z"/><path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M69,103.4v4.9h59h59v-4.9v-4.9h-59H69V103.4z"/><path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M69,142.7v4.9h59h59v-4.9v-4.9h-59H69V142.7z"/><path style="fill:#039bfc;fill-opacity:1;stroke:none" d="M69,182.1v4.9h59h59v-4.9v-4.9h-59H69V182.1z"/>
+ </g>
+</svg>
