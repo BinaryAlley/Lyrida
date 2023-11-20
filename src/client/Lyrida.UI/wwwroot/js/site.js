@@ -1,6 +1,7 @@
 ﻿// TODO: - when directory title is too long, use elipsis on tab headers
 //       - save history to db, so that getting logged out doesn't clear it, upon re-login
 //       - add user preference to refresh current dirrectory after cut/copy/paste/delete operation (slower, but accurate)
+//       - add customizable date time format for details view
 
 // test placeholders
 const environmentTypes = [
@@ -95,6 +96,7 @@ const btnPaste = document.getElementById('btnPaste');
 const btnNewFile = document.getElementById('btnNewFile');
 const accountIcon = document.getElementById('accountIcon');
 const accountDropdown = document.getElementById('accountDropdown');
+const tabHeaders = document.getElementById('dynTab_tabHeaders');
 const selectionDropdown = document.getElementById('selectionDropdown');
 const actionsDropdown = document.getElementById('actionsDropdown');
 const addressBarInput = document.getElementById('addressBarInput');
@@ -117,6 +119,9 @@ const btnUpOneLevel = document.getElementById('btnUpOneLevel');
 const visibleSelectionRectangle = document.getElementById('visibleSelectionRectangle');
 const selectionRectangle = document.getElementById('selectionRectangle');
 const progressIndicator = document.getElementById('progressIndicator');
+const progressIndicatorValue = document.getElementById('progressIndicatorValue');
+const progressIndicatorValueShadow = document.getElementById('progressIndicatorValueShadow');
+const progressIndicatorValueText = document.getElementById('progressIndicatorValueText');
 const scrollbarHeight = getScrollbarHeight();
 const scrollbarWidth = getScrollbarWidth();
 
@@ -293,8 +298,17 @@ function scrollHorizontally(event) {
 }
 
 /** 
- * Make address bar horizontally scrollable.
+ * Make tab headers bar horizontally scrollable.
  */
+if (tabHeaders)
+    tabHeaders.addEventListener('wheel', function (event) {
+        event.preventDefault();
+        this.scrollLeft += (event.deltaY > 0 ? 1 : -1) * 80;
+    }, { passive: false });
+
+/** 
+* Make address bar horizontally scrollable.
+*/
 if (addressBar)
     addressBar.addEventListener('wheel', function (event) {
         event.preventDefault();
@@ -392,8 +406,10 @@ if (accountIcon)
     accountIcon.addEventListener('click', function (event) {
         if (accountDropdown.classList.contains('hidden')) {
             accountDropdown.classList.remove('hidden');
-            actionsDropdown.classList.add('hidden');
-            selectionDropdown.classList.add('hidden');
+            if (actionsDropdown)
+                actionsDropdown.classList.add('hidden');
+            if (selectionDropdown)
+                selectionDropdown.classList.add('hidden');
         }
         else
             accountDropdown.classList.add('hidden');
@@ -406,9 +422,11 @@ if (accountIcon)
 if (btnActions)
     btnActions.addEventListener('click', function (event) {
         if (actionsDropdown.classList.contains('hidden')) {
-            accountDropdown.classList.add('hidden');
+            if (accountDropdown)
+                accountDropdown.classList.add('hidden');
             actionsDropdown.classList.remove('hidden');
-            selectionDropdown.classList.add('hidden');
+            if (selectionDropdown)
+                selectionDropdown.classList.add('hidden');
         }
         else
             actionsDropdown.classList.add('hidden');
@@ -421,8 +439,10 @@ if (btnActions)
 if (btnSelection)
     btnSelection.addEventListener('click', function (event) {
         if (selectionDropdown.classList.contains('hidden')) {
-            accountDropdown.classList.add('hidden');
-            actionsDropdown.classList.add('hidden');
+            if (accountDropdown)
+                accountDropdown.classList.add('hidden');
+            if (actionsDropdown)
+                actionsDropdown.classList.add('hidden');
             selectionDropdown.classList.remove('hidden');
         }
         else
@@ -711,7 +731,7 @@ function showExtraDetails() {
  */
 function fetchDataForPath(path, environmentId, uuid, title, callback) {
     if (path !== null) {
-        startOperation();
+        showBusyIndicator();
         // fetch directory data for the path.
         $.ajax({
             url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(path),
@@ -747,18 +767,27 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
                             if (jqXHR.status === 401)
                                 window.location.href = "/Account/Login";
                             else
-                                console.error('Failed to fetch files:', error);
+                                Swal.fire({
+                                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                                });
+                                //console.error('Failed to fetch files:', error);
                         }
                     });
                 }
-                endOperation();
+                hideBusyIndicator();
             },
             error: function (jqXHR, textStatus, error) {
+
                 if (jqXHR.status === 401)
                     window.location.href = "/Account/Login";
                 else
-                    console.error('Failed to fetch directories:', error);
-                endOperation();
+                    Swal.fire({
+                        title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                        customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                    });
+                    //console.error('Failed to fetch directories:', error);
+                hideBusyIndicator();
             }
         });
     } else
@@ -775,7 +804,7 @@ function goUpOneLevel() {
     if (!addressBarInput.value.endsWith(separator))
         addressBarInput.value = addressBarInput.value + separator;
     const path = addressBarInput.value;
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/GoUpOneLevel?path=' + encodeURIComponent(path),
         type: 'GET',
@@ -818,14 +847,18 @@ function goUpOneLevel() {
                     title: data.errorMessage
                 });
             }
-            endOperation();
+            hideBusyIndicator();
         },
         error: function (jqXHR, textStatus, error) {
-            endOperation();
+            hideBusyIndicator();
             if (jqXHR.status === 401)
                 window.location.href = "/Account/Login";
             else
-                console.error('Failed to fetch files:', error);
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            //console.error('Failed to fetch files:', error);
         }
     });
 }
@@ -1712,9 +1745,9 @@ function getVisibleItems() {
  */
 async function processItem(item, visibleItems) {
     try {
-        startOperation();
+        showBusyIndicator();
         const result = await getThumbnailApiCall(item.path, imagePreviewsQuality);
-        endOperation();
+        hideBusyIndicator();
         // update the item's thumbnail using the retrieved data
         if (typeof result.base64Data !== "undefined")
             item.img.src = `data:${result.mimeType};base64,${result.base64Data}`;
@@ -1726,7 +1759,7 @@ async function processItem(item, visibleItems) {
             processItem(nextItem, visibleItems);
         }
     } catch (error) {
-        endOperation();
+        hideBusyIndicator();
         if (error.name === 'AbortError') {
             // console.log('Fetch operation was aborted.');
         } else {
@@ -1747,7 +1780,7 @@ async function processItem(item, visibleItems) {
  * @returns {Promise<object>} - Returns a Promise resolving to an object containing base64Data and mimeType.
  * @throws {Error} - Throws an error if the API call fails.
  */
-async function getThumbnailApiCall(path, quality) { // endOperation();
+async function getThumbnailApiCall(path, quality) { // hideBusyIndicator();
     // URL encode the path to ensure it's safely transmitted in the URL
     const encodedItem = encodeURIComponent(path);
     // fetch the thumbnail for the given item from the server
@@ -1833,7 +1866,7 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
             abortController = null;
         }
     }
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/CheckPath?path=' + encodeURIComponent(path),
         type: 'GET',
@@ -1844,7 +1877,7 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
             if (data.success) {
                 if (enableConsoleDebugMessages)
                     console.info(getCurrentTime() + " Checked path for: " + path);
-                startOperation();
+                showBusyIndicator();
                 $.ajax({
                     url: baseUrl + '/FileSystem/ParsePath?path=' + encodeURIComponent(path),
                     type: 'GET',
@@ -1871,27 +1904,35 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
                         }
                         else
                             console.error(data.errorMessage);
-                        endOperation();
+                        hideBusyIndicator();
                     },
-                    error: function (jqXHR, textStatus, errorThrown) {
+                    error: function (jqXHR, textStatus, error) {
                         if (jqXHR.status === 401)
                             window.location.href = "/Account/Login";
                         else
-                            console.error('Failed to fetch files:', errorThrown);
-                        endOperation();
+                            Swal.fire({
+                                title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                                customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                            });
+                        //console.error('Failed to fetch files:', error);
+                        hideBusyIndicator();
                     }
                 });
             }
             else
                 console.error(data.errorMessage);
-            endOperation();
+            hideBusyIndicator();
         },
-        error: function (jqXHR, textStatus, errorThrown) {
+        error: function (jqXHR, textStatus, error) {
             if (jqXHR.status === 401) // TODO: perhaps, update the last location of current tab, so that it returns to it after login?
                 window.location.href = "/Account/Login";
             else
-                console.error('Failed to fetch files:', errorThrown);
-            endOperation();
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            //console.error('Failed to fetch files:', error);
+            hideBusyIndicator();
         }
     });
 }
@@ -1968,7 +2009,7 @@ function handlePathSegmentComboboxChange(event) {
             // clear any existing dropdown elements
             dropdown.innerHTML = "";
             // fetch directory data for the path.
-            startOperation();
+            showBusyIndicator();
             $.ajax({
                 url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(pathValue),
                 type: 'GET',
@@ -2015,14 +2056,18 @@ function handlePathSegmentComboboxChange(event) {
                             dropdown.appendChild(directoryDiv);
                         });
                     }
-                    endOperation();
+                    hideBusyIndicator();
                 },
                 error: function (jqXHR, textStatus, error) {
                     if (jqXHR.status === 401)
                         window.location.href = "/Account/Login";
                     else
-                        console.error('Failed to fetch directories:', error);
-                    endOperation();
+                        Swal.fire({
+                            title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                            customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                        });
+                        //console.error('Failed to fetch directories:', error);
+                    hideBusyIndicator();
                 }
             });
             // when drop down opens, need to show address bar overflow, otherwise clipping of drop down occurs
@@ -2115,7 +2160,7 @@ function addNewPageToStorage(guid, title, path, platformId) {
         path: path,
         platformId: platformId
     };
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/AddPage',
         type: 'POST',
@@ -2125,14 +2170,14 @@ function addNewPageToStorage(guid, title, path, platformId) {
             "X-Environment-Type": activeEnvironmentId.toString()
         },
         success: function () {
-            endOperation();
+            hideBusyIndicator();
         },
         error: function (jqXHR, textStatus, error) {
             if (jqXHR.status === 401)
                 window.location.href = "/Account/Login";
             else
                 swal("STOP!", textStatus + " " + error, "error", { button: { text: "OK", className: "confirm-button", } });
-            endOperation();
+            hideBusyIndicator();
         }
     });
 }
@@ -2151,7 +2196,7 @@ function updatePageInStorage(guid, path, environmentId, title) {
         path: path,
         platformId: environmentId
     };
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/UpdatePage',
         type: 'POST',
@@ -2161,14 +2206,14 @@ function updatePageInStorage(guid, path, environmentId, title) {
             "X-Environment-Type": activeEnvironmentId.toString()
         },
         success: function () {
-            endOperation();
+            hideBusyIndicator();
         },
         error: function (jqXHR, textStatus, error) {
             if (jqXHR.status === 401)
                 window.location.href = "/Account/Login";
             else
                 swal("STOP!", textStatus + " " + error, "error", { button: { text: "OK", className: "confirm-button", } });
-            endOperation();
+            hideBusyIndicator();
         }
     });
 }
@@ -2178,7 +2223,7 @@ function updatePageInStorage(guid, path, environmentId, title) {
  * @param {guid} guid - The unique id of the page to delete
  */
 function removePageFromStorage(guid) {
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/RemovePage',
         type: 'POST',
@@ -2188,14 +2233,14 @@ function removePageFromStorage(guid) {
             "X-Environment-Type": activeEnvironmentId.toString()
         },
         success: function () {
-            endOperation();
+            hideBusyIndicator();
         },
         error: function (jqXHR, textStatus, error) {
             if (jqXHR.status === 401)
                 window.location.href = "/Account/Login";
             else
                 swal("STOP!", textStatus + " " + errorThrown, "error", { button: { text: "OK", className: "confirm-button", } });
-            endOperation();
+            hideBusyIndicator();
         }
     });
 }
@@ -2232,7 +2277,7 @@ function renameFileSystemElement(renamedElement, newName) {
         element.classList.remove('cut');
     });
     if ($(renamedElement).find('.t.f, .t.d').text() !== newName) { // don't rename if name did not change
-        startOperation();
+        showBusyIndicator();
         $.ajax({
             url: baseUrl + '/FileSystem/RenameElement',
             type: 'POST',
@@ -2257,7 +2302,7 @@ function renameFileSystemElement(renamedElement, newName) {
                     });
                     toast.fire({ icon: 'error', title: data.errorMessage });
                 }
-                endOperation();
+                hideBusyIndicator();
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401)
@@ -2267,7 +2312,7 @@ function renameFileSystemElement(renamedElement, newName) {
                         title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
                         customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
                     });
-                endOperation();
+                hideBusyIndicator();
             }
         });
     }
@@ -2314,6 +2359,7 @@ function pasteElements() {
         overrideExisting = null;
         overrideAll = null;
         toastContent = '';
+        showOperationProgress();
         processClipboardItem(0, explorer.dataset.path); // start with the first item
     }
 }
@@ -2326,9 +2372,12 @@ function pasteElements() {
  */
 function processClipboardItem(index, destinationPath) {
     // if all items have been processed, exit the function
-    if (index >= clipboard.length)
+    if (index >= clipboard.length) {
+        hideOperationProgress();
         return;
+    }
     const element = clipboard[index];
+    updateOperationProgress(index + 1, clipboard.length);
     pasteElement(element, destinationPath, (shouldContinue) => {
         // shouldContinue is a boolean indicating whether to move to the next item
         processClipboardItem(index + (shouldContinue ? 1 : 0), destinationPath); // callback function to process the next item or retry the current item without incrementing the index
@@ -2349,7 +2398,7 @@ function pasteElement(element, destinationPath, callback) {
         isFile: element.type === 'file',
         overrideExisting: overrideAll === null ? overrideExisting : true
     };
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/' + (element.action === 'copy' ? (element.type === 'file' ? 'CopyFile' : 'CopyDirectory') : (element.type === 'file' ? 'MoveFile' : 'MoveDirectory')),
         type: 'POST',
@@ -2391,6 +2440,7 @@ function pasteElement(element, destinationPath, callback) {
                             <a href="#" id="swal-yesToAll" class="confirm-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.replaceAllText + `</a>
                             <a href="#" id="swal-skip" class="abort-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.skipText + `</a>
                             <a href="#" id="swal-keepBoth" class="abort-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.keepText + `</a>
+                            <a href="#" id="swal-cancel" class="abort-button f-18 h-24px pl-10 pr-10 block mt-10">` + data.cancelText + `</a>
                             `,
                         showConfirmButton: false,
                         showCancelButton: false,
@@ -2399,6 +2449,7 @@ function pasteElement(element, destinationPath, callback) {
                             document.getElementById('swal-yesToAll').addEventListener('click', handleYesToAll);
                             document.getElementById('swal-skip').addEventListener('click', handleSkip);
                             document.getElementById('swal-keepBoth').addEventListener('click', handleKeepBoth);
+                            document.getElementById('swal-cancel').addEventListener('click', handleCancel);
                         }
                     });
                     // define handlers                        
@@ -2436,6 +2487,13 @@ function pasteElement(element, destinationPath, callback) {
                             console.info('user chose Keep Both for paste conflict');
                         Swal.close();
                     }
+                    function handleCancel(event) {
+                        event.preventDefault();
+                        Swal.close();
+                        hideBusyIndicator();
+                        hideOperationProgress();
+                        return;
+                    }
                 }
                 else
                 {
@@ -2448,7 +2506,7 @@ function pasteElement(element, destinationPath, callback) {
                     toast.fire({ icon: 'error', title: data.errorMessage });
                 }
             }
-            endOperation();
+            hideBusyIndicator();
         },
         error: function (jqXHR, textStatus, errorThrown) {
             if (enableConsoleDebugMessages)
@@ -2460,7 +2518,8 @@ function pasteElement(element, destinationPath, callback) {
                     title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
                     customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
                 });
-            endOperation();
+            hideBusyIndicator();
+            hideOperationProgress();
         }
     });
 }
@@ -2473,13 +2532,15 @@ function deleteElements(elements) {
     document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
         element.classList.remove('cut');
     });
+    let completedCount = 0;
     toastContent = '';
     // iterate over each selected item and send a delete request
     elements.forEach(element => {
         var path = element.getAttribute('data-path');
         var type = element.getAttribute('data-type');        
         var endpoint = type === 'directory' ? '/FileSystem/DeleteDirectory?path=' : '/FileSystem/DeleteFile?path=';
-        startOperation();
+        showBusyIndicator();
+        showOperationProgress();
         $.ajax({
             url: baseUrl + endpoint + encodeURIComponent(path),
             type: 'DELETE',
@@ -2488,6 +2549,7 @@ function deleteElements(elements) {
                 "X-Environment-Type": activeEnvironmentId.toString()
             },
             success: function (data) {
+                completedCount++;
                 // remove the element from the UI
                 element.remove();
                 // update the toast content with the path of the deleted item
@@ -2495,7 +2557,10 @@ function deleteElements(elements) {
                 // show or update the toast with the new content
                 successToast.fire({ icon: 'success', title: data.message + ":", html: toastContent.replace(/\n/g, '<br>'), // Replace newlines with line breaks for HTML
                 });
-                endOperation();
+                hideBusyIndicator();
+                updateOperationProgress(completedCount, elements.length);
+                if (completedCount === elements.length)
+                    hideOperationProgress();
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 if (jqXHR.status === 401)
@@ -2504,7 +2569,8 @@ function deleteElements(elements) {
                     Swal.fire({ title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
                         customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
                     });
-                endOperation();
+                hideBusyIndicator();
+                hideOperationProgress();
             }
         });
     });
@@ -2520,7 +2586,7 @@ function createNewDirectory(explorer, path, name) {
     document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
         element.classList.remove('cut');
     });
-    startOperation();
+    showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/CreateDirectory',
         type: 'POST',
@@ -2546,7 +2612,7 @@ function createNewDirectory(explorer, path, name) {
                 });
                 toast.fire({ icon: 'error', title: data.errorMessage });
             }
-            endOperation();
+            hideBusyIndicator();
         },
         error: function (jqXHR, textStatus, errorThrown) {
             if (jqXHR.status === 401)
@@ -2555,7 +2621,7 @@ function createNewDirectory(explorer, path, name) {
                 Swal.fire({ title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + errorThrown, confirmButtonText: 'OK',
                     customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
                 });
-            endOperation();
+            hideBusyIndicator();
         }
     });
 }
@@ -2635,31 +2701,44 @@ function setUserPermissions(permissions) {
 /**
  * Starts progress indicator
  */
-function startOperation() {
+function showBusyIndicator() {
     if (ajaxCallCounter === 0)
         progressIndicator.classList.remove('hidden');
     ajaxCallCounter++;
-    console.info("++" + ajaxCallCounter);
 }
 
 /**
- * Uodates the progress indicator
+ * Updates the progress indicator
  * @param {int} completed - Number of completed elements
  * @param {int} total - Number of total elements
  */
-function updateOperationProgress(completed, total) {
-    //var progress = (completed / total) * 100;
-    //Pace.set(progress); 
+function updateOperationProgress(completed, total) {    
+    progressIndicatorValueText.innerText = completed + '/' + total;
 }
 
 /**
- * Stops progress indicator
+ * Hides progress indicator
  */
-function endOperation() {
+function hideBusyIndicator() {
     ajaxCallCounter--;
     if (ajaxCallCounter === 0) 
         progressIndicator.classList.add('hidden');
-    console.info("--" + ajaxCallCounter);
+}
+
+/**
+ * Shows the elements that display a progress operation
+ */
+function showOperationProgress() {
+    progressIndicatorValueShadow.classList.remove('hidden');
+    progressIndicatorValue.classList.remove('hidden');
+}
+
+/**
+ * Hides the elements that display a progress operation
+ */
+function hideOperationProgress() {
+    progressIndicatorValueShadow.classList.add('hidden');
+    progressIndicatorValue.classList.add('hidden');
 }
 
 /**

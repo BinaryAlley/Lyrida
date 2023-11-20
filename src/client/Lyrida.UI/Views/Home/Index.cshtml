@@ -1,1 +1,12 @@
-﻿
+﻿@using System.Text.Json;
+@section Scripts {
+    @if(ViewData["error"] is not null)
+    {
+    <script type="text/javascript">
+            Swal.fire({
+                title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@Html.Raw(ViewData["error"])', confirmButtonText: 'OK',
+                customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+            });
+    </script>
+    }
+}

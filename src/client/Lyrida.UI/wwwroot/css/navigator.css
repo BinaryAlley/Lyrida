@@ -179,6 +179,6 @@
 
 @media (max-width: 768px) {
     #dynTab_tabPages {
-        height: calc(100% - 140px) !important;
+        height: calc(100% - 176px) !important;
     }
 }

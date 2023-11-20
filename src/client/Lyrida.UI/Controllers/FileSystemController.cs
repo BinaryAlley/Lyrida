@@ -1,16 +1,17 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System;
 using Newtonsoft.Json;
+using System.Net.Http;
 using Lyrida.UI.Common.Api;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using Lyrida.UI.Common.Exceptions;
 using Lyrida.UI.Common.DTO.FileSystem;
 using Lyrida.Infrastructure.Common.Enums;
 using Lyrida.Infrastructure.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Lyrida.UI.Common.DTO.Configuration;
-using System.Collections.Generic;
-using Lyrida.UI.Common.Exceptions;
 #endregion
 
 namespace Lyrida.UI.Controllers;
@@ -50,12 +51,20 @@ public class FileSystemController : Controller
     [HttpGet()]
     public async Task<IActionResult> Index()
     {
-        string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
-        ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
-        response = await apiHttpClient.GetAsync($"pages", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
-        ViewData["Preferences"] = profilePreferences;
-        ViewData["InitialPages"] = JsonConvert.DeserializeObject<List<PageDto>>(response);
-        return View("Index");
+        try
+        {
+            string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+            ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
+            response = await apiHttpClient.GetAsync($"pages", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+            ViewData["Preferences"] = profilePreferences;
+            ViewData["InitialPages"] = JsonConvert.DeserializeObject<List<PageDto>>(response);
+            return View("Index");
+        }
+        catch (HttpRequestException)
+        {
+            ViewData["error"] = translationService.Translate(Terms.TheServerDidNotRespond);
+            return View("Index");
+        }
     }
 
     /// <summary>
@@ -174,6 +183,7 @@ public class FileSystemController : Controller
                         replaceText = translationService.Translate(Terms.ReplaceTheFile),
                         replaceAllText = translationService.Translate(Terms.ReplaceAllFiles),
                         skipText = translationService.Translate(Terms.SkipThisFile),
+                        cancelText = translationService.Translate(Terms.Cancel),
                         keepText = translationService.Translate(Terms.KeepBothFiles),
                     });
                 throw;

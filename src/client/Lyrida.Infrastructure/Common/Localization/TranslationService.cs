@@ -142,7 +142,7 @@ public class TranslationService : ITranslationService
             (Terms.EmptyPasswordConfirm, "Confirmarea parolei nu poate fi goală!", "The password confirm cannot be empty!", "Die Passwortbestätigung darf nicht leer sein!"),
             (Terms.PasswordsNotMatch, "Parola și confirmarea parolei nu sunt identice!", "Password and password confirm are not identical!", "Passwort und Passwortbestätigung stimmen nicht überein!"),
             (Terms.InvalidUsername, "Nume de utilizator sau parola invalidă!", "Invalid username or password!", "Ungültiger Benutzername oder Passwort!"),
-            (Terms.ReplaceTheFile, "Înlocuiește fișierul destinație", "Replace the file in the destination", "Die Datei im Ziel ersetzen"),
+            (Terms.ReplaceTheFile, "Înlocuiește fișierul", "Replace the file", "Die Datei ersetzen"),
             (Terms.ReplaceAllFiles, "Înlocuiește toate fișierele", "Replace all files", "Alle Dateien ersetzen"),
             (Terms.SkipThisFile, "Sări peste acest fișier", "Skip this file", "Diese Datei überspringen"),
             (Terms.KeepBothFiles, "Păstrează ambele fișiere", "Keep both files", "Beide Dateien behalten"),
@@ -223,6 +223,8 @@ public class TranslationService : ITranslationService
             (Terms.CopyHere, "Copiază aici", "Copy here", "Hierhin kopieren"),
             (Terms.MoveHere, "Mută aici", "Move here", "Hierhin verschieben"),
             (Terms.LinkHere, "Leagă aici", "Link here", "Hier verlinken"),
+            (Terms.TheServerDidNotRespond, "Serverul nu a răspuns!", "The server did not respond!", "Der Server hat nicht geantwortet!"),
+            (Terms.FileSystem, "Sistem de fișiere", "File System", "Dateisystem"),
         };
     }
     #endregion

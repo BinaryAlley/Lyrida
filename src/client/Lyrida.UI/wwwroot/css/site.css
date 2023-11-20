@@ -140,6 +140,10 @@ header {
     background-color: #232323;
 }
 
+.colored-toast {
+    margin-bottom: 35px;
+}
+
 .swal-modal, .colored-toast {
     background: linear-gradient(135deg, #404040, #232323) !important;
     border-top: 1px solid #505050 !important;
@@ -150,7 +154,7 @@ header {
 }
 
 .swal2-popup {
-    max-height: 90vh;
+    /*max-height: 90vh;*/ /*disabled because high html content like the option to override existing file when copying would go off-panel*/
 }
 
 .swal-title {
@@ -233,6 +237,8 @@ footer {
     border-top-width: 1px;
 
     display: flex;
+    align-items: center; /* This will center the children vertically */
+
     background: rgb(10, 11, 11);
     background-image: linear-gradient(180deg, #505050, #464646, #404040, #363636);
 }
@@ -481,11 +487,16 @@ header #btnNavigate, header #btnEditPath {
 }
 
 #progressIndicator {
+    text-align: center;
     width: 37px;
     height: 37px;
     margin: auto;
     content: url('../images/ui/atom.svg');  
     animation: rotate 1.5s linear infinite;
+}
+
+#progressIndicatorValue, #progressIndicatorValueShadow {
+    width: 55px;
 }
 
 .text-light-one {

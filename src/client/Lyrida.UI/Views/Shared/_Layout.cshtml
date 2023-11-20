@@ -52,6 +52,7 @@
                     {
                         <li><a class="menu-link text-light-one" asp-controller="Account" asp-action="Logout">@translationService.Translate(Terms.Logout)</a></li>
                         <li><a class="menu-link text-light-one" asp-controller="Account" asp-action="Profile">@translationService.Translate(Terms.MyAccount)</a></li>
+                        <li><a class="menu-link text-light-one" asp-controller="FileSystem" asp-action="Index">@translationService.Translate(Terms.FileSystem)</a></li>
                     }
                     else
                     {
@@ -78,8 +79,11 @@
     </header>
     @RenderBody()
     <footer>
-        &copy; 2023 - Lyrida - <a asp-area="" asp-controller="Filesystem" asp-action="Index">Privacy</a>
+        <div id="progressIndicatorValueShadow" class="hidden"></div>
         <div id="progressIndicator" class="hidden"></div>
+        <div id="progressIndicatorValue" class="hidden">
+            <span id="progressIndicatorValueText" class="text-light-three"></span>
+        </div>
     </footer>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

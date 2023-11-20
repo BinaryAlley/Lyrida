@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using System.Net.Http;
 using Lyrida.UI.Common.Api;
 using System.Threading.Tasks;
 using System.Security.Claims;
@@ -83,9 +84,17 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> Profile()
     {
-        string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
-        ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
-        return View(profilePreferences);
+        try
+        {
+            string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+            ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
+            return View(profilePreferences);
+        }
+        catch (HttpRequestException)
+        {
+            ViewData["error"] = translationService.Translate(Terms.TheServerDidNotRespond);
+            return View();
+        }       
     }
 
     /// <summary>

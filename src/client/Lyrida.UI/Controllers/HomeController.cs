@@ -6,6 +6,8 @@ using Lyrida.UI.Common.Exceptions;
 using Lyrida.Infrastructure.Localization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Net.Http;
+using Lyrida.Infrastructure.Common.Enums;
 #endregion
 
 namespace Lyrida.Client.Controllers;
@@ -60,6 +62,11 @@ public class HomeController : Controller
             Response.Cookies.Delete("Token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Register", "Account");
+        }
+        catch (HttpRequestException)
+        {
+            ViewData["error"] = translationService.Translate(Terms.TheServerDidNotRespond);
+            return View();
         }
     }
     #endregion

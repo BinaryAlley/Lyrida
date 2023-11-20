@@ -67,65 +67,76 @@
         <span>@translationService.Translate(Terms.LinkHere)</span>
     </div>
 </div>
-
 @section Scripts {
-    <script type="text/javascript">
-        $('#dynTab_addTab').click((e) => {
-            e.preventDefault();
-            activeEnvironmentId = 0;
-            addNewTab("New Tab", null, null, null);
-            e.stopPropagation();
-        });
-        $('#renameInput').on('blur', function () {
-            renameInput.classList.add('hidden');
-            if (!isEscapePressed) {
-                const explorer = getActiveExplorer();
-                if (explorer) {
-                    // there should be one item selected
-                    const selectedItems = explorer.querySelectorAll('.e.selected');
-                    if (selectedItems.length > 0)
-                        renameFileSystemElement(selectedItems[0], renameInput.value);
-                }
-            }
-            isEscapePressed = false;
-        });
-        $('#btnMenuCopy').click(function (event) {
-            clipboard = [];
-            dropContextMenu.classList.add('hidden');
-            draggedItems.forEach(element => {
-                clipboard.push({ path: element.path, name: element.name, type: element.type, action: "copy" });
-            });
-            document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
-                element.classList.remove('cut');
-            });
-            pasteElements();
-            draggedItems = [];
-            event.preventDefault();
-            event.stopPropagation();
-        });
-        $('#btnMenuMove').click(function (event) {
-            clipboard = [];
-            dropContextMenu.classList.add('hidden');
-            document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
-                element.classList.remove('cut');
-            });
-            draggedItems.forEach(element => {
-                clipboard.push({ path: element.path, name: element.name, type: element.type, action: "cut" });
-            });
-            pasteElements();
-            draggedItems = [];
-            event.preventDefault();
-            event.stopPropagation();
-        });
-        $('#btnMenuLink').click(function (event) {
+    @if (ViewData["error"] is not null)
+    {
+        <script type="text/javascript">
             Swal.fire({
-                title: 'STOP!', icon: 'error', buttonsStyling: false, text: "Not yet implemented!", confirmButtonText: 'OK',
+                title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@Html.Raw(ViewData["error"])', confirmButtonText: 'OK',
                 customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
             });
-            dropContextMenu.classList.add('hidden');
-            draggedItems = [];
-            event.preventDefault();
-            event.stopPropagation();
-        });
-    </script>
+        </script>
+    }
+    else 
+    {
+        <script type="text/javascript">
+            $('#dynTab_addTab').click((e) => {
+                e.preventDefault();
+                activeEnvironmentId = 0;
+                addNewTab("New Tab", null, null, null);
+                e.stopPropagation();
+            });
+            $('#renameInput').on('blur', function () {
+                renameInput.classList.add('hidden');
+                if (!isEscapePressed) {
+                    const explorer = getActiveExplorer();
+                    if (explorer) {
+                        // there should be one item selected
+                        const selectedItems = explorer.querySelectorAll('.e.selected');
+                        if (selectedItems.length > 0)
+                            renameFileSystemElement(selectedItems[0], renameInput.value);
+                    }
+                }
+                isEscapePressed = false;
+            });
+            $('#btnMenuCopy').click(function (event) {
+                clipboard = [];
+                dropContextMenu.classList.add('hidden');
+                draggedItems.forEach(element => {
+                    clipboard.push({ path: element.path, name: element.name, type: element.type, action: "copy" });
+                });
+                document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+                    element.classList.remove('cut');
+                });
+                pasteElements();
+                draggedItems = [];
+                event.preventDefault();
+                event.stopPropagation();
+            });
+            $('#btnMenuMove').click(function (event) {
+                clipboard = [];
+                dropContextMenu.classList.add('hidden');
+                document.querySelectorAll('.e').forEach(element => { // unmark items as "cut"
+                    element.classList.remove('cut');
+                });
+                draggedItems.forEach(element => {
+                    clipboard.push({ path: element.path, name: element.name, type: element.type, action: "cut" });
+                });
+                pasteElements();
+                draggedItems = [];
+                event.preventDefault();
+                event.stopPropagation();
+            });
+            $('#btnMenuLink').click(function (event) {
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: "Not yet implemented!", confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+                dropContextMenu.classList.add('hidden');
+                draggedItems = [];
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        </script>
+    }
 }

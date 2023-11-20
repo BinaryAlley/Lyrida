@@ -49,70 +49,62 @@
 
 ::-webkit-scrollbar-thumb:vertical {
 	background:
-   url(../images/ui/scrollbar-thumb-vertical-top.png) 50% 0%,
-   url(../images/ui/scrollbar-thumb-vertical-bottom.png) 50% 100%,
-   url(../images/ui/scrollbar-thumb-vertical-middle.png) 50% 50%,
-   url(../images/ui/scrollbar-thumb-vertical-repeat.png) 50% 50%;
+	url(../images/ui/scrollbar-thumb-vertical-top.png) 50% 0%,
+	url(../images/ui/scrollbar-thumb-vertical-bottom.png) 50% 100%,
+	url(../images/ui/scrollbar-thumb-vertical-middle.png) 50% 50%,
+	url(../images/ui/scrollbar-thumb-vertical-repeat.png) 50% 50%;
 	
 	background-position: 0px 0px, 0px 100%, 0px 50%, 0px 50%;
 	background-repeat: no-repeat, no-repeat, no-repeat, repeat-y;
 
-  background-size:24px 120px;  
-  min-height: 50px !important;*
-  background-position:center;
-  display: block;
-  background-size:contain;
+	background-size:24px 120px;  
+	min-height: 65px !important;
+	display: block;
+	background-size:contain;
 }
 
 ::-webkit-scrollbar-thumb:horizontal {
 	background:
-   url(../images/ui/scrollbar-thumb-horizontal-left.png) 0% 50%,
-   url(../images/ui/scrollbar-thumb-horizontal-right.png) 100% 50%,
-   url(../images/ui/scrollbar-thumb-horizontal-middle.png) 50% 50%,
-   url(../images/ui/scrollbar-thumb-horizontal-repeat.png) 50% 50%;
+	url(../images/ui/scrollbar-thumb-horizontal-left.png) 0% 50%,
+	url(../images/ui/scrollbar-thumb-horizontal-right.png) 100% 50%,
+	url(../images/ui/scrollbar-thumb-horizontal-middle.png) 50% 50%,
+	url(../images/ui/scrollbar-thumb-horizontal-repeat.png) 50% 50%;
 	
 	background-position: 0px 0px, 100% 0%, 50% 0%, 50px 0%;
 	background-repeat: no-repeat, no-repeat, no-repeat, repeat-x;
 
-  background-size:24px 120px;  
-  min-height: 50px !important;*
-  background-position:center;
-  display: block;
-  background-size:contain;
+	background-size:24px 120px;  
+	min-width: 65px !important;
+	display: block;
+	background-size:contain;
 }
 
 ::-webkit-scrollbar-thumb:vertical:hover {
 	background:
-   url(../images/ui/scrollbar-thumb-vertical-top.png) 50% 0%,
-   url(../images/ui/scrollbar-thumb-vertical-bottom.png) 50% 100%,
-   url(../images/ui/scrollbar-thumb-vertical-middle-hover.png) 50% 50%,
-   url(../images/ui/scrollbar-thumb-vertical-repeat.png) 50% 50%;
-	
+	url(../images/ui/scrollbar-thumb-vertical-top.png) 50% 0%,
+	url(../images/ui/scrollbar-thumb-vertical-bottom.png) 50% 100%,
+	url(../images/ui/scrollbar-thumb-vertical-middle-hover.png) 50% 50%,
+	url(../images/ui/scrollbar-thumb-vertical-repeat.png) 50% 50%;
 	background-position: 0px 0px, 0px 100%, 0px 50%, 0px 50%;
 	background-repeat: no-repeat, no-repeat, no-repeat, repeat-y;
-
-  background-size:24px 120px;  
-  min-height: 50px !important;*
-  background-position:center;
-  display: block;
-  background-size:contain;
+	background-size:24px 120px;  
+	min-height: 65px !important;
+	display: block;
+	background-size:contain;
 }
 
 ::-webkit-scrollbar-thumb:horizontal:hover {
 	background:
-   url(../images/ui/scrollbar-thumb-horizontal-left.png) 0% 50%,
-   url(../images/ui/scrollbar-thumb-horizontal-right.png) 100% 50%,
-   url(../images/ui/scrollbar-thumb-horizontal-middle-hover.png) 50% 50%,
-   url(../images/ui/scrollbar-thumb-horizontal-repeat.png) 50% 50%;
-	
+	url(../images/ui/scrollbar-thumb-horizontal-left.png) 0% 50%,
+	url(../images/ui/scrollbar-thumb-horizontal-right.png) 100% 50%,
+	url(../images/ui/scrollbar-thumb-horizontal-middle-hover.png) 50% 50%,
+	url(../images/ui/scrollbar-thumb-horizontal-repeat.png) 50% 50%;
 	background-position: 0px 0px, 100% 0%, 50% 0%, 50px 0%;
 	background-repeat: no-repeat, no-repeat, no-repeat, repeat-x;
-
-  background-size:24px 120px;  
-  min-height: 50px !important;*
-  background-position:center;
-  display: block;
-  background-size:contain;
+	background-size:24px 120px;  
+	min-width: 65px !important;
+	display: block;
+	background-size:contain;
 }
 
 ::-webkit-scrollbar-corner {
