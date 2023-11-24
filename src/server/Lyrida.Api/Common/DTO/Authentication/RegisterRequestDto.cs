@@ -6,4 +6,4 @@
 /// <remarks>
 /// Creation Date: 12th of July, 2023
 /// </remarks>
-public record RegisterRequestDto(string FirstName, string LastName, string Email, string Password, string PasswordConfirm, bool Use2fa);
+public record RegisterRequestDto(string Username, string Password, string PasswordConfirm, bool Use2fa);

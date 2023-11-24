@@ -10,11 +10,11 @@ namespace Lyrida.UI.Common.DTO.Authentication;
 /// <remarks>
 /// Creation Date: 13th of June, 2023
 /// </remarks>
-[DebuggerDisplay("Email: {Email}")]
+[DebuggerDisplay("Username: {Username}")]
 public class LoginDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    public string? Email { get; set; }
+    public string? Username { get; set; }
     public string? Password { get; set; }
     public string? TotpCode { get; set; }
     #endregion

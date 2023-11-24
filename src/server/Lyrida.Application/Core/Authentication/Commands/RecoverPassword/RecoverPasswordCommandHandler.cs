@@ -55,7 +55,7 @@ public class RecoverPasswordCommandHandler : IRequestHandler<RecoverPasswordComm
     public async Task<ErrorOr<CommandResultDto>> Handle(RecoverPasswordCommand command, CancellationToken cancellationToken)
     {
         // validate that the user exists
-        var resultSelectUser = await userRepository.GetByEmailAsync(command.Email);
+        var resultSelectUser = await userRepository.GetByUsernameAsync(command.Username);
         if (resultSelectUser.Error is null)
         {
             if (resultSelectUser.Data is not null)

@@ -176,9 +176,3 @@
 .navigator-combobox:hover > .shine-effect::after {
     opacity: 1;
 }
-
-@media (max-width: 768px) {
-    #dynTab_tabPages {
-        height: calc(100% - 176px) !important;
-    }
-}

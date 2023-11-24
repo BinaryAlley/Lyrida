@@ -50,7 +50,7 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
     public async Task<ErrorOr<RegistrationResultDto>> Handle(ChangePasswordCommand command, CancellationToken cancellationToken)
     {
         // check if the user already exists
-        var resultSelectUser = await userRepository.GetByEmailAsync(command.Email);
+        var resultSelectUser = await userRepository.GetByUsernameAsync(command.Username);
         if (string.IsNullOrEmpty(resultSelectUser.Error))
         {
             if (resultSelectUser.Data is not null) // the account must exist before changing password
@@ -62,9 +62,7 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
                 resultSelectUser.Data[0].Password = Uri.EscapeDataString(hashService.HashString(command.NewPassword));
                 var user = new UserDto
                 {
-                    Email = command.Email,
-                    LastName = resultSelectUser.Data[0].LastName,
-                    FirstName = resultSelectUser.Data[0].FirstName,
+                    Username = command.Username
                 };
                 // update the user
                 var resultUpdateUser = await userRepository.UpdateAsync(resultSelectUser.Data[0]);

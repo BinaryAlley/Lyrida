@@ -10,14 +10,12 @@ namespace Lyrida.UI.Common.DTO.Authentication;
 /// <remarks>
 /// Creation Date: 13th of June, 2023
 /// </remarks>
-[DebuggerDisplay("{Email}")]
+[DebuggerDisplay("{Username}")]
 public class RegisterResponseDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
     public int Id { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public string? Email { get; set; }
+    public string? Username { get; set; }
     public string? Token { get; set; }
     public string? TotpSecret { get; set; }
     #endregion

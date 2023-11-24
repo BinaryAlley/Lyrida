@@ -15,9 +15,7 @@ public sealed class UserDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
     public int Id { get; set; }
-    public string FirstName { get; set; } = null!;
-    public string LastName { get; set; } = null!;
-    public string Email { get; set; } = null!;
+    public string Username { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string? TotpSecret { get; set; } = null!;
     public bool UsesTotp { get; set; }
@@ -34,7 +32,7 @@ public sealed class UserDto
     /// <returns>Custom string value showing relevant data for current class</returns>
     public override string ToString()
     {
-        return Id + " :: " + Email;
+        return Id + " :: " + Username;
     }
 
     /// <summary>

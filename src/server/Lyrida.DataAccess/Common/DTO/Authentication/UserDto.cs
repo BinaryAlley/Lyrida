@@ -18,12 +18,8 @@ public sealed class UserDto : IStorageDto
     [IgnoreOnCommand]
     [MapsTo(Name = "id")]
     public int Id { get; set; }
-    [MapsTo(Name = "first_name")]
-    public string FirstName { get; set; } = null!;
-    [MapsTo(Name = "last_name")]
-    public string LastName { get; set; } = null!;
-    [MapsTo(Name = "email")]
-    public string Email { get; set; } = null!;
+    [MapsTo(Name = "username")]
+    public string Username { get; set; } = null!;
     [MapsTo(Name = "password")]
     public string Password { get; set; } = null!;
     [MapsTo(Name = "totp_secret")]
@@ -47,7 +43,7 @@ public sealed class UserDto : IStorageDto
     /// <returns>Custom string value showing relevant data for current class</returns>
     public override string ToString()
     {
-        return Id + " :: " + Email;
+        return Id + " :: " + Username;
     }
     #endregion
 }

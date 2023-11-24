@@ -14,7 +14,6 @@ using Lyrida.Application.Common.DTO.Pages;
 using Lyrida.Application.Core.Pages.Queries.Read;
 using Lyrida.Application.Core.Pages.Commands.Create;
 using Lyrida.Application.Core.Pages.Commands.Delete;
-using Lyrida.Application.Core.Pages.Commands.Update;
 #endregion
 
 namespace Lyrida.Api.Controllers;
@@ -85,18 +84,6 @@ public class PagesController : ApiController
             return Problem(statusCode: StatusCodes.Status400BadRequest, title: translationService.Translate(Terms.InvalidUserId));
         ErrorOr<bool> result = await mediator.Send(new DeletePageCommand(userId, guid));
         return result.Match(result => NoContent(), errors => Problem(errors));
-    }
-
-    /// <summary>
-    /// Updates a page in the collection of open user pages of the current user.
-    /// </summary>
-    [HttpPut()]
-    public async Task<IActionResult> UpdatePage([FromBody] PageRequestDto data)
-    {
-        if (!TryGetUserId(out int userId))
-            return Problem(statusCode: StatusCodes.Status400BadRequest, title: translationService.Translate(Terms.InvalidUserId));
-        ErrorOr<bool> updateResult = await mediator.Send(new UpdatePageCommand(userId, mapper.Map<PageDto>(data)));
-        return updateResult.Match(result => Ok(result), errors => Problem(errors));
     }
 
     /// <summary>

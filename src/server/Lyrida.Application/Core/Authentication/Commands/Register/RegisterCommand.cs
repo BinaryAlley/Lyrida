@@ -12,4 +12,4 @@ namespace Lyrida.Application.Core.Authentication.Commands.Register;
 /// <remarks>
 /// Creation Date: 18th of July, 2023
 /// </remarks>
-public record RegisterCommand(string FirstName, string LastName, string Email, string Password, string PasswordConfirm, bool Use2fa) : IRequest<ErrorOr<RegistrationResultDto>>;
+public record RegisterCommand(string Username, string Password, string PasswordConfirm, bool Use2fa) : IRequest<ErrorOr<RegistrationResultDto>>;

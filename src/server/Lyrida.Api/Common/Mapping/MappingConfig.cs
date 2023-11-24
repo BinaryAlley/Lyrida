@@ -26,22 +26,16 @@ public class MappingConfig : IRegister
     {
         TypeAdapterConfig<AuthenticationResultDto, LoginResponseDto>.NewConfig()
             .Map(dest => dest.Id, src => src.User.Id)
-            .Map(dest => dest.FirstName, src => src.User.FirstName)
-            .Map(dest => dest.LastName, src => src.User.LastName)
-            .Map(dest => dest.Email, src => src.User.Email)
+            .Map(dest => dest.Username, src => src.User.Username)
             .Map(dest => dest.UsesTotp, src => src.User.UsesTotp)
             .Map(dest => dest.Token, src => src.Token);
         TypeAdapterConfig<AuthenticationResultDto, AuthenticationResponseDto>.NewConfig()
             .Map(dest => dest.Id, src => src.User.Id)
-            .Map(dest => dest.FirstName, src => src.User.FirstName)
-            .Map(dest => dest.LastName, src => src.User.LastName)
-            .Map(dest => dest.Email, src => src.User.Email)
+            .Map(dest => dest.Username, src => src.User.Username)
             .Map(dest => dest.Token, src => src.Token);
         TypeAdapterConfig<RegistrationResultDto, AuthenticationResponseDto>.NewConfig()
             .Map(dest => dest.Id, src => src.User.Id)
-            .Map(dest => dest.FirstName, src => src.User.FirstName)
-            .Map(dest => dest.LastName, src => src.User.LastName)
-            .Map(dest => dest.Email, src => src.User.Email)
+            .Map(dest => dest.Username, src => src.User.Username)
             .Map(dest => dest.TotpSecret, src => src.User.TotpSecret);
     }
     #endregion

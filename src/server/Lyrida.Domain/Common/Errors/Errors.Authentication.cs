@@ -19,7 +19,7 @@ public static partial class Errors
         public static Error InvalidUsername => Error.Validation(nameof(InvalidUsername));
         public static Error InvalidTotpCode => Error.Failure(nameof(InvalidTotpCode));
         public static Error TokenAlreadyIssued => Error.Failure(nameof(TokenAlreadyIssued));
-        public static Error DuplicateEmailError => Error.Conflict(nameof(DuplicateEmailError));
+        public static Error DuplicateUsernameError => Error.Conflict(nameof(DuplicateUsernameError));
         public static Error AccountAlreadyVerified => Error.Failure(nameof(AccountAlreadyVerified));
         #endregion
     }

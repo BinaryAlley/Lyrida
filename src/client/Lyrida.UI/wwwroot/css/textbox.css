@@ -33,7 +33,11 @@
     outline: none;
 }
 
-/* Disabled State */
+/* Placeholder Text State */
+.enlightenment-input::placeholder  {
+    color: #999;
+}
+
 .enlightenment-input:disabled {
     color: #999;
     background: var(--window-back-color);

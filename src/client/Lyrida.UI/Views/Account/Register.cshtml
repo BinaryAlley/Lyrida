@@ -18,46 +18,18 @@
                     </td>
                 </tr>
             }
-            <!-- section first name -->
+            <!-- section username -->
             <tr>
                 <td class="w-25">
-                    <label for="registerFirstName" class="text-light-one">@translationService.Translate(Terms.FirstName)</label>
+                    <label for="registerUsername" class="text-light-one">Username</label>
                 </td>
                 <td class="w-75">
-                    <input type="text" class="w-95 enlightenment-input" id="registerFirstName" name="firstName" value="@Model.FirstName">
+                    <input type="text" class="w-95 enlightenment-input" id="registerUsername" name="username" value="@Model.Username">
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
-                    <span id="registerFirstNameError" class="invalid-feedback hidden"></span>
-                </td>
-            </tr>
-            <!-- section last name -->
-            <tr>
-                <td class="w-25">
-                    <label for="registerLastName" class="text-light-one">@translationService.Translate(Terms.LastName)</label>
-                </td>
-                <td class="w-75">
-                    <input type="text" class="w-95 enlightenment-input" id="registerLastName" name="lastName" value="@Model.LastName">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <span id="registerLastNameError" class="invalid-feedback hidden"></span>
-                </td>
-            </tr>
-            <!-- section email -->
-            <tr>
-                <td class="w-25">
-                    <label for="registerEmail" class="text-light-one">Email</label>
-                </td>
-                <td class="w-75">
-                    <input type="email" class="w-95 enlightenment-input" id="registerEmail" name="email" value="@Model.Email" autocomplete="email">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <span id="registerEmailError" class="invalid-feedback hidden"></span>
+                    <span id="registerUsernameError" class="invalid-feedback hidden"></span>
                 </td>
             </tr>
             <!-- section password -->
@@ -155,9 +127,7 @@
                     },
                     success: function (data) {
                         const registerForm = $('#registerForm');
-                        const registerFirstNameError = $('#registerFirstNameError');
-                        const registerLastNameError = $('#registerLastNameError');
-                        const registerEmailError = $('#registerEmailError');
+                        const registerUsernameError = $('#registerUsernameError');
                         const registerPasswordError = $('#registerPasswordError');
                         const registerPasswordConfirmError = $('#registerPasswordConfirmError');
                         const registerSuccess = $('#registerSuccess');
@@ -165,9 +135,7 @@
                         const registerError = $('#registerError');
                         const totpImage = $('#totpImage');
                         const totpMessage = $('#totpMessage');
-                        registerFirstNameError.removeClass('inline').addClass('hidden');
-                        registerLastNameError.removeClass('inline').addClass('hidden');
-                        registerEmailError.removeClass('inline').addClass('hidden');
+                        registerUsernameError.removeClass('inline').addClass('hidden');
                         registerPasswordError.removeClass('inline').addClass('hidden');
                         registerPasswordConfirmError.removeClass('inline').addClass('hidden');
                         registerSuccess.removeClass('inline').addClass('hidden');
@@ -176,9 +144,7 @@
                         totpImage.removeClass('inline').addClass('hidden');
                         totpMessage.removeClass('inline').addClass('hidden');
                         if (data.success) {
-                            $('#registerFirstName').val('');
-                            $('#registerLastName').val('');
-                            $('#registerEmail').val('');
+                            $('#registerUsername').val('');
                             $('#registerPassword').val('');
                             $('#registerPasswordConfirm').val('');
                             registerForm.removeClass('inline').addClass('hidden');
@@ -190,12 +156,8 @@
                                 totpImage.attr("src", data.registrationData.totpSecret);
                             }
                         } else {
-                            if (data.firstNameError)
-                                registerFirstNameError.text(data.firstNameError).removeClass('hidden').addClass('inline');
-                            if (data.lastNameError)
-                                registerLastNameError.text(data.lastNameError).removeClass('hidden').addClass('inline');
-                            if (data.emailError)
-                                registerEmailError.text(data.emailError).removeClass('hidden').addClass('inline');
+                            if (data.usernameError)
+                                registerUsernameError.text(data.usernameError).removeClass('hidden').addClass('inline');
                             if (data.passwordError)
                                 registerPasswordError.text(data.passwordError).removeClass('hidden').addClass('inline');
                             if (data.passwordConfirmError)

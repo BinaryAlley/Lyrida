@@ -3,6 +3,7 @@ using System;
 using Newtonsoft.Json;
 using System.Net.Http;
 using Lyrida.UI.Common.Api;
+using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -56,8 +57,13 @@ public class FileSystemController : Controller
             string response = await apiHttpClient.GetAsync($"account/getPreferences", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
             ProfilePreferencesDto? profilePreferences = JsonConvert.DeserializeObject<ProfilePreferencesDto>(response);
             response = await apiHttpClient.GetAsync($"pages", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+            PageDto[]? pages = JsonConvert.DeserializeObject<PageDto[]>(response);
+            response = await apiHttpClient.GetAsync($"environments", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+            FileSystemDataSourceDto[]? environments = JsonConvert.DeserializeObject<FileSystemDataSourceDto[]>(response);
+
             ViewData["Preferences"] = profilePreferences;
-            ViewData["InitialPages"] = JsonConvert.DeserializeObject<List<PageDto>>(response);
+            ViewData["InitialPages"] = pages;
+            ViewData["Environments"] = environments;
             return View("Index");
         }
         catch (HttpRequestException)
@@ -109,6 +115,19 @@ public class FileSystemController : Controller
             Data = Convert.ToBase64String(response.Data),
             MimeType = response.ContentType
         });
+    }
+
+    /// <summary>
+    /// Adds or updates a file system data source.
+    /// </summary>
+    /// <param name="dataSource">The file system data source to add or update.</param>
+    [HttpPost("AddDataSource")]
+    public async Task<IActionResult> AddDataSource([FromBody] FileSystemDataSourceDto dataSource)
+    {
+        PlatformType platform = (PlatformType)HttpContext.Items["Platform"]!;
+        EnvironmentType environment = (EnvironmentType)HttpContext.Items["Environment"]!;
+        var response = await apiHttpClient.PostAsync($"environments", dataSource, HttpContext.Items["UserToken"]?.ToString(), translationService.Language, environment, platform);
+        return Json(new { success = true, message = translationService.Translate(Terms.DataSourceSaved) });
     }
 
     /// <summary>
@@ -329,7 +348,8 @@ public class FileSystemController : Controller
     [HttpPost("AddPage")]
     public async Task<IActionResult> AddPage([FromBody] PageDto page)
     {
-        await apiHttpClient.PostAsync($"pages", page, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+        if (page.EnvironmentId != null)
+            await apiHttpClient.PostAsync($"pages", page, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
         return Json(new { success = true });
     }
 
@@ -341,17 +361,6 @@ public class FileSystemController : Controller
     public async Task<IActionResult> RemovePage([FromBody] string guid)
     {
         await apiHttpClient.DeleteAsync($"pages/{guid}", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
-        return Json(new { success = true });
-    }
-
-    /// <summary>
-    /// Updates an existing user page
-    /// </summary>
-    /// <param name="page">The page to be updated</param>
-    [HttpPost("UpdatePage")]
-    public async Task<IActionResult> UpdatePage([FromBody] PageDto page)
-    {
-        await apiHttpClient.PutAsync($"pages", page, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
         return Json(new { success = true });
     }
     #endregion

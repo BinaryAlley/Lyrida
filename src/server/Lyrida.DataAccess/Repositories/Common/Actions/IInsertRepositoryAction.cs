@@ -17,10 +17,10 @@ public interface IInsertRepositoryAction<TDto> where TDto : IStorageDto
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Saves an element of type <typeparamref name="TDto"/> in the storage medium
+    /// Saves an element of type <typeparamref name="TDto"/> in the storage medium.
     /// </summary>
-    /// <param name="data">The element to be saved</param>
-    /// <returns>The result of saving <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse{TDto}"/></returns>
+    /// <param name="data">The element to be saved.</param>
+    /// <returns>The result of saving <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse{TDto}"/>.</returns>
     Task<ApiResponse<TDto>> InsertAsync(TDto data);
     #endregion
 }

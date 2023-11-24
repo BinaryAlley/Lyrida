@@ -5,10 +5,9 @@ using ErrorOr;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Lyrida.Application.Core.Authorization;
 using Lyrida.Domain.Core.FileSystem.Entities;
-using Lyrida.Domain.Core.FileSystem.Services.Files;
 using Lyrida.Application.Common.DTO.FileSystem;
+using Lyrida.Domain.Core.FileSystem.Services.Files;
 #endregion
 
 namespace Lyrida.Application.Core.FileSystem.Files.Queries.Read;
@@ -38,9 +37,9 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, ErrorOr<IEnum
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Gets the list of files at the specified path
+    /// Gets the list of files at the specified path.
     /// </summary>
-    /// <returns>A list of files</returns>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a collection of files, or an error.</returns>
     public async Task<ErrorOr<IEnumerable<FileDto>>> Handle(GetFilesQuery query, CancellationToken cancellationToken)
     {
         ErrorOr<IEnumerable<File>> result = await fileService.GetFilesAsync(query.Path);

@@ -1,5 +1,5 @@
 # Lyrida: web-based file explorer
-Explore your files with ease and flexibility. Lyrida is an open-source, web-based client/server file explorer designed to streamline the way you interact with your filesystem in the browser. With Lyrida, simplicity meets functionality, giving you the power to manage your files efficiently, without the need for complex setups.
+Explore your files with ease and flexibility. Lyrida is an open-source, web-based client/server file explorer, designed to streamline the way you interact with your filesystem in the browser. With Lyrida, simplicity meets functionality, giving you the power to manage your files efficiently, without the need for complex setups.
 
 ![Lyrida file explorer](./documents/screenshots/001.png)
 
@@ -30,7 +30,7 @@ You can open multiple tabs, each with a different data source, location, display
 
 Lyrida offers six file system display layouts - list, details, and four icon sizes (small to extra large) - reflecting the versatile design of desktop file explorers. Optimized for both large and small screens, the layouts ensure a seamless experience on desktops, mobile phones, and tablets. The responsive interface smartly adjusts to the screen size, while the functionality, such as selection and navigation, is intuitively designed for interaction with either a mouse or touch, depending on your device.
 
-### Photo, video and text viewer
+### Photo, audio, video and text viewer
 
 Lyrida offers customizable media viewing options. You can choose to display thumbnails for image files, which also open in a full-width carousel for an immersive viewing experience. This carousel includes a filmstrip of thumbnails at the bottom, allowing for swift navigation between images. Integrated audio and video players are designed to stream your audio and video files effectively (to be implemented). Additionally, Lyrida provides a preview pane for text files, allowing you to glimpse the content without downloading and opening the file in a separate application.
 
@@ -42,7 +42,7 @@ Multiple other features are available, and they are listed in the detailed prese
 
 ## Documentation
 
-- **[Installation]()**
+- **[Installation](./documents/INSTALLATION.MD)**
 - **[Usage]()**
 - **[FAQ]()**
 
@@ -69,17 +69,22 @@ Several icons used in this project were adapted from icons sourced from [OnlineW
 
 - [`os.svg`](https://www.onlinewebfonts.com/icon/241211)
 - [`cut.svg`](https://www.onlinewebfonts.com/icon/52112)
-- [`ftp.svg`](https://www.onlinewebfonts.com/icon/248291)
 - [`atom.svg`](https://www.onlinewebfonts.com/icon/193445)
 - [`copy.svg`](https://www.onlinewebfonts.com/icon/569600)
 - [`move.svg`](https://www.onlinewebfonts.com/icon/233790)
 - [`link.svg`](https://www.onlinewebfonts.com/icon/389791)
 - [`paste.svg`](https://www.onlinewebfonts.com/icon/487532)
+- [`cursor.svg`](https://www.onlinewebfonts.com/icon/521421)
 - [`delete.svg`](https://www.onlinewebfonts.com/icon/564261)
 - [`rename.svg`](https://www.onlinewebfonts.com/icon/138529)
 - [`download.svg`](https://www.onlinewebfonts.com/icon/574052)
 - [`new-file.svg`](https://www.onlinewebfonts.com/icon/569609)
 - [`new-directory.svg`](https://www.onlinewebfonts.com/icon/572641)
+
+Some other icons were taken from [UXWing Icons](https://uxwing.com/). Although the license doesn't require a mention of author, still, here it is:
+
+- [`ftp.svg`](https://uxwing.com/ftp-icon/)
+- [`sftp.svg`](https://uxwing.com/sftp-icon/)
 
 ### Image viewer
 

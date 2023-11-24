@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Lyrida.Domain.Common.Enums;
 using Lyrida.Domain.Common.Errors;
-using Lyrida.Domain.Core.FileSystem.Services.Permissions;
 using Lyrida.Domain.Core.FileSystem.ValueObjects;
+using Lyrida.Domain.Core.FileSystem.Services.Permissions;
 #endregion
 
 namespace Lyrida.Domain.Core.FileSystem.Services.Directories.DirectoryProviderStrategies;
@@ -108,7 +108,7 @@ internal class FtpDirectoryProviderStrategy : IFtpDirectoryProviderStrategy
     /// <summary>
     /// Creates a new directory with the specified name, at the specified path.
     /// </summary>
-    /// <param name="path">The path where the directory will be created..</param>
+    /// <param name="path">The path where the directory will be created.</param>
     /// <param name="name">The name of the directory that will be created.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either the path of a created directory, or an error.</returns>
     public ErrorOr<FileSystemPathId> CreateDirectory(FileSystemPathId path, string name)

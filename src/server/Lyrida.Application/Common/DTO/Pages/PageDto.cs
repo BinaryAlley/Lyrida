@@ -16,10 +16,12 @@ public sealed class PageDto
     #region ==================================================================== PROPERTIES =================================================================================
     public int Id { get; set; }
     public int UserId { get; set; }
-    public Guid Uuid { get; set; }
+    public Guid PageId { get; set; }
     public string? Title { get; set; }
     public string? Path { get; set; }
-    public int PlatformId { get; set; }
+    public Guid EnvironmentId { get; set; }
+    public DateTime Created { get; set; }
+    public DateTime Updated { get; set; }
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================

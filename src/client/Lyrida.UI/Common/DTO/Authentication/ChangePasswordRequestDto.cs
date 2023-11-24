@@ -10,11 +10,11 @@ namespace Lyrida.UI.Common.DTO.Authentication;
 /// <remarks>
 /// Creation Date: 01st of August, 2023
 /// </remarks>
-[DebuggerDisplay("{Email}")]
+[DebuggerDisplay("{Username}")]
 public class ChangePasswordRequestDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    public string? Email { get; set; }
+    public string? Username { get; set; }
     public string? CurrentPassword { get; set; }
     public string? NewPassword { get; set; }
     public string? NewPasswordConfirm { get; set; }

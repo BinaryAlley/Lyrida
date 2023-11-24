@@ -15,12 +15,12 @@ public interface IRepository<TDto> where TDto : IStorageDto
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Opens a transaction
+    /// Opens a transaction.
     /// </summary>
     void OpenTransaction();
 
     /// <summary>
-    /// Closes a transaction, rolls back changes if the transaction was faulty
+    /// Closes a transaction, rolls back changes if the transaction was faulty.
     /// </summary>
     void CloseTransaction();
     #endregion

@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Net.Http;
 using Lyrida.Infrastructure.Common.Enums;
+using Newtonsoft.Json;
+using Lyrida.UI.Common.DTO.FileSystem;
+using System.Linq;
 #endregion
 
 namespace Lyrida.Client.Controllers;
@@ -49,19 +52,25 @@ public class HomeController : Controller
             // check if the web app was initialized
             var response = await apiHttpClient.GetAsync("initialization/", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
             if (response == "true") // application was initialized
-                return RedirectToAction("Index", "FileSystem");
+            {
+                response = await apiHttpClient.GetAsync($"environments", HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
+                return View(JsonConvert.DeserializeObject<FileSystemDataSourceDto[]>(response)); 
+            }
             else
                 // TODO: should be:
                 // return View("~/Views/Account/Register", new RegisterRequestDto());
                 // but doesn't work because of an ASP.NET bug: https://github.com/dotnet/AspNetCore.Docs/issues/25157
                 return RedirectToAction("Register", "Account");
         }
-        catch (ApiException)
+        catch (ApiException ex)
         {
             // if it got here, assume something bad, and sign out
             Response.Cookies.Delete("Token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Register", "Account");
+            if (ex.Error?.Errors?.First() == translationService.Translate(Terms.UninitializedDatabaseError))
+                return RedirectToAction("Register", "Account");
+            else
+                return RedirectToAction("Login", "Account");
         }
         catch (HttpRequestException)
         {

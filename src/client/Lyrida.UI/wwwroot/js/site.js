@@ -2,15 +2,16 @@
 //       - save history to db, so that getting logged out doesn't clear it, upon re-login
 //       - add user preference to refresh current dirrectory after cut/copy/paste/delete operation (slower, but accurate)
 //       - add customizable date time format for details view
+//       - add search functionality
 
 // test placeholders
-const environmentTypes = [
-    // ORDER OF ENVIRONMENTS MATTERS! (or, at least, their ID's must remain unchanged..)
-    { id: 1, title: "Local File System", "name": "local", platformType: "Unix", initialPath: "/app/" },
-    { id: 2, title: "Local File System", "name": "local", platformType: "Windows", initialPath: "C:\\Users\\Andromeda\\Desktop" },
-    { id: 3, title: "File Transfer Protocol", "name": "ftp", platformType: "Unix", initialPath: "ftp://user:pasword@hostname:21/home/user" },
-    { id: 4, title: "Google Drive", "name": "gdrive", platformType: "Unix", initialPath: "/test/address/" },
-];
+//const environmentTypes = [
+//    // ORDER OF ENVIRONMENTS MATTERS! (or, at least, their ID's must remain unchanged..)
+//    { id: 1, title: "Local File System", "name": "local", platformType: "Unix", initialPath: "/app/" },
+//    { id: 2, title: "Local File System", "name": "local", platformType: "Windows", initialPath: "C:\\Users\\Andromeda\\Desktop" },
+//    { id: 3, title: "File Transfer Protocol", "name": "ftp", platformType: "Unix", initialPath: "ftp://user:pasword@hostname:21/home/user" },
+//    { id: 4, title: "Google Drive", "name": "gdrive", platformType: "Unix", initialPath: "/test/address/" },
+//];
 
 // ==================================
 // Constants
@@ -111,11 +112,9 @@ const dropContextMenu = document.getElementById('dropContextMenu');
 const btnTreeView = document.getElementById('btnTreeView');
 const btnPreview = document.getElementById('btnPreview');
 const btnSplitView = document.getElementById('btnSplitView');
-const btnNavigate = document.getElementById('btnNavigate');
 const btnEditPath = document.getElementById('btnEditPath');
 const btnNavigateBack = document.getElementById('btnNavigateBack');
 const btnNavigateForward = document.getElementById('btnNavigateForward');
-const btnUpOneLevel = document.getElementById('btnUpOneLevel');
 const visibleSelectionRectangle = document.getElementById('visibleSelectionRectangle');
 const selectionRectangle = document.getElementById('selectionRectangle');
 const progressIndicator = document.getElementById('progressIndicator');
@@ -175,29 +174,31 @@ function getActiveExplorer() {
 // ==================================
 
 // these variables are declared inside FileSystem/Index!
-if (typeof window.showThumbnails === "undefined")
+if (typeof window.showThumbnails === 'undefined')
     window.showThumbnails = true; // whether to show thumbnails or not
-if (typeof window.imagePreviewsQuality === "undefined")
+if (typeof window.imagePreviewsQuality === 'undefined')
     window.imagePreviewsQuality = 70; // the quality used for image thumbnails
-if (typeof window.fullImageQuality === "undefined")
+if (typeof window.fullImageQuality === 'undefined')
     window.fullImageQuality = 90; // the quality used for full images
-if (typeof window.scrollThumbnailRetrievalTimeout === "undefined")
+if (typeof window.scrollThumbnailRetrievalTimeout === 'undefined')
     window.scrollThumbnailRetrievalTimeout = 1000; // the time span to wait after the last scroll, before getting thumbnails
-if (typeof window.thumbnailsRetrievalBatchSize === "undefined")
+if (typeof window.thumbnailsRetrievalBatchSize === 'undefined')
     window.thumbnailsRetrievalBatchSize = 20; // the number of thumbnails to ask from the server, concurrently
-if (typeof window.rememberOpenTabs === "undefined")
+if (typeof window.rememberOpenTabs === 'undefined')
     window.rememberOpenTabs = true; // whether to keep track of open tabs or not
-if (typeof window.inspectFileForThumbnails === "undefined")
+if (typeof window.inspectFileForThumbnails === 'undefined')
     window.inspectFileForThumbnails = false; // whether to check the actual header bytes in order to determine if a file is an image, rather than its extension
-if (typeof window.enableConsoleDebugMessages === "undefined")
+if (typeof window.enableConsoleDebugMessages === 'undefined')
     window.enableConsoleDebugMessages = false; // whether to display debug messages at the developer console, or not
+if (typeof window.environmentTypes === 'undefined') // the list of available environments, enabled by the user
+    window.environmentTypes = {};
 
 let scrollTimeout; // timeout to delay thumbnail loading after scrolling
 let resizeTimeout; // timeout to delay thumbnail loading after resizing
 let hasScrolledAfterModeChange = false; // flag to track if scrolling occurred after a mode change
 let abortController; // allows the cancellation of thumbnail retrieval jobs
 let activeTabId; // tracks the currently active tab's ID
-let activeEnvironmentId = 0; // tracks the currently active platform ID, used for creating a new tab
+let activeEnvironmentId = ''; // tracks the currently active platform ID, used for creating a new tab 
 let addressBarWidth;
 let addressBarCachedScroll = 0;
 let selectionStartPosition = { x: 0, y: 0 };
@@ -214,8 +215,6 @@ let toastContent = '';
 var ajaxCallCounter = 0;
 
 let navigationHistory = {};
-
-window.Permissions = [];
 
 // ==================================
 // Event Handlers
@@ -321,10 +320,12 @@ if (addressBar)
 if (btnTreeView)
     btnTreeView.addEventListener('click', function () {
         const treeview = getActiveTreeview();
-        const computedStyle = window.getComputedStyle(treeview);
-        // using computedStyle to check the actual styles being applied to the element
-        treeview.style.width = computedStyle.width === '0px' ? '100px' : '0px';
-        treeview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+        if (treeview !== null) {
+            const computedStyle = window.getComputedStyle(treeview);
+            // using computedStyle to check the actual styles being applied to the element
+            treeview.style.width = computedStyle.width === '0px' ? '100px' : '0px';
+            treeview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+        }
     });
 
 /**
@@ -333,10 +334,12 @@ if (btnTreeView)
 if (btnPreview)
     btnPreview.addEventListener('click', function () {
         const preview = getActivePreview();
-        const computedStyle = window.getComputedStyle(preview);
-        // using computedStyle to check the actual styles being applied to the element
-        preview.style.width = computedStyle.width === '0px' ? '150px' : '0px';
-        preview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+        if (preview !== null) {
+            const computedStyle = window.getComputedStyle(preview);
+            // using computedStyle to check the actual styles being applied to the element
+            preview.style.width = computedStyle.width === '0px' ? '150px' : '0px';
+            preview.style.visibility = computedStyle.visibility === 'hidden' ? 'visible' : 'hidden';
+        }
     });
 
 /**
@@ -348,16 +351,6 @@ if (btnSplitView)
     });
 
 /**
-* Event handler for the navigate button click.
-*/
-if (btnNavigate)
-    btnNavigate.addEventListener('click', function () {
-        parsePath(true, false, false);
-        addressBarInput.style.display = 'none';
-        addressBar.style.display = 'block';
-    });
-
-/**
  * Event handler for the edit path button click.
  */
 if (btnEditPath)
@@ -365,14 +358,6 @@ if (btnEditPath)
         addressBarInput.style.display = 'block';
         addressBarInput.focus();
         addressBar.style.display = 'none';
-    });
-
-/**
- * Event handler for the navigate up one level button click.
- */
-if (btnUpOneLevel)
-    btnUpOneLevel.addEventListener('click', function () {
-        goUpOneLevel();
     });
 
 /**
@@ -519,17 +504,6 @@ if (btnSelectInverse)
     });
 
 /**
- * Event handler for the addressbar input keypress events.
- */
-if (addressBarInput)
-    addressBarInput.addEventListener('keypress', function (event) {
-        if (event.key === 'Enter') {  
-            event.preventDefault();  
-            parsePath(true, false, false);
-        }
-    });
-
-/**
  * Event handler for the rename input keypress events.
  */
 if (renameInput)
@@ -540,18 +514,6 @@ if (renameInput)
         } else if (event.key === 'Escape') {
             isEscapePressed = true;
             renameInput.blur();
-        }
-    });
-
-/**
- * Event handler for the addressbar input keydown events.
- */
-if (addressBarInput)
-    addressBarInput.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            event.preventDefault();  // prevent any default action
-            addressBarInput.style.display = 'none'; // Hide #addressBarInput
-            addressBar.style.display = 'block'; // Show #addressBar
         }
     });
 
@@ -725,11 +687,11 @@ function showExtraDetails() {
  * Fetches directory and file data for the given file system path. 
  * @param {string} path - The file system path to fetch data from.
  * @param {string} environmentId - The Id of the environment for which to fetch the data at the provided path.
- * @param {string} uuid - The UUID associated with the current explorer instance.
+ * @param {string} pageId - The UUID associated with the current explorer instance.
  * @param {string} title - The title of the tab.
  * @param {Function} callback - A function to be executed after successful data retrieval.
  */
-function fetchDataForPath(path, environmentId, uuid, title, callback) {
+function fetchDataForPath(path, environmentId, pageId, title, callback) {
     if (path !== null) {
         showBusyIndicator();
         // fetch directory data for the path.
@@ -737,18 +699,20 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
             url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(path),
             type: 'GET',
             headers: {
-                "X-Environment-Type": environmentId.toString()
+                "X-Environment-Type": environmentTypes[environmentId].type,
+                "X-Platform-Type": environmentTypes[environmentId].platformType
             },
             success: function (directoriesData) {
                 if (directoriesData.success) {
                     if (rememberOpenTabs)
-                        updatePageInStorage(uuid, path, environmentId, title);
+                        updatePageInStorage(pageId, path, environmentId, title);
                     // fetch file data, upon successful directory fetch.
                     $.ajax({
                         url: baseUrl + '/FileSystem/GetFiles?path=' + encodeURIComponent(path),
                         type: 'GET',
                         headers: {
-                            "X-Environment-Type": environmentId.toString()
+                            "X-Environment-Type": environmentTypes[environmentId].type,
+                            "X-Platform-Type": environmentTypes[environmentId].platformType
                         },
                         success: function (filesData) {
                             if (filesData.success) {
@@ -798,7 +762,7 @@ function fetchDataForPath(path, environmentId, uuid, title, callback) {
  * Navigates up one level from the current path
  */
 function goUpOneLevel() {
-    const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId); // TODO: check if implementation can be simplified
+    const foundEnvironment = environmentTypes[activeEnvironmentId]; 
     const foundEnvironmentPlatformType = foundEnvironment.platformType;
     const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
     if (!addressBarInput.value.endsWith(separator))
@@ -809,7 +773,8 @@ function goUpOneLevel() {
         url: baseUrl + '/FileSystem/GoUpOneLevel?path=' + encodeURIComponent(path),
         type: 'GET',
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": foundEnvironment.type,
+            "X-Platform-Type": foundEnvironmentPlatformType
         },
         success: function (data) {
             if (data.success) {
@@ -868,25 +833,25 @@ function goUpOneLevel() {
  * Fetches directory and file data for the tab and renders its content.
  * @param {string} title - The title of the tab.
  * @param {string} path - The file path associated with the tab.
- * @param {number} platformId - The platform ID for the tab.
- * @param {string} uuid - The UUID associated with the current explorer instance.
+ * @param {number} environmentId - The environment ID for the tab.
+ * @param {string} pageId - The UUID associated with the current explorer instance.
 */
-function addNewTab(title, path, platformId, uuid) {
-    if (platformId !== null)
-        activeEnvironmentId = platformId;
+function addNewTab(title, path, environmentId, pageId) {     
+    if (environmentId !== null)
+        activeEnvironmentId = environmentId;
     // determine the tab ID
     const currentTabId = nextTabId++;
     // construct the new page object
-    const newPage = { title: title, path: path, tabId: currentTabId, platformId: activeEnvironmentId };
+    const newPage = { title: title, path: path, tabId: currentTabId, environmentId: activeEnvironmentId };
     openTabs.push(newPage);
     // render the new tab's header
     renderTabHeader(newPage);
     // set the current path as the title of the tab header
     document.getElementById(`tabHeader${currentTabId}`).setAttribute("title", path);
     // fetch directory data for the new tab
-    fetchDataForPath(path, activeEnvironmentId, uuid, title, function (data) {
+    fetchDataForPath(path, activeEnvironmentId, pageId, title, function (data) {
         // render the tab's content and bind events.
-        renderTabPage(currentTabId, data, uuid);
+        renderTabPage(currentTabId, data, pageId);
         bindEventsToActiveExplorer();
         switchViewMode(setListViewMode, false);
     });
@@ -911,9 +876,9 @@ function updateCurrentTab(path, title, isHistoryNavigation, isBackNavigation) {
         // update the tab header title
         let tabHeader = document.getElementById(`tabHeader${activeTabId}`);
         explorer.setAttribute("data-path", path);
-        const uuid = explorer.getAttribute("data-uuid");
+        const pageId = explorer.getAttribute("data-page-id");
         tabHeader.getElementsByTagName('a')[0].textContent = title;
-        fetchDataForPath(path, activeEnvironmentId, uuid, title, function (data) {
+        fetchDataForPath(path, activeEnvironmentId, pageId, title, function (data) {
             // update the current tab's content with the fetched data
             updateTabContent(activeTabId, data);
             // rebind necessary event handlers to the updated content
@@ -972,17 +937,16 @@ function switchTab(tabId) {
     // set the current tab as active
     $(`#tabHeader${tabId}`).addClass('active');
     const explorer = document.getElementById(`explorer${tabId}`);
-    const environmentId = Number(explorer.getAttribute('data-environment'));
-    const environment = environmentTypes.find(item => item.id === environmentId);
+    const environmentId = explorer.getAttribute('data-environment');
+    const environment = environmentTypes[environmentId];
     activeEnvironmentId = environmentId;
     // set the environment drop down values (title, icon, etc)
-    const environmentsCombobox = document.getElementById('environmentsCombobox');
     const imgElement = environmentsCombobox.querySelector("label.enlightenment-toggle img");
-    if (typeof environment !== 'undefined') { //getEnvironmentIconPath(type);
+    if (typeof environment !== 'undefined') { 
         imgElement.src = getEnvironmentIconPath(environment);
-        imgElement.setAttribute('title', (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title);
-        imgElement.setAttribute('alt', (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title);
-        environmentsCombobox.setAttribute('title', (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title);
+        imgElement.setAttribute('title', (environment.type === "local") ? `${environment.title} (${environment.platformType})` : environment.title);
+        imgElement.setAttribute('alt', (environment.type === "local") ? `${environment.title} (${environment.platformType})` : environment.title);
+        environmentsCombobox.setAttribute('title', (environment.type === "local") ? `${environment.title} (${environment.platformType})` : environment.title);
     }
     else {
         imgElement.setAttribute('title', imgElement.getAttribute('data-default-text'));
@@ -1035,8 +999,8 @@ function renderTabHeader(page) {
         const prevTab = $(tabHeader).prev('li');
         // remove the page from storage
         if (rememberOpenTabs) {
-            const uuid = $(`#explorer${page.tabId}`).data('uuid');
-            removePageFromStorage(uuid);
+            const pageId = $(`#explorer${page.tabId}`).data('page-id');
+            removePageFromStorage(pageId);
         }
         // remove current tab header and content
         tabHeader.remove();
@@ -1059,7 +1023,6 @@ function renderTabHeader(page) {
         if (openTabs.length === 0) {
             addressBarInput.value = '';
             renderAddressBar(null);
-            const environmentsCombobox = document.getElementById('environmentsCombobox');
             const imgElement = environmentsCombobox.querySelector("label.enlightenment-toggle img");
             imgElement.setAttribute('title', imgElement.getAttribute('data-default-text'));
             imgElement.setAttribute('alt', imgElement.getAttribute('data-default-text'));
@@ -1114,14 +1077,14 @@ function renderTabHeader(page) {
  * Renders the content for a given tab using provided data.
  * @param {string} tabId - The unique identifier for the tab.
  * @param {Object} data - Data containing directories and files to be rendered.
- * @param {string} uuid - The UUID associated with the current explorer instance.
+ * @param {string} pageId - The UUID associated with the current explorer instance.
 */
-function renderTabPage(tabId, data, uuid) {
+function renderTabPage(tabId, data, pageId) {
     // DOM Elements
     const drivesContainer = createContainer(`drivesContainer${tabId}`);
     const explorerContainer = createContainer(`explorerContainer${tabId}`, "scrollHorizontal");
     const detailsHeader = createDetailsHeader(tabId);
-    const explorer = createExplorer(tabId, data !== null ? data.path : null, uuid !== null ? uuid : null);
+    const explorer = createExplorer(tabId, data !== null ? data.path : null, pageId !== null ? pageId : null);
     const previewContainer = createContainer(`previewContainer${tabId}`);
     // populate explorer with directories and files
     if (data !== null)
@@ -1335,15 +1298,15 @@ function createDetailsHeader(tabId) {
  * Creates the main explorer container for directories and files.
  * @param {string} tabId - The ID associated with the current tab.
  * @param {string} path - The data-path attribute to set on the explorer.
- * @param {string} uuid - The UUID associated with the current explorer instance.
+ * @param {string} pageId - The UUID associated with the current explorer instance.
  * @returns {HTMLElement} - Returns the created explorer container.
  */
-function createExplorer(tabId, path, uuid) {
-    const guid = uuid !== null ? uuid : generateUUID();
+function createExplorer(tabId, path, pageId) {
+    const guid = pageId !== null ? pageId : generateUUID();
     const explorer = createContainer(`explorer${tabId}`, "List");
     explorer.setAttribute("data-path", path);
     explorer.setAttribute("data-environment", activeEnvironmentId);
-    explorer.setAttribute("data-uuid", guid);
+    explorer.setAttribute("data-page-id", guid);
     explorer.style.flexDirection = "column"; // TODO: change based on preferences of initial display view    
     explorer.addEventListener('mouseup', (event) => {
         const explorerScrollbars = hasScrollbars(explorer);
@@ -1378,9 +1341,9 @@ function createExplorer(tabId, path, uuid) {
         dropContextMenu.classList.remove('hidden'); // show the context menu
         explorer.classList.remove('dragged');
     });
-    if (rememberOpenTabs && uuid === null) { // only store pages when the option is enabled and its a brand new page, not one already stored
+    if (rememberOpenTabs && pageId === null) { // only store pages when the option is enabled and its a brand new page, not one already stored
         const lastAddedPage = openTabs[openTabs.length - 1];
-        addNewPageToStorage(guid, lastAddedPage.title, lastAddedPage.path, lastAddedPage.platformId);
+        addNewPageToStorage(guid, lastAddedPage.title, lastAddedPage.path, lastAddedPage.environmentId);
     }
     return explorer;
 }
@@ -1786,7 +1749,8 @@ async function getThumbnailApiCall(path, quality) { // hideBusyIndicator();
     // fetch the thumbnail for the given item from the server
     const response = await fetch(baseUrl + '/FileSystem/GetThumbnail?path=' + encodeURIComponent(path) + '&quality=' + quality, {
         headers: {
-            'X-Environment-Type': activeEnvironmentId.toString()
+            'X-Environment-Type': environmentTypes[activeEnvironmentId].type,
+            "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
         },
         signal: abortController.signal // use the abort signal 
     });
@@ -1831,17 +1795,16 @@ function getIconPathForFile(filename, type) {
 
 /**
  * Determines the appropriate SVG icon path based on environment type.
- * @param {Object} type - An environment type object.
- * @param {string} type.name - The name of the environment (e.g., "local", "gdrive").
- * @param {string} type.platformType - The platform type, if applicable (e.g., "windows", "unix").
+ * @param {Object} environment - An environment type object.
+ * @param {string} environment.type - The type of the environment (e.g., "local", "gdrive").
+ * @param {string} environment.platformType - The platform type, if applicable (e.g., "windows", "unix").
  * @returns {string} The relative path to the appropriate SVG image.
 */
-function getEnvironmentIconPath(type) {
-    if (type.name !== "local") {
-        return baseUrl + "/images/ui/" + type.name.toLowerCase() + ".svg";  // Example: "gdrive.svg"
-    } else {
-        return baseUrl + "/images/ui/" + type.platformType.toLowerCase() + ".svg"; // Example: "windows.svg" or "unix.svg"
-    }
+function getEnvironmentIconPath(environment) {
+    if (environment.type !== "local") 
+        return baseUrl + "/images/ui/" + environment.type.toLowerCase() + ".svg";  // example: "gdrive.svg"
+    else 
+        return baseUrl + "/images/ui/" + environment.platformType.toLowerCase() + ".svg"; // example: "windows.svg" or "unix.svg"
 }
 
 /**
@@ -1851,7 +1814,7 @@ function getEnvironmentIconPath(type) {
  * @param {boolean} isBackNavigation - Whether the history navigation is forward or backward.
  */
 function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
-    const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+    const foundEnvironment = environmentTypes[activeEnvironmentId];
     const foundEnvironmentPlatformType = foundEnvironment.platformType;
     const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
     if (!addressBarInput.value.endsWith(separator))
@@ -1871,7 +1834,8 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
         url: baseUrl + '/FileSystem/CheckPath?path=' + encodeURIComponent(path),
         type: 'GET',
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+            "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
         },
         success: function (data) {
             if (data.success) {
@@ -1882,7 +1846,8 @@ function parsePath(needsContentRefresh, isHistoryNavigation, isBackNavigation) {
                     url: baseUrl + '/FileSystem/ParsePath?path=' + encodeURIComponent(path),
                     type: 'GET',
                     headers: {
-                        "X-Environment-Type": activeEnvironmentId.toString()
+                        "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+                        "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
                     },
                     success: function (data) {
                         if (data.success) {
@@ -1976,7 +1941,7 @@ function renderAddressBar(pathSegments) {
             const dropdown = document.createElement("div");
             dropdown.className = "navigator-dropdown";
             dropdown.id = `navigatorDropdown_${index}`;
-            const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+            const foundEnvironment = environmentTypes[activeEnvironmentId];
             const foundEnvironmentPlatformType = foundEnvironment.platformType;
             const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
             // get the segments from start to the current one (on UNIX, start with path separator char!)
@@ -2014,7 +1979,8 @@ function handlePathSegmentComboboxChange(event) {
                 url: baseUrl + '/FileSystem/GetDirectories?path=' + encodeURIComponent(pathValue),
                 type: 'GET',
                 headers: {
-                    "X-Environment-Type": activeEnvironmentId.toString()
+                    "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+                    "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
                 },
                 success: function (directoriesData) {
                     if (directoriesData.success) {
@@ -2047,7 +2013,7 @@ function handlePathSegmentComboboxChange(event) {
                             directoryDiv.dataset.value = pathValue + option.name;
                             directoryDiv.textContent = option.name;
                             directoryDiv.addEventListener('click', function (event) {
-                                const foundEnvironment = environmentTypes.find(environment => environment.id === activeEnvironmentId);
+                                const foundEnvironment = environmentTypes[activeEnvironmentId];
                                 const foundEnvironmentPlatformType = foundEnvironment.platformType;
                                 const separator = (foundEnvironmentPlatformType === "Unix") ? '/' : '\\';
                                 addressBarInput.value = pathValue + (!pathValue.endsWith(separator) ? separator : '') + option.name + separator;
@@ -2148,17 +2114,17 @@ function handleEnvironemtComboboxChange(event) {
 
 /**
  * Adds a new user page to storage
- * @param {guid} guid - The unique id of the page to add
+ * @param {guid} pageId - The unique id of the page to add
  * @param {string} title - The title of the page to add
  * @param {string} path - The path of the page to add
- * @param {int} platformId - The id of the platform of the page to add
+ * @param {int} environmentId - The id of the environment of the page to add
  */
-function addNewPageToStorage(guid, title, path, platformId) {
+function addNewPageToStorage(pageId, title, path, environmentId) {
     const page = {
-        uuid: guid,
+        pageId: pageId,
         title: title,
         path: path,
-        platformId: platformId
+        environmentId: environmentId || null
     };
     showBusyIndicator();
     $.ajax({
@@ -2167,7 +2133,8 @@ function addNewPageToStorage(guid, title, path, platformId) {
         data: JSON.stringify(page),
         contentType: "application/json; charset=utf-8",
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": activeEnvironmentId !== '' ? environmentTypes[activeEnvironmentId].type : 'local',
+            "X-Platform-Type": activeEnvironmentId !== '' ? environmentTypes[activeEnvironmentId].platformType : 'Unix'
         },
         success: function () {
             hideBusyIndicator();
@@ -2184,26 +2151,27 @@ function addNewPageToStorage(guid, title, path, platformId) {
 
 /**
  * Updates a page in the storage
- * @param {guid} guid - The unique id of the page to update
+ * @param {guid} pageId - The unique id of the page to update
  * @param {string} path - The path of the page to update
  * @param {int} environmentId - The id of the platform of the page to update
  * @param {string} title - The title of the page to update
  */
-function updatePageInStorage(guid, path, environmentId, title) {
+function updatePageInStorage(pageId, path, environmentId, title) {
     const page = {
-        uuid: guid,
+        pageId: pageId,
         title: title,
         path: path,
-        platformId: environmentId
+        environmentId: environmentId
     };
     showBusyIndicator();
     $.ajax({
-        url: baseUrl + '/FileSystem/UpdatePage',
+        url: baseUrl + '/FileSystem/AddPage',
         type: 'POST',
         data: JSON.stringify(page),
         contentType: "application/json; charset=utf-8",
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+            "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
         },
         success: function () {
             hideBusyIndicator();
@@ -2220,17 +2188,18 @@ function updatePageInStorage(guid, path, environmentId, title) {
 
 /**
  * Deletes a page from the storage
- * @param {guid} guid - The unique id of the page to delete
+ * @param {guid} pageId - The unique id of the page to delete
  */
-function removePageFromStorage(guid) {
+function removePageFromStorage(pageId) {
     showBusyIndicator();
     $.ajax({
         url: baseUrl + '/FileSystem/RemovePage',
         type: 'POST',
-        data: JSON.stringify(guid),
+        data: JSON.stringify(pageId),
         contentType: 'application/json; charset=utf-8',
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+            "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
         },
         success: function () {
             hideBusyIndicator();
@@ -2284,7 +2253,8 @@ function renameFileSystemElement(renamedElement, newName) {
             data: JSON.stringify({ path: renamedElement.dataset.path, name: newName, isFile: renamedElement.dataset.type === 'file' }),
             contentType: 'application/json',
             headers: {
-                "X-Environment-Type": activeEnvironmentId.toString()
+                "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+                "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
             },
             success: function (data) {
                 if (data.success) {
@@ -2405,7 +2375,8 @@ function pasteElement(element, destinationPath, callback) {
         data: JSON.stringify(dataPayload),
         contentType: 'application/json',
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+            "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
         },
         success: function (data) {
             if (data.success) {
@@ -2546,7 +2517,8 @@ function deleteElements(elements) {
             type: 'DELETE',
             contentType: 'application/json',
             headers: {
-                "X-Environment-Type": activeEnvironmentId.toString()
+                "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+                "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
             },
             success: function (data) {
                 completedCount++;
@@ -2593,7 +2565,8 @@ function createNewDirectory(explorer, path, name) {
         data: JSON.stringify({ path: path, name: name }),
         contentType: 'application/json',
         headers: {
-            "X-Environment-Type": activeEnvironmentId.toString()
+            "X-Environment-Type": environmentTypes[activeEnvironmentId].type,
+            "X-Platform-Type": environmentTypes[activeEnvironmentId].platformType
         },
         success: function (data) {
             if (data.success) {
@@ -2624,78 +2597,6 @@ function createNewDirectory(explorer, path, name) {
             hideBusyIndicator();
         }
     });
-}
-
-/**
- * Gets the permissions of the currently logged in user
- */
-function getUserPermissions() {
-    if (userId !== "") { // userId is set in _Layout.cshtml
-        $.ajax({
-            url: "/Permissions/GetPermissionsByUserId/" + userId,
-            method: "GET",
-            success: function (userPermissionsData) {
-                if (userPermissionsData.success) {
-                    setUserPermissions(userPermissionsData.userPermissions.map(p => p.permissionName))
-                    updatePrimaryMenuItemsVisibility(userPermissionsData.userPermissions);
-                    updateSecondaryMenuItemsVisibility(userPermissionsData.userPermissions);
-                    $.ajax({
-                        url: "/Permissions/GetRolesByUserId/" + userId,
-                        method: "GET",
-                        success: function (userRolesData) {
-                            if (userRolesData.success) {
-                                var userRoles = userRolesData.userRoles;
-                                // iterate roles and get their permissions
-                                for (var i = 0; i < userRoles.length; i++) {
-                                    $.ajax({
-                                        url: "/Permissions/GetPermissionsByRoleId/" + userRoles[i].id,
-                                        method: "GET",
-                                        success: function (rolePermissionsData) {
-                                            if (rolePermissionsData.success) {
-                                                setUserPermissions(rolePermissionsData.rolePermissions.map(p => p.permissionName))
-                                                updatePrimaryMenuItemsVisibility(rolePermissionsData.rolePermissions);
-                                                updateSecondaryMenuItemsVisibility(rolePermissionsData.rolePermissions);
-                                            } else {
-                                                if (rolePermissionsData.errorMessage)
-                                                    swal("STOP!", rolePermissionsData.errorMessage, "error", {
-                                                        button: {
-                                                            text: "OK",
-                                                            className: "confirm-button",
-                                                        }
-                                                    });
-                                            }
-                                        }
-                                    });
-                                }
-                            } else {
-                                if (userRolesData.errorMessage)
-                                    swal("STOP!", userRolesData.errorMessage, "error", {
-                                        button: {
-                                            text: "OK",
-                                            className: "confirm-button",
-                                        }
-                                    });
-                            }
-                        }
-                    });
-                } else {
-                    if (userPermissionsData.errorMessage)
-                        swal("STOP!", userPermissionsData.errorMessage, "error", {
-                            button: {
-                                text: "OK",
-                                className: "confirm-button",
-                            }
-                        });
-                }
-            }
-        });
-    }
-}
-
-// store the user permissions for the remaining of this session
-// note: chill, this is for UI visual manipulation purposes ONLY, the permissions are checked server side anyway!
-function setUserPermissions(permissions) {
-    window.Permissions = [...new Set([...window.Permissions, ...permissions])];
 }
 
 /**
@@ -2859,12 +2760,12 @@ $(document).ready(function () {
     * This updates the displayed value of the combobox to the clicked option
     * and closes the dropdown.
     */
-    $(document).on("click", ".enlightenment-option:not(#environmentsDropdown .enlightenment-option)", function () {
-        var value = $(this).data("value");
+    $(document).on('click', '.enlightenment-option:not(#environmentsDropdown .enlightenment-option)', function () {
+        var value = $(this).data('value');
         var text = $(this).text();
-        var combobox = $(this).closest(".enlightenment-combobox");
-        combobox.find(".enlightenment-selected-text").text(text);
-        combobox.find(".enlightenment-toggle-checkbox").prop("checked", false);
+        var combobox = $(this).closest('.enlightenment-combobox');
+        combobox.find('.enlightenment-selected-text').text(text);
+        combobox.find('.enlightenment-toggle-checkbox').prop('checked', false);
     });
 
     /**
@@ -2873,22 +2774,22 @@ $(document).ready(function () {
     $(document).on("click", "#environmentsDropdown .enlightenment-option", function () {
         reattachDropdown();
         const clickedImage = $(this).find('img');
-        const environment = environmentTypes.find(item => item.id === clickedImage.data("environemt-id"));
+        const environment = environmentTypes[clickedImage.data('environment-id')];
 
         var combobox = $(this).closest(".enlightenment-combobox");
-        combobox.find("label.enlightenment-toggle img").attr('src', clickedImage.attr('src'));
-        combobox.find(".enlightenment-toggle-checkbox").prop("checked", false);
-        const titleValue = (environment.title === "Local File System") ? `${environment.title} (${environment.platformType})` : environment.title;
+        combobox.find('label.enlightenment-toggle img').attr('src', clickedImage.attr('src'));
+        combobox.find('.enlightenment-toggle-checkbox').prop('checked', false);
+        const titleValue = (environment.type === 'local') ? `${environment.title} (${environment.platformType})` : environment.title;
 
         combobox.attr('title', titleValue);
-        const imgElement = combobox.find("label.enlightenment-toggle img");
+        const imgElement = combobox.find('label.enlightenment-toggle img');
         imgElement.attr('title', titleValue);
         imgElement.attr('alt', titleValue);
         const explorer = getActiveExplorer();
         if (explorer)
-            explorer.setAttribute('data-environment', environment.id);
+            explorer.setAttribute('data-environment', clickedImage.data('environment-id'));
         addressBarInput.value = environment.initialPath;
-        activeEnvironmentId = environment.id;
+        activeEnvironmentId = clickedImage.data('environment-id');
         parsePath(true, false, false);
     });
 
@@ -2959,7 +2860,9 @@ $(document).ready(function () {
 
     if (environmentDropdown)
         // add the available environments to the environments combobox in the navigator
-        environmentTypes.forEach((type, index, array) => {
+        //environmentTypes.forEach((type, index, array) => { switched
+        Object.keys(environmentTypes).forEach((key, index, array) => {
+            const type = environmentTypes[key];
             const optionDiv = document.createElement('div');
             optionDiv.className = "enlightenment-option";
             if (index === array.length - 1)
@@ -2970,7 +2873,7 @@ $(document).ready(function () {
             imgElement.alt = type.title;
             imgElement.title = type.title;
             imgElement.style.width = '42px';
-            imgElement.setAttribute('data-environemt-id', type.id);
+            imgElement.setAttribute('data-environment-id', key);
             optionDiv.appendChild(imgElement);
             optionDiv.style.padding = '0px';
             environmentDropdown.appendChild(optionDiv);

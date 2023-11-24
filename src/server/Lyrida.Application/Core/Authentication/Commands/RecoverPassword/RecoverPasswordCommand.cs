@@ -12,4 +12,4 @@ namespace Lyrida.Application.Core.Authentication.Commands.RecoverPassword;
 /// <remarks>
 /// Creation Date: 01st of August, 2023
 /// </remarks>
-public record RecoverPasswordCommand(string Email, string TotpCode) : IRequest<ErrorOr<CommandResultDto>>;
+public record RecoverPasswordCommand(string Username, string TotpCode) : IRequest<ErrorOr<CommandResultDto>>;

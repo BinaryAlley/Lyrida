@@ -7,7 +7,6 @@ using FluentValidation;
 using Autofac.Extras.DynamicProxy;
 using Lyrida.Application.Common.Behaviors;
 using Lyrida.Infrastructure.Common.Logging;
-using Lyrida.Application.Core.Authorization;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
 #endregion
@@ -24,9 +23,9 @@ public class ApplicationLayerServices : Module
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Registers the services of the Application Layer into the Dependency Injection container
+    /// Registers the services of the Application Layer into the Dependency Injection container.
     /// </summary>
-    /// <param name="builder">The Dependency Injection container where the services are registered</param>
+    /// <param name="builder">The Dependency Injection container where the services are registered.</param>
     protected override void Load(ContainerBuilder builder)
     {
         // automatically register all mediator commands and queries in this assembly
@@ -62,13 +61,6 @@ public class ApplicationLayerServices : Module
                        .ForEach(x => builder.RegisterType(x.ValidatorType)
                                             .As(x.InterfaceType)
                                             .InstancePerLifetimeScope());
-        builder.RegisterType<AuthorizationService>()
-       .As<IAuthorizationService>()
-#if !DEBUG
-                       .EnableInterfaceInterceptors()
-                       .InterceptedBy(typeof(ProxyInterceptor))
-#endif
-       .InstancePerLifetimeScope();
     }
     #endregion
 }

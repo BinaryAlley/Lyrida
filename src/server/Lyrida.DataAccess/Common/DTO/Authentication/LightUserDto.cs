@@ -17,7 +17,6 @@ public sealed class LightUserDto : IStorageDto
     [IgnoreOnCommand]
     public int Id { get; set; }
     public string? Username { get; set; }
-    public string? Email { get; set; }
     #endregion
 
     #region ===================================================================== METHODS ===================================================================================
@@ -27,7 +26,7 @@ public sealed class LightUserDto : IStorageDto
     /// <returns>Custom string value showing relevant data for current class</returns>
     public override string ToString()
     {
-        return Id + " :: " + Email;
+        return Id + " :: " + Username;
     }
     #endregion
 }

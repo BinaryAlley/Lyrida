@@ -9,11 +9,7 @@
 public enum DataContainers
 {
     Users,
-    Roles,
     UserPages,
-    UserRoles,
-    Permissions,
     UserPreferences,
-    RolePermissions,
-    UserPermissions
+    UserEnvironments,
 }

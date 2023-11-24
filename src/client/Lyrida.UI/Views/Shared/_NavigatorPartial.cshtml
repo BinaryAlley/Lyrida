@@ -105,7 +105,7 @@
                 <div class="shine-effect" style="top: 1px;"></div>
                 <input type="checkbox" id="environmentsDropdownToggle" class="enlightenment-toggle-checkbox" />
                 <label class="enlightenment-toggle" for="environmentsDropdownToggle" style="padding: 0 13px 0px 16px; background-position: right 0px top 50%, left 7px top 50%, 0 0; background-size: 0px 0px, 3px auto, 100%;">
-                    <img id="imgPlatformPlaceholder" src="~/images/ui/os.svg" alt="@translationService.Translate(Terms.SelectAPlatform)" title="@translationService.Translate(Terms.SelectAPlatform)" data-default-text="@translationService.Translate(Terms.SelectAPlatform)" style="width: 23px;">
+                    <img src="~/images/ui/os.svg" id="imgPlatformPlaceholder" alt="@translationService.Translate(Terms.SelectAPlatform)" title="@translationService.Translate(Terms.SelectAPlatform)" data-default-text="@translationService.Translate(Terms.SelectAPlatform)" style="width: 23px;">
                 </label>
                 <div class="enlightenment-dropdown" id="environmentsDropdown">
                     <div class="shine-effect" style="top: -4px;"></div>
@@ -163,12 +163,59 @@
         }, {
             'disable_in_input': true
         });
-
-        $('#btnSelectionMode').click(function (event) {
-            if (isSelectionMode)
-                $(this).text('@translationService.Translate(Terms.NormalMode)');
+        $('#btnUpOneLevel').click(function (event) {
+            if (Object.keys(environmentTypes).length === 0) {
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@translationService.Translate(Terms.AddDataSourceFirst)', confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            }
             else
-                $(this).text('@translationService.Translate(Terms.SelectionMode)');
+                goUpOneLevel();
+        });
+        $('#addressBarInput').keydown(function (event) {
+            event.preventDefault();  
+            if (event.key === 'Escape') {
+                addressBarInput.style.display = 'none'; // hide #addressBarInput
+                addressBar.style.display = 'block'; // show #addressBar
+            } else if (event.key === 'Enter') {
+                if (Object.keys(environmentTypes).length === 0) {
+                    Swal.fire({
+                        title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@translationService.Translate(Terms.AddDataSourceFirst)', confirmButtonText: 'OK',
+                        customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                    });
+                }
+                else
+                    parsePath(true, false, false);
+            }
+        });
+        $('#btnNavigate').click(function (event) {
+            if (Object.keys(environmentTypes).length === 0) {
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@translationService.Translate(Terms.AddDataSourceFirst)', confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            }
+            else
+                parsePath(true, false, false);
+            addressBarInput.style.display = 'none';
+            addressBar.style.display = 'block';
+        });
+        $('#btnSelectionMode').click(function (event) {
+            var selectImagePath = '@Url.Content("~/images/ui/select.svg")';
+            var normalImagePath = '@Url.Content("~/images/ui/cursor.svg")';
+            if (isSelectionMode) {
+                $(this).find('span').text('@translationService.Translate(Terms.NormalMode)');
+                $(this).find('img').attr('src', normalImagePath);
+                $(this).find('img').attr('title', '@translationService.Translate(Terms.NormalMode)');
+                $(this).find('img').attr('alt', '@translationService.Translate(Terms.NormalMode)');
+            }
+            else { 
+                $(this).find('span').text('@translationService.Translate(Terms.SelectionMode)');
+                $(this).find('img').attr('src', selectImagePath);
+                $(this).find('img').attr('title', '@translationService.Translate(Terms.SelectionMode)');
+                $(this).find('img').attr('alt', '@translationService.Translate(Terms.SelectionMode)');
+            }
         });
         $('#btnCut').click(function (event) {
             const explorer = getActiveExplorer();
@@ -284,7 +331,6 @@
             event.preventDefault();
             event.stopPropagation();
         });
-
         $('#btnDelete').click(function (event) {
             const explorer = getActiveExplorer();
             if (explorer) {
@@ -406,6 +452,23 @@
                 const selectedItems = explorer.querySelectorAll('.e.selected');
                 if (selectedItems.length === 1)
                     enterRenameMode(selectedItems[0]);
+            }
+            else {
+                const Toast = swal.mixin({
+                    toast: true,
+                    position: 'bottom-left',
+                    iconColor: 'red',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'error',
+                    title: '@translationService.Translate(Terms.NavigateToALocationFirst)'
+                });
             }
             actionsDropdown.classList.add('hidden');
             event.preventDefault();

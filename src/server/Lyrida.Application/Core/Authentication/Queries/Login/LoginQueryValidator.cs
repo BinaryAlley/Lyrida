@@ -19,7 +19,7 @@ public class LoginQueryValidator : AbstractValidator<LoginQuery>
     /// </summary>
     public LoginQueryValidator()
     {
-        RuleFor(x => x.Email).NotEmpty().WithMessage(Terms.EmailCannotBeEmpty.ToString());
+        RuleFor(x => x.Username).NotEmpty().WithMessage(Terms.UsernameCannotBeEmpty.ToString());
         RuleFor(x => x.Password).NotEmpty().WithMessage(Terms.PasswordCannotBeEmpty.ToString());
     }
     #endregion

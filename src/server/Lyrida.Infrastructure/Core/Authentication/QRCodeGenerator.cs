@@ -22,15 +22,15 @@ public class QRCodeGenerator : IQRCodeGenerator
     /// <summary>
     /// Generates a QR code Data URI for TOTP secret.
     /// </summary>
-    /// <param name="email">User's email or unique identifier.</param>
+    /// <param name="username">User's username or unique identifier.</param>
     /// <param name="secret">The TOTP secret for which the QR code should be generated.</param>
     /// <returns>Data URI for the QR code.</returns>
-    public string GenerateQrCodeDataUri(string email, byte[] secret)
+    public string GenerateQrCodeDataUri(string username, byte[] secret)
     {
         // convert secret to Base32
         string base32Secret = Base32Encoding.ToString(secret);
         // build the otpauth URI
-        string otpauthString = $"otpauth://totp/{ISSUER}:{Uri.EscapeDataString(email)}?secret={base32Secret}&issuer={ISSUER}";
+        string otpauthString = $"otpauth://totp/{ISSUER}:{Uri.EscapeDataString(username)}?secret={base32Secret}&issuer={ISSUER}";
         // generate QR Code
         QRCoder.QRCodeGenerator qrGenerator = new();
         QRCodeData qrData = qrGenerator.CreateQrCode(otpauthString, QRCoder.QRCodeGenerator.ECCLevel.Q);

@@ -31,17 +31,22 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        string? baseUrl = builder.Configuration["BASE_URL"];
         builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
         // add services to the container
         builder.Services.AddControllersWithViews(options =>
         {
             options.Filters.Add(typeof(ApiExceptionFilter));
             options.Filters.Add(typeof(UserTokenActionFilter));
+            options.Filters.Add(typeof(PlatformFilterAttribute));
             options.Filters.Add(typeof(EnvironmentFilterAttribute));
         });
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {
-            options.LoginPath = "/Account/Login";
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+                options.LoginPath = $"{baseUrl}/Account/Login";
+            else
+                options.LoginPath = "/Account/Login";
         });
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
         {
@@ -50,6 +55,7 @@ public class Program
         // add filters for cross cutting concerns in regard to the API interaction
         builder.Services.AddScoped<ApiExceptionFilter>();
         builder.Services.AddScoped<UserTokenActionFilter>();
+        builder.Services.AddScoped<PlatformFilterAttribute>();
         builder.Services.AddScoped<EnvironmentFilterAttribute>();
         // add session middleware
         builder.Services.AddDistributedMemoryCache();  // required for session state
@@ -85,7 +91,6 @@ public class Program
             app.UseHsts();
         }
         //app.UseHttpsRedirection();
-        string? baseUrl = builder.Configuration["BASE_URL"];
         if (!string.IsNullOrWhiteSpace(baseUrl))
         {
             app.UsePathBase(baseUrl);

@@ -56,9 +56,9 @@ public class AuthenticationController : ApiController
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Registers a new user identified by <paramref name="data"/>
+    /// Registers a new user identified by <paramref name="data"/>.
     /// </summary>
-    /// <param name="data">The data of the user to register</param>
+    /// <param name="data">The data of the user to register.</param>
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequestDto data)
     {
@@ -67,9 +67,9 @@ public class AuthenticationController : ApiController
     }
 
     /// <summary>
-    /// Authenticates an user identified by <paramref name="data"/>
+    /// Authenticates an user identified by <paramref name="data"/>.
     /// </summary>
-    /// <param name="data">The data used for the login</param>
+    /// <param name="data">The data used for the login.</param>
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequestDto data)
     {
@@ -88,9 +88,9 @@ public class AuthenticationController : ApiController
     }
 
     /// <summary>
-    /// Sends a password recovery link to an account identified by <paramref name="data"/>.
+    /// Recovers the password of an account identified by <paramref name="data"/>.
     /// </summary>
-    /// <param name="data">The email of the account for which to send a password recovery link</param>
+    /// <param name="data">The account for which to recover the password.</param>
     [HttpPost("recoverPassword")]
     public async Task<IActionResult> RecoverPassword(RecoverPasswordRequestDto data)
     {
@@ -99,9 +99,9 @@ public class AuthenticationController : ApiController
     }
 
     /// <summary>
-    /// Sends a password recovery link to an account identified by <paramref name="data"/>.
+    /// Changes the password of an account identified by <paramref name="data"/>.
     /// </summary>
-    /// <param name="data">The email of the account for which to send a password recovery link</param>
+    /// <param name="data">The account for which to change the password.</param>
     [Authorize]
     [HttpPost("changePassword")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequestDto data)
@@ -124,10 +124,10 @@ public class AuthenticationController : ApiController
     }
 
     /// <summary>
-    /// Gets the id of the user currently making requests
+    /// Gets the id of the user currently making requests.
     /// </summary>
-    /// <param name="userId">The id of the user currently making requests</param>
-    /// <returns>True if the id of the user currently making requests could be parsed, False otherwise</returns>
+    /// <param name="userId">The id of the user currently making requests.</param>
+    /// <returns>True if the id of the user currently making requests could be parsed, False otherwise.</returns>
     private bool TryGetUserId(out int userId)
     {
         var userIdClaim = User.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;

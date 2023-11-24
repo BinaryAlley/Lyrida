@@ -42,11 +42,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     /// Generates a new JWT token.
     /// </summary>
     /// <param name="id">The id of the user for which to generate the token.</param>
-    /// <param name="firstName">The first name of the user for which to generate the token.</param>
-    /// <param name="lastName">The last name of the user for which to generate the token.</param>
-    /// <param name="email">The email of the user for which to generate the token.</param>
+    /// <param name="username">The username of the user for which to generate the token.</param>
     /// <returns>The generated JWT token.</returns>
-    public string GenerateToken(string id, string firstName, string lastName, string email)
+    public string GenerateToken(string id, string username)
     {
         // use a symmetric key approach
         var securityKey = cryptographyService.Decrypt(appConfig.JwtSettings!.SecretKey!);
@@ -54,9 +52,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, id),
-            new Claim(JwtRegisteredClaimNames.GivenName, firstName),
-            new Claim(JwtRegisteredClaimNames.FamilyName, lastName),
-            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.UniqueName, username),
             new Claim(JwtRegisteredClaimNames.Jti, id.ToString())
         };
         var securityToken = new JwtSecurityToken(

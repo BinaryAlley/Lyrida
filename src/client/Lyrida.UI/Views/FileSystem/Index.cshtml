@@ -5,27 +5,49 @@
 @using Lyrida.UI.Common.DTO.Configuration;
 @inject ITranslationService translationService
 @{
+    @if (ViewData["Environments"] is FileSystemDataSourceDto[] dataSources)
+    {
+        foreach (FileSystemDataSourceDto dataSource in dataSources)
+        {
+            <script>
+                $(document).ready(() => {
+                    window.environmentTypes['@dataSource.EnvironmentId'] = {
+                        environmentId: '@dataSource.EnvironmentId',
+                        type: '@dataSource.Type',
+                        title: '@dataSource.Title',
+                        initialPath: '@dataSource.InitialPath',
+                        platformType: '@dataSource.PlatformType',
+                        url: @Html.Raw(dataSource?.Url != null ? $"'{dataSource.Url}'" : "null"),
+                        port: @Html.Raw(dataSource?.Port != null ? $"{dataSource.Port}" : "null"),
+                        username: @Html.Raw(dataSource?.Username != null ? $"'{dataSource.Username}'" : "null"),
+                        password: @Html.Raw(dataSource?.Password != null ? $"'{dataSource.Password}'" : "null"),
+                        passiveMode: @Html.Raw(dataSource?.PassiveMode != null ? $"'{dataSource.PassiveMode.ToString()!.ToLower()}'" : "null")
+                    };
+                });
+            </script>
+        }
+    }
     if (ViewData["Preferences"] is ProfilePreferencesDto profilePreference)
     {
-    <script>
+        <script>
             let nextTabId = 0;
             $(document).ready(() => {
                 @if (profilePreference.RememberOpenTabs)
-            {
-                if (ViewData["InitialPages"] is List<PageDto> initialPages)// TODO: "remember" view mode for each tab (if enabled as user preference)
                 {
-                    for (int i = 0; i < initialPages.Count; i++)
+                    if (ViewData["InitialPages"] is PageDto[] initialPages)// TODO: "remember" view mode for each tab (if enabled as user preference)
                     {
-                        var title = Json.Serialize(initialPages[i].Title);
-                        var path = Json.Serialize(initialPages[i].Path);
-                        var platformId = initialPages[i].PlatformId;
-                        var uuid = Json.Serialize(initialPages[i].Uuid);
+                        for (int i = 0; i < initialPages.Length; i++)
+                        {
+                            var title = Json.Serialize(initialPages[i].Title);
+                            var path = Json.Serialize(initialPages[i].Path);
+                            var environmentId = Json.Serialize(initialPages[i].EnvironmentId);
+                            var pageId = Json.Serialize(initialPages[i].PageId);
                             <text>
-                                addNewTab(@title, @path, @platformId, @uuid);
+                                addNewTab(@title, @path, @environmentId, @pageId);
                             </text>
+                        }
                     }
                 }
-            }
                 showThumbnails = @profilePreference.ShowImagePreviews.ToString().ToLower();
                 imagePreviewsQuality = @profilePreference.ImagePreviewsQuality.ToString().ToLower();
                 fullImageQuality = @profilePreference.FullImageQuality.ToString().ToLower();
@@ -36,7 +58,7 @@
                 thumbnailsRetrievalBatchSize = @profilePreference.ThumbnailsRetrievalBatchSize.ToString().ToLower();
                 // let USE_2FA = @profilePreference.Use2fa.ToString().ToLower();
             });
-    </script>
+        </script>
     }
 }
 <div class="dynTab-container">
@@ -55,15 +77,15 @@
 <div id="dropContextMenu" class="enlightenment-dropdown hidden" style="position: absolute; top: 31.5px; left: 421px; display: block; width: 154px;">
     <div class="shine-effect" style="top: -4px;"></div>
     <div id="btnMenuCopy" class="enlightenment-option" style="padding: 0px;">
-        <img src="/images/ui/copy.svg" alt="@translationService.Translate(Terms.CopyHere)" title="@translationService.Translate(Terms.CopyHere)" class="icon" style="display: inline-block; vertical-align: middle;">
+        <img src="~/images/ui/copy.svg" alt="@translationService.Translate(Terms.CopyHere)" title="@translationService.Translate(Terms.CopyHere)" class="icon" style="display: inline-block; vertical-align: middle;">
         <span>@translationService.Translate(Terms.CopyHere)</span>
     </div>
     <div id="btnMenuMove" class="enlightenment-option" style="padding: 0px;">
-        <img src="/images/ui/move.svg" alt="@translationService.Translate(Terms.MoveHere)" title="@translationService.Translate(Terms.MoveHere)" class="icon" style="display: inline-block; vertical-align: middle;">
+        <img src="~/images/ui/move.svg" alt="@translationService.Translate(Terms.MoveHere)" title="@translationService.Translate(Terms.MoveHere)" class="icon" style="display: inline-block; vertical-align: middle;">
         <span>@translationService.Translate(Terms.MoveHere)</span>
     </div>
     <div id="btnMenuLink" class="enlightenment-option" style="padding: 0px;">
-        <img src="/images/ui/link.svg" alt="@translationService.Translate(Terms.LinkHere)" title="@translationService.Translate(Terms.LinkHere)" class="icon" style="display: inline-block; vertical-align: middle;">
+        <img src="~/images/ui/link.svg" alt="@translationService.Translate(Terms.LinkHere)" title="@translationService.Translate(Terms.LinkHere)" class="icon" style="display: inline-block; vertical-align: middle;">
         <span>@translationService.Translate(Terms.LinkHere)</span>
     </div>
 </div>
@@ -77,13 +99,20 @@
             });
         </script>
     }
-    else 
+    else
     {
         <script type="text/javascript">
             $('#dynTab_addTab').click((e) => {
                 e.preventDefault();
-                activeEnvironmentId = 0;
-                addNewTab("New Tab", null, null, null);
+                activeEnvironmentId = '';
+                if (Object.keys(environmentTypes).length === 0) {
+                    Swal.fire({
+                        title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@translationService.Translate(Terms.AddDataSourceFirst)', confirmButtonText: 'OK',
+                        customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                    });
+                }
+                else
+                    addNewTab("New Tab", null, null, null);
                 e.stopPropagation();
             });
             $('#renameInput').on('blur', function () {

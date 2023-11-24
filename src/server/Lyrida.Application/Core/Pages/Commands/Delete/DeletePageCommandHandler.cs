@@ -5,7 +5,6 @@ using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
 using Lyrida.Domain.Common.Errors;
-using Lyrida.Application.Core.Authorization;
 using Lyrida.DataAccess.Repositories.UserPages;
 #endregion
 
@@ -25,11 +24,10 @@ public class DeletePageCommandHandler : IRequestHandler<DeletePageCommand, Error
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
-    /// <param name="authorizationService">Injected service for permissions</param>
-    public DeletePageCommandHandler(IUnitOfWork unitOfWork, IAuthorizationService authorizationService)
+    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories.</param>
+    public DeletePageCommandHandler(IUnitOfWork unitOfWork)
     {
         userPageRepository = unitOfWork.GetRepository<IUserPageRepository>();
     }
@@ -37,17 +35,29 @@ public class DeletePageCommandHandler : IRequestHandler<DeletePageCommand, Error
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Deletes a user page in the repository
+    /// Deletes a user page in the repository.
     /// </summary>
-    /// <returns>True, if the deletion was successful, an Error otherwise</returns>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean being <see langword="true"/> if the deletion was successful, or an error.</returns>
     public async Task<ErrorOr<bool>> Handle(DeletePageCommand query, CancellationToken cancellationToken)
     {
-        // delete the user page
-        var resultDeleteUserPage = await userPageRepository.DeleteByIdAsync(query.UserId.ToString(), query.PageId);
-        if (resultDeleteUserPage.Error is null && resultDeleteUserPage.Count > 0)
-            return true;
+        // first, make sure the user page belongs to the user
+        var resultSelectUserPage = await userPageRepository.GetByIdAsync(query.PageId);
+        if (resultSelectUserPage.Error is null && resultSelectUserPage.Data is not null)
+        {
+            if (resultSelectUserPage.Data[0].UserId == query.UserId)
+            {
+                // delete the user page
+                var resultDeleteUserPage = await userPageRepository.DeleteByIdAsync(query.PageId);
+                if (resultDeleteUserPage.Error is null && resultDeleteUserPage.Count > 0)
+                    return true;
+                else
+                    return Errors.DataAccess.DeleteUserPageError;
+            }
+            else
+                return Errors.Authorization.InvalidPermissionError;
+        }
         else
-            return Errors.DataAccess.DeleteUserPageError;
+            return Errors.DataAccess.GetUserPagesError;
     }
     #endregion
 }

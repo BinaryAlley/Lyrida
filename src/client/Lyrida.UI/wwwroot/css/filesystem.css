@@ -515,7 +515,7 @@ div[id^="previewContainer"] {
   z-index: 1000; 
 }
 
-@media (max-width: 360px) {
+@media (max-width: 400px) {
     .e.extra-large-icons {
         width: 100%;
     }
@@ -523,11 +523,11 @@ div[id^="previewContainer"] {
         width: calc(100% - 14px);
     }
     .e.extra-large-icons .text span {
-        max-width: 360px;
+        max-width: 400px;
     }
 
     .e.large-icons {
-        width: 148px;
+        width: 164px;
     }
     .e.large-icons .text {
         width: calc(100% - 14px);
@@ -537,7 +537,7 @@ div[id^="previewContainer"] {
     }
 
     .e.medium-icons {
-        width: 91px;
+        width: 102px;
     }
     .e.medium-icons .text {
         width: calc(100% - 14px);

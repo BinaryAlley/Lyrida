@@ -39,9 +39,9 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="logger">The injected logger to be used in interception</param>
+    /// <param name="logger">The injected logger to be used in interception.</param>
     public DatabaseAsyncProxyInterceptor(ILoggerManager logger)
     {
         this.logger = logger;
@@ -52,12 +52,12 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Intercepts method invocations, both synchronous and asynchronous, that have no return type, and adds logging functionality to them
+    /// Intercepts method invocations, both synchronous and asynchronous, that have no return type, and adds logging functionality to them.
     /// </summary>
-    /// <param name="invocation">The method that will be invoked</param>
-    /// <param name="proceedInfo"> Describes the <see cref="IInvocation.Proceed"/> operation for <paramref name="invocation"/> at a specific point during interception</param>
-    /// <param name="proceed">The function to proceed the <paramref name="proceedInfo"/></param>
-    /// <returns>A Task object that represents the asynchronous operation</returns>
+    /// <param name="invocation">The method that will be invoked.</param>
+    /// <param name="proceedInfo"> Describes the <see cref="IInvocation.Proceed"/> operation for <paramref name="invocation"/> at a specific point during interception.</param>
+    /// <param name="proceed">The function to proceed the <paramref name="proceedInfo"/>.</param>
+    /// <returns>A Task object that represents the asynchronous operation.</returns>
     protected override async Task InterceptAsync(IInvocation invocation, IInvocationProceedInfo proceedInfo, Func<IInvocation, IInvocationProceedInfo, Task> proceed)
     {
         try
@@ -86,13 +86,13 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Intercepts method invocations, both synchronous and asynchronous, that have a return type, and adds logging functionality to them
+    /// Intercepts method invocations, both synchronous and asynchronous, that have a return type, and adds logging functionality to them.
     /// </summary>
-    /// <typeparam name="TResult">The type of the result to return</typeparam>
-    /// <param name="invocation">The method that will be invoked</param>
-    /// <param name="proceedInfo"> Describes the <see cref="IInvocation.Proceed"/> operation for <paramref name="invocation"/> at a specific point during interception</param>
-    /// <param name="proceed">The function to proceed the <paramref name="proceedInfo"/></param>
-    /// <returns>A Task object that represents the result of awaiting the asynchronous operation</returns>
+    /// <typeparam name="TResult">The type of the result to return.</typeparam>
+    /// <param name="invocation">The method that will be invoked.</param>
+    /// <param name="proceedInfo"> Describes the <see cref="IInvocation.Proceed"/> operation for <paramref name="invocation"/> at a specific point during interception.</param>
+    /// <param name="proceed">The function to proceed the <paramref name="proceedInfo"/>.</param>
+    /// <returns>A Task object that represents the result of awaiting the asynchronous operation.</returns>
     protected override async Task<TResult> InterceptAsync<TResult>(IInvocation invocation, IInvocationProceedInfo proceedInfo, Func<IInvocation, IInvocationProceedInfo, Task<TResult>> proceed)
     {
         string query = string.Empty;
@@ -124,7 +124,11 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
                             {
                                 dynamic? mappedAttribute = parameter.GetCustomAttribute(mappingAttributeType);
                                 var value = parameter.GetValue(invocation.Arguments[1]);
-                                query += (mappedAttribute?.Name ?? parameter.Name) + " = " + (value is string ? "'" : "") + value + (value is string ? "'" : "");
+                                string columnName = (mappedAttribute?.Name ?? parameter.Name);
+                                // dont include sesnsitive data
+                                if (columnName.Contains("password", StringComparison.OrdinalIgnoreCase) || columnName.Contains("totp", StringComparison.OrdinalIgnoreCase))
+                                    value = "not included in logs";
+                                query += columnName + " = " + (value is string ? "'" : "") + value + (value is string ? "'" : "");
                                 if (parameters.Length > 1 && i < parameters.Length - 1)
                                 {
                                     query += ", ";
@@ -239,11 +243,11 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Substitutes named parameters in SQL queries with their corresponding values
+    /// Substitutes named parameters in SQL queries with their corresponding values.
     /// </summary>
-    /// <param name="originalQuery">The original SQL query</param>
-    /// <param name="data">The anonymous object containing the values of the named parameters</param>
-    /// <returns>A string representing the original SQL queries, with the named parameters replaced by their corresponding values</returns>
+    /// <param name="originalQuery">The original SQL query.</param>
+    /// <param name="data">The anonymous object containing the values of the named parameters.</param>
+    /// <returns>A string representing the original SQL queries, with the named parameters replaced by their corresponding values.</returns>
     private static string SubstituteNamedParameters(string originalQuery, object data)
     {
         // get the properties of the filter object
@@ -266,11 +270,11 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Gets the names of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
+    /// Gets the names of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries.
     /// </summary>
-    /// <typeparam name="TDto">The type of <paramref name="model"/></typeparam>
-    /// <param name="model">A database model containing the public properties used for getting or saving data in a database table</param>
-    /// <returns>A formatted string used in SQL queries, composed of the names of the public properties of <paramref name="model"/></returns>
+    /// <typeparam name="TDto">The type of <paramref name="model"/>.</typeparam>
+    /// <param name="model">A database model containing the public properties used for getting or saving data in a database table.</param>
+    /// <returns>A formatted string used in SQL queries, composed of the names of the public properties of <paramref name="model"/>.</returns>
     internal static string GetColumns<TDto>(TDto model)
     {
         if (model != null)
@@ -303,11 +307,11 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
+    /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries.
     /// </summary>
-    /// <typeparam name="TDto">The type of <paramref name="model"/></typeparam>
-    /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table</param>
-    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/></returns>
+    /// <typeparam name="TDto">The type of <paramref name="model"/>.</typeparam>
+    /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table.</param>
+    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/>.</returns>
     internal static string GetParameters<TDto>(TDto model)
     {
         if (model != null)
@@ -320,6 +324,9 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
                                                         .None());
             return string.Join(", ", properties.Select(e =>
             {
+                // dont include sesnsitive data
+                if (e.Name.Contains("password", StringComparison.OrdinalIgnoreCase) || e.Name.Contains("totp", StringComparison.OrdinalIgnoreCase))
+                    return "not included in logs";
                 var value = e.GetValue(model);
                 if (value is null)
                     return "NULL";
@@ -339,10 +346,10 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Gets the values of the public properties of <paramref name="type"/> and formats them as a string used in SQL queries
+    /// Gets the values of the public properties of <paramref name="type"/> and formats them as a string used in SQL queries.
     /// </summary>
-    /// <param name="type">A database element containing the public properties whose values are used for saving data in a database table</param>
-    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="type"/></returns>
+    /// <param name="type">A database element containing the public properties whose values are used for saving data in a database table.</param>
+    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="type"/>.</returns>
     internal static string GetProperties(Type type) 
     {
         var ignoreOnQueryAttributeType = Type.GetType(IGNORE_ON_QUERY_ATTRIBUTE);
@@ -371,31 +378,27 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     }
 
     /// <summary>
-    /// Caches the Data Access Layer DTO types, for performance improved access
+    /// Caches the Data Access Layer DTO types, for performance improved access.
     /// </summary>
     private static void CacheDataAccessLayerEntitiesPropertyNames()
     {
         var assembly = Assembly.Load(DATA_ACCESS);
         var types = assembly.GetTypes()
                             .Where(t => t.Namespace != null && t.Namespace.StartsWith(DTOs) && t.GetInterfaces()
-                                                                                                    .Any(i => i.Name == I_STORAGE_DTO));
+                                                                                                .Any(i => i.Name == I_STORAGE_DTO));
         foreach (var type in types)
             PropertyNamesCache.TryAdd(type, GetProperties(type));
     }
 
     /// <summary>
-    /// Maps the names of the database columns to the names of the columns used in application
+    /// Maps the names of the database columns to the names of the columns used in application.
     /// </summary>
     private void MapDatabaseTableNames()
     {
-        dbTableNamesMaping.Add("Roles", "Roles");
-        dbTableNamesMaping.Add("Users", "Users");
-        dbTableNamesMaping.Add("UserPages", "UserPages");
-        dbTableNamesMaping.Add("UserRoles", "UserRoles");
-        dbTableNamesMaping.Add("Permissions", "Permissions");
-        dbTableNamesMaping.Add("UserPermissions", "UserPermissions");
-        dbTableNamesMaping.Add("RolePermissions", "RolePermissions");
-        dbTableNamesMaping.Add("UserPreferences", "UserPreferences");
+        dbTableNamesMaping.Add("Users", "users");
+        dbTableNamesMaping.Add("UserPages", "userpages");
+        dbTableNamesMaping.Add("UserPreferences", "userpreferences");
+        dbTableNamesMaping.Add("UserEnvironments", "userenvironments");
     }
     #endregion
 }

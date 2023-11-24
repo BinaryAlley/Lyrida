@@ -6,4 +6,4 @@
 /// <remarks>
 /// Creation Date: 12th of July, 2023
 /// </remarks>
-public record AuthenticationResponseDto(int Id, string FirstName, string LastName, string Email, string Token, string TotpSecret);
+public record AuthenticationResponseDto(int Id, string Username, string Token, string TotpSecret);

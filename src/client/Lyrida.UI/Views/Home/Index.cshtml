@@ -1,12 +1,557 @@
 ﻿@using System.Text.Json;
+@using Lyrida.UI.Common.DTO.FileSystem;
+@inject ITranslationService translationService
+
+<div id="indexMainBody">
+    <p class="text-light-two f-22 mb-10 mt-0 pt-10 text-center">Choose file system data sources:</p>
+
+    <div id="availableFileSystemsContainer" class="text-center text-light-one f-18">
+        <div class="enlightenment-panel w-250px h-150px available-file-system-card shadow-effect">
+            <div data-source-name="local" class="available-file-system-button add-data-source">+</div>
+            <p>@translationService.Translate(Terms.LocalFileSystem)</p>
+        </div>
+        <div class="enlightenment-panel w-250px h-150px available-file-system-card shadow-effect">
+            <div data-source-name="ftps" class="available-file-system-button add-data-source">+</div>
+            <p>FTPS (File Transfer Protocol Secure)</p>
+        </div>
+        <div class="enlightenment-panel w-250px h-150px available-file-system-card shadow-effect">
+            <div data-source-name="sftp" class="available-file-system-button add-data-source">+</div>
+            <p>@translationService.Translate(Terms.SFTP)</p>
+        </div>
+        <div class="enlightenment-panel w-250px h-150px available-file-system-card shadow-effect">
+            <div data-source-name="ftp" class="available-file-system-button add-data-source">+</div>
+            <p>@translationService.Translate(Terms.FTP)</p>
+        </div>
+    </div>
+
+    <div id="selectedFileSystemsContainer" style="margin-top: 25px;">
+        @if (Model is not null && Model is FileSystemDataSourceDto[] dataSources)
+        {
+            foreach (FileSystemDataSourceDto dataSource in dataSources)
+            {
+                <script>
+                    $(document).ready(() => {
+                        window.environmentTypes['@dataSource.EnvironmentId'] = {
+                            environmentId: '@dataSource.EnvironmentId',
+                            type: '@dataSource.Type',
+                            title: '@dataSource.Title',
+                            initialPath: '@dataSource.InitialPath',
+                            platformType: '@dataSource.PlatformType',
+                            url: @Html.Raw(dataSource?.Url != null ? $"'{dataSource.Url}'" : "null"),
+                            port: @Html.Raw(dataSource?.Port != null ? $"{dataSource.Port}" : "null"),
+                            username: @Html.Raw(dataSource?.Username != null ? $"'{dataSource.Username}'" : "null"),
+                            password: @Html.Raw(dataSource?.Password != null ? $"'{dataSource.Password}'" : "null"),
+                            passiveMode: @Html.Raw(dataSource?.PassiveMode != null ? $"'{dataSource.PassiveMode.ToString()!.ToLower()}'" : "null")
+                        };
+                    });
+                </script>
+                <div class="enlightenment-panel shadow-effect pl-0 pr-0 pb-0 mx-auto panel mt-10" style="width: 350px; min-width: 350px;">
+                    <div class="shine-effect"></div>
+                    <div class="available-file-system-card">
+                        <div class="available-file-system-button text-center close-data-source" style="color: #FF0000; top: 0px; right: 10px;">&times;</div>
+                    </div>
+                    <table class="w-90 mx-auto" data-unique-id="@dataSource.EnvironmentId">                        
+                        <tr>
+                            <td colspan="2">
+                            @if (dataSource.Type == "local")
+                            {
+                                <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.LocalFileSystem)</p>
+                            }
+                            else if (dataSource.Type == "ftp")
+                            {
+                                <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.FTP)</p>
+                            }
+                            else if (dataSource.Type == "sftp")
+                            {
+                                <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.SFTP)</p>
+                            }
+                            else if (dataSource.Type == "ftps")
+                            {
+                                <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.FTPS)</p>
+                            }
+                            </td>
+                        </tr>
+                        <!-- section Title -->
+                        <tr>
+                            <td class="w-100">
+                                <input type="hidden" name="type" value="local">
+                                <label class="text-light-one">@translationService.Translate(Terms.Title)</label>
+                                <input type="text" class="w-100 enlightenment-input" name="title" value="@dataSource.Title">
+                                <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionTitle)</small>
+                            </td>
+                        </tr>
+                        @if (dataSource.Type == "ftp" || dataSource.Type == "sftp" || dataSource.Type == "ftps")
+                        {
+                            <!-- section URL -->
+                            <tr>
+                                <td class="w-100">
+                                    <label class="text-light-one">URL</label>
+                                    <input type="url" class="w-100 enlightenment-input" name="url" placeholder="example.com" value="@dataSource.Url">
+                                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionURL)</small>
+                                </td>
+                            </tr>
+                            <!-- section Port -->
+                            <tr>
+                                <td class="w-100">
+                                    <label class="text-light-one">Port</label>
+                                    <input type="number" class="w-100 enlightenment-input" name="port" value="@dataSource.Port">
+                                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPort)</small>
+                                </td>
+                            </tr>
+                            <!-- section Username -->
+                            <tr>
+                                <td class="w-100">
+                                    <label class="text-light-one">@translationService.Translate(Terms.Username)</label>
+                                    <input type="text" class="w-100 enlightenment-input" name="username" autocomplete="on" value="@dataSource.Username">
+                                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionUsername)</small>
+                                </td>
+                            </tr>
+                            <!-- section Password -->
+                            <tr>
+                                <td class="w-100">
+                                    <label class="text-light-one">@translationService.Translate(Terms.Password)</label>
+                                    <input type="password" class="w-100 enlightenment-input" name="password" value="@dataSource.Password">
+                                    <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPassword)</small>
+                                </td>
+                            </tr>
+                        }
+                        <!-- section Initial Path -->
+                        <tr>
+                            <td class="w-100">
+                                <label class="text-light-one">@translationService.Translate(Terms.InitialPath)</label>
+                                <input type="text" class="w-100 enlightenment-input" name="initialPath" value="@dataSource.InitialPath">
+                                <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionInitialPath)</small>
+                            </td>
+                        </tr>
+                        <!-- section Platform Type -->
+                        <tr>
+                            <td class="w-100">
+                                <label class="text-light-one">@translationService.Translate(Terms.Platform)</label>
+                                <div class="enlightenment-combobox inline-block w-100">
+                                    <div class="shine-effect" style="top: 1px;"></div>
+                                    <input type="checkbox" class="enlightenment-toggle-checkbox" />
+                                    <label class="enlightenment-toggle">
+                                        <span class="enlightenment-selected-text">@dataSource.PlatformType</span>
+                                    </label>
+                                    <div class="enlightenment-dropdown">
+                                        <div class="shine-effect" style="top: -4px;"></div>
+                                        <div class="enlightenment-option first-option" data-value="Unix">Unix</div>
+                                        <div class="enlightenment-option last-option" data-value="Windows">Windows</div>
+                                    </div>
+                                </div>
+                                <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPlatform)</small>
+                            </td>
+                        </tr>                            
+                        <tr>
+                            <td colspan="2" class="w-100 text-center">
+                                <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Save)</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <span class="invalid-feedback hidden"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Template for container table -->
+<script id="template-container" type="text/x-custom-template">
+    <div class="enlightenment-panel shadow-effect pl-0 pr-0 pb-0 mx-auto panel mt-10" style="width: 350px; min-width: 350px;">
+        <div class="shine-effect"></div>
+        <div class="available-file-system-card">
+            <div class="available-file-system-button text-center close-data-source" style="color: #FF0000; top: 0px; right: 10px;">&times;</div>
+        </div>
+        <table class="w-90 mx-auto" data-unique-id="__UNIQUEID__">
+        </table>
+    </div>
+</script>
+
+<!-- Template for Local File System -->
+<script id="template-local" type="text/x-custom-template">
+    <tr>
+        <td colspan="2">
+            <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.LocalFileSystem)</p>
+        </td>
+    </tr>
+    <!-- section Title -->
+    <tr>
+        <td class="w-100">
+            <input type="hidden" name="type" value="local">
+            <label class="text-light-one">@translationService.Translate(Terms.Title)</label>
+            <input type="text" class="w-100 enlightenment-input" name="title" value="@translationService.Translate(Terms.LocalFileSystem)">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionTitle)</small>
+        </td>
+    </tr>
+    <!-- section Initial Path -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.InitialPath)</label>
+            <input type="text" class="w-100 enlightenment-input" name="initialPath" value="/app/">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionInitialPath)</small>
+        </td>
+    </tr>
+    <!-- section Platform Type -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Platform)</label>
+            <div class="enlightenment-combobox inline-block w-100">
+                <div class="shine-effect" style="top: 1px;"></div>
+                <input type="checkbox" class="enlightenment-toggle-checkbox" />
+                <label class="enlightenment-toggle">
+                    <span class="enlightenment-selected-text">Unix</span>
+                </label>
+                <div class="enlightenment-dropdown">
+                    <div class="shine-effect" style="top: -4px;"></div>
+                    <div class="enlightenment-option first-option" data-value="Unix">Unix</div>
+                    <div class="enlightenment-option last-option" data-value="Windows">Windows</div>
+                </div>
+            </div>
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPlatform)</small>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" class="w-100 text-center">
+            <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Save)</button>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <span class="invalid-feedback hidden"></span>
+        </td>
+    </tr>
+</script>
+
+<!-- Template for SFTP -->
+<script id="template-sftp" type="text/x-custom-template">
+    <tr>
+        <td colspan="2">
+            <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.SFTP)</p>
+        </td>
+    </tr>
+    <!-- section Title -->
+    <tr>
+        <td class="w-100">
+            <input type="hidden" name="type" value="sftp">
+            <label class="text-light-one">@translationService.Translate(Terms.Title)</label>
+            <input type="text" class="w-100 enlightenment-input" name="title" value="@translationService.Translate(Terms.SFTP)">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionTitle)</small>
+        </td>
+    </tr>
+    <!-- section URL -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">URL</label>
+            <input type="url" class="w-100 enlightenment-input" name="url" placeholder="example.com">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionURL)</small>
+        </td>
+    </tr>
+    <!-- section Port -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">Port</label>
+            <input type="number" class="w-100 enlightenment-input" name="port" value="22">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPort)</small>
+        </td>
+    </tr>
+    <!-- section Username -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Username)</label>
+            <input type="text" class="w-100 enlightenment-input" name="username" autocomplete="on">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionUsername)</small>
+        </td>
+    </tr>
+    <!-- section Password -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Password)</label>
+            <input type="password" class="w-100 enlightenment-input" name="password">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPassword)</small>
+        </td>
+    </tr>
+    <!-- section Initial Path -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.InitialPath)</label>
+            <input type="text" class="w-100 enlightenment-input" name="initialPath" value="/">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionInitialPath)</small>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" class="w-100 text-center">
+            <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Save)</button>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <span class="invalid-feedback hidden"></span>
+        </td>
+    </tr>
+</script>
+
+<!-- Template for FTPS -->
+<script id="template-ftps" type="text/x-custom-template">
+    <tr>
+        <td colspan="2">
+            <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.FTPS)</p>
+        </td>
+    </tr>
+    <!-- section Title -->
+    <tr>
+        <td class="w-100">
+            <input type="hidden" name="type" value="sftp">
+            <label class="text-light-one">@translationService.Translate(Terms.Title)</label>
+            <input type="text" class="w-100 enlightenment-input" name="title" value="@translationService.Translate(Terms.FTPS)">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionTitle)</small>
+        </td>
+    </tr>
+    <!-- section URL -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">URL</label>
+            <input type="url" class="w-100 enlightenment-input" name="url" placeholder="example.com">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionURL)</small>
+        </td>
+    </tr>
+    <!-- section Port -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">Port</label>
+            <input type="number" class="w-100 enlightenment-input" name="port" value="990">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPort)</small>
+        </td>
+    </tr>
+    <!-- section Username -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Username)</label>
+            <input type="text" class="w-100 enlightenment-input" name="username" autocomplete="on">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionUsername)</small>
+        </td>
+    </tr>
+    <!-- section Password -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Password)</label>
+            <input type="password" class="w-100 enlightenment-input" name="password">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPassword)</small>
+        </td>
+    </tr>
+    <!-- section Initial Path -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.InitialPath)</label>
+            <input type="text" class="w-100 enlightenment-input" name="initialPath" value="/">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionInitialPath)</small>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" class="w-100 text-center">
+            <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Save)</button>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <span class="invalid-feedback hidden"></span>
+        </td>
+    </tr>
+</script>
+
+<!-- Template for FTP -->
+<script id="template-ftp" type="text/x-custom-template">
+    <tr>
+        <td colspan="2">
+            <p class="text-light-one f-18 mt-0 mb-5 text-center">@translationService.Translate(Terms.FTP)</p>
+        </td>
+    </tr>
+    <!-- section Title -->
+    <tr>
+        <td class="w-100">
+            <input type="hidden" name="type" value="sftp">
+            <label class="text-light-one">@translationService.Translate(Terms.Title)</label>
+            <input type="text" class="w-100 enlightenment-input" name="title" value="@translationService.Translate(Terms.FTP)">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionTitle)</small>
+        </td>
+    </tr>
+    <!-- section URL -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">URL</label>
+            <input type="url" class="w-100 enlightenment-input" name="url" placeholder="example.com">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionURL)</small>
+        </td>
+    </tr>
+    <!-- section Port -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">Port</label>
+            <input type="number" class="w-100 enlightenment-input" name="port" value="21">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPort)</small>
+        </td>
+    </tr>
+    <!-- section Username -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Username)</label>
+            <input type="text" class="w-100 enlightenment-input" name="username" autocomplete="on">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionUsername)</small>
+        </td>
+    </tr>
+    <!-- section Password -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.Password)</label>
+            <input type="password" class="w-100 enlightenment-input" name="password">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionPassword)</small>
+        </td>
+    </tr>
+    <!-- section Initial Path -->
+    <tr>
+        <td class="w-100">
+            <label class="text-light-one">@translationService.Translate(Terms.InitialPath)</label>
+            <input type="text" class="w-100 enlightenment-input" name="initialPath" value="/">
+            <small class="text-disabled" style="margin-left: 25px;">@translationService.Translate(Terms.DescriptionInitialPath)</small>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" class="w-100 text-center">
+            <button type="submit" class="confirm-button f-16 w-100px">@translationService.Translate(Terms.Save)</button>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <span class="invalid-feedback hidden"></span>
+        </td>
+    </tr>
+</script>
+
 @section Scripts {
-    @if(ViewData["error"] is not null)
-    {
     <script type="text/javascript">
-            Swal.fire({
-                title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@Html.Raw(ViewData["error"])', confirmButtonText: 'OK',
-                customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+        @if (ViewData["error"] is not null)
+        {
+            <text>
+                Swal.fire({
+                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: '@Html.Raw(ViewData["error"])', confirmButtonText: 'OK',
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                });
+            </text>
+        }
+        else
+        {
+            <text>
+            $('.add-data-source').on('click', function () { // event handler for available data sources add button
+                const uniqueId = generateUUID();
+
+                const dataSourceName = $(this).data('source-name');
+                const templateId = `#template-${dataSourceName}`;                    
+                const templateHtml = $(templateId).html();
+
+                // create the container from the template
+                const templateContainerHtml = $($('#template-container').html().replace(/__UNIQUEID__/g, uniqueId));
+                // find the table within the new container and append the file system template
+                templateContainerHtml.find('table').append(templateHtml);
+                // append the entire container to the selectedFileSystemsContainer
+                $('#selectedFileSystemsContainer').append(templateContainerHtml);
+                environmentTypes[uniqueId] = {
+                    environmentId: uniqueId,
+                    type: 'local',
+                    title: '@translationService.Translate(Terms.LocalFileSystem)',
+                    initialPath: '/app/',
+                    platformType: 'Unix'
+                };
             });
+            $('#selectedFileSystemsContainer').on('click', '.close-data-source', function () { // event handler for selected data sources close button
+                // ask for confirmation
+                Swal.fire({
+                    title: '@translationService.Translate(Terms.ConfirmationMessage)',
+                    text: '@translationService.Translate(Terms.CannotRevert)',
+                    icon: 'warning',
+                    heightAuto: false,
+                    buttonsStyling: false,
+                    showCancelButton: true,
+                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10', cancelButton: 'abort-button f-18 h-24px ml-10 pl-10 pr-10' },
+                    cancelButtonText: '@translationService.Translate(Terms.Cancel)',
+                    confirmButtonText: '@translationService.Translate(Terms.Confirm)'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // find the closest '.enlightenment-panel' and then the child 'table' within it to get the 'data-unique-id'
+                        var uniqueId = $(this).closest('.enlightenment-panel').find('table').data('unique-id');
+                        // remove the data source from the environmentTypes object using the unique ID
+                        if (uniqueId && environmentTypes[uniqueId])
+                            delete environmentTypes[uniqueId];
+                        // now remove the '.enlightenment-panel' element from the DOM
+                        $(this).closest('.enlightenment-panel').remove();
+                    }
+                });
+            });
+            $('#selectedFileSystemsContainer').on('click', '.enlightenment-combobox', function () { // event handler for selected data sources environment combobox
+                var $checkbox = $(this).find('.enlightenment-toggle-checkbox');
+                $checkbox.prop('checked', !$checkbox.prop('checked'));
+            });
+            $('#selectedFileSystemsContainer').on('click', '.confirm-button', function () { // event handler for selected data sources save button
+                // get the closest parent .enlightenment-panel and find the table to get the 'data-unique-id'
+                var uniqueId = $(this).closest('.enlightenment-panel').find('table').data('unique-id');
+                // if the uniqueId is found, proceed to update the environmentTypes object
+                if (uniqueId && environmentTypes[uniqueId]) {
+                    // find all input elements within the same panel and update the corresponding values
+                    $(this).closest('.enlightenment-panel').find('input, select').each(function () {
+                        var inputName = $(this).attr('name');
+                        var inputValue = $(this).val();
+                        // if the input is a checkbox, use the checked property instead of val()
+                        if ($(this).is(':checkbox'))
+                            inputValue = $(this).is(':checked');
+                        // if there is a valid name attribute, update the dataSource entry
+                        if (inputName)
+                            environmentTypes[uniqueId][inputName] = inputValue;
+                    });
+                    // additionally, update the selected platform type text if needed
+                    var selectedPlatform = $(this).closest('.enlightenment-panel').find('.enlightenment-selected-text').text();
+                    if (selectedPlatform)
+                        environmentTypes[uniqueId]['platformType'] = selectedPlatform;
+                    showBusyIndicator();
+                    // send it to the API too
+                    $.ajax({
+                        url: baseUrl + '/FileSystem/AddDataSource',
+                        type: 'POST',
+                        data: JSON.stringify(environmentTypes[uniqueId]),
+                        contentType: "application/json; charset=utf-8",
+                        headers: {
+                            "X-Environment-Type": environmentTypes[uniqueId].type,
+                            "X-Platform-Type": environmentTypes[uniqueId].platformType
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                if (enableConsoleDebugMessages)
+                                    console.info(getCurrentTime() + " Saved data source for " + uniqueId);
+                                const toast = swal.mixin({
+                                    toast: true, position: 'bottom-left', iconColor: 'green', showConfirmButton: false, timer: 3000,
+                                    allowEscapeKey: true, showCloseButton: true, timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                                });
+                                toast.fire({ icon: 'success', title: data.message });
+                            }
+                            else
+                                console.error(data.errorMessage);
+                            hideBusyIndicator();
+                        },
+                        error: function (jqXHR, textStatus, error) {
+                            if (jqXHR.status === 401)
+                                window.location.href = "/Account/Login";
+                            else
+                                Swal.fire({
+                                    title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
+                                    customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
+                                });
+                            hideBusyIndicator();
+                        }
+                    });
+                }
+            });
+            </text>
+        }
     </script>
-    }
 }

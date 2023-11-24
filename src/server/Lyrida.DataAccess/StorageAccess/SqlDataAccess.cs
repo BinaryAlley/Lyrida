@@ -39,9 +39,9 @@ internal sealed class SqlDataAccess : IDataAccess
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="dbConnection">The injected database connection to use</param>
+    /// <param name="dbConnection">The injected database connection to use.</param>
     internal SqlDataAccess(IDbConnection dbConnection)
     {
         this.dbConnection = dbConnection;
@@ -65,15 +65,15 @@ internal sealed class SqlDataAccess : IDataAccess
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Executes a generic operation on the storage medium
+    /// Executes a generic operation on the storage medium.
     /// </summary>
-    /// <typeparam name="TDto">The type of the model to get from the storage medium as a result of <paramref name="command"/></typeparam>
-    /// <param name="query">The command to execute on the storage medium</param>
-    /// <param name="filter">Specifies an anonymous object whose properties are used for the named parameters</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the storage medium, if any, or the provided error, in case of failure</returns>
+    /// <typeparam name="TDto">The type of the model to get from the storage medium as a result of <paramref name="command"/>.</typeparam>
+    /// <param name="query">The command to execute on the storage medium.</param>
+    /// <param name="filter">Specifies an anonymous object whose properties are used for the named parameters.</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the storage medium, if any, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse<TDto>> ExecuteAsync<TDto>(string query, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto
     {
         ApiResponse<TDto> serializedData = new();
@@ -99,14 +99,14 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Executes a generic operation on the storage medium
+    /// Executes a generic operation on the storage medium.
     /// </summary>
-    /// <param name="query">The command to execute on the storage medium</param>
-    /// <param name="filter">Specifies an anonymous object whose properties are used for the named parameters</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse"/> instance containing the affected number of rows, or the provided error, in case of failure</returns>
+    /// <param name="query">The command to execute on the storage medium.</param>
+    /// <param name="filter">Specifies an anonymous object whose properties are used for the named parameters.</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse"/> instance containing the affected number of rows, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse> ExecuteAsync(string query, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
     {
         ApiResponse serializedData = new();
@@ -131,16 +131,16 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Selects data of type <typeparamref name="TDto"/> from the database with manual column mapping
+    /// Selects data of type <typeparamref name="TDto"/> from the database with manual column mapping.
     /// </summary>
-    /// <typeparam name="TDto">The type of the model to get from the database</typeparam>
-    /// <param name="table">The table from which to select the data</param>
-    /// <param name="columns">The columns to take from <paramref name="table"/></param>
-    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the database, or the provided error, in case of failure</returns>
+    /// <typeparam name="TDto">The type of the model to get from the database.</typeparam>
+    /// <param name="table">The table from which to select the data.</param>
+    /// <param name="columns">The columns to take from <paramref name="table"/>.</param>
+    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...).</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the database, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse<TDto>> SelectAsync<TDto>(DataContainers table, string? columns, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto
     {
         ApiResponse<TDto> serializedData = new();
@@ -196,15 +196,15 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Selects data of type <typeparamref name="TDto"/> from the database without manual column mapping
+    /// Selects data of type <typeparamref name="TDto"/> from the database without manual column mapping.
     /// </summary>
-    /// <typeparam name="TDto">The type of the model to get from the database</typeparam>
-    /// <param name="table">The table from which to select the data</param>
-    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the database, or the provided error, in case of failure</returns>
+    /// <typeparam name="TDto">The type of the model to get from the database.</typeparam>
+    /// <param name="table">The table from which to select the data.</param>
+    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...).</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the requested data from the database, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse<TDto>> SelectAsync<TDto>(DataContainers table, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto
     {
         ApiResponse<TDto> serializedData = new();
@@ -260,15 +260,15 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Saves data of type <typeparamref name="TDto"/> in the database
+    /// Saves data of type <typeparamref name="TDto"/> in the database.
     /// </summary>
-    /// <typeparam name="TDto">The type of the model to save in the database</typeparam>
-    /// <param name="table">The table in which to insert data</param>
-    /// <param name="model">The model to be saved</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the id of the inserted data from the database, or the provided error, in case of failure</returns>
+    /// <typeparam name="TDto">The type of the model to save in the database.</typeparam>
+    /// <param name="table">The table in which to insert data.</param>
+    /// <param name="model">The model to be saved.</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse{TDto}"/> instance containing the id of the inserted data from the database, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse<TDto>> InsertAsync<TDto>(DataContainers table, TDto model, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto, new()
     {
         ApiResponse<TDto> serializedData = new();
@@ -301,16 +301,16 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Updates data in the database using a model
+    /// Updates data in the database using a model.
     /// </summary>
-    /// <typeparam name="TDto">The type of the model to update in the database</typeparam>
-    /// <param name="table">The table in which to update the data</param>
-    /// <param name="model">The model to be updated</param>
-    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure</returns>
+    /// <typeparam name="TDto">The type of the model to update in the database.</typeparam>
+    /// <param name="table">The table in which to update the data.</param>
+    /// <param name="model">The model to be updated.</param>
+    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...).</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse> UpdateAsync<TDto>(DataContainers table, TDto model, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null) where TDto : IStorageDto, new()
     {
         ApiResponse serializedData = new();
@@ -403,15 +403,15 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Updates data in the database using an anonymous model
+    /// Updates data in the database using an anonymous model.
     /// </summary>
-    /// <param name="table">The table in which to update the data</param>
-    /// <param name="values">An object whose properties are used for the columns to be updated</param>
-    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...)</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure</returns>
+    /// <param name="table">The table in which to update the data.</param>
+    /// <param name="values">An object whose properties are used for the columns to be updated.</param>
+    /// <param name="filter">Used for conditional selects, specifies an object whose properties are used for the conditions (SELECT ... FROM ... WHERE ...).</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse> UpdateAsync(DataContainers table, object values, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
     {
         ApiResponse serializedData = new();
@@ -496,12 +496,12 @@ internal sealed class SqlDataAccess : IDataAccess
     /// <summary>
     /// Deletes data from the database
     /// </summary>
-    /// <param name="table">The table from which to delete data</param>
-    /// <param name="filter">Used for conditional deletes, specifies an object whose properties are used for the conditions (DELETE FROM ... WHERE ...)</param>
-    /// <param name="line">The line number in the source file where the method is called</param>
-    /// <param name="caller">The method or property name of the caller of the method</param>
-    /// <param name="file">The full path of the file that contains the caller, at compile time</param>
-    /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure</returns>
+    /// <param name="table">The table from which to delete data.</param>
+    /// <param name="filter">Used for conditional deletes, specifies an object whose properties are used for the conditions (DELETE FROM ... WHERE ...).</param>
+    /// <param name="line">The line number in the source file where the method is called.</param>
+    /// <param name="caller">The method or property name of the caller of the method.</param>
+    /// <param name="file">The full path of the file that contains the caller, at compile time.</param>
+    /// <returns>An <see cref="ApiResponse"/> instance containing the count of affected rows in the database, or the provided error, in case of failure.</returns>
     public async Task<ApiResponse> DeleteAsync(DataContainers table, object? filter = null, [CallerLineNumber] int line = 0, [CallerMemberName] string? caller = null, [CallerFilePath] string? file = null)
     {
         if (dbTransaction == null && dbConnection.State != ConnectionState.Open)
@@ -557,11 +557,11 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries
+    /// Gets the values of the public properties of <paramref name="model"/> and formats them as a string used in SQL queries.
     /// </summary>
-    /// <typeparam name="TDto">The type of <paramref name="model"/></typeparam>
-    /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table</param>
-    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/></returns>
+    /// <typeparam name="TDto">The type of <paramref name="model"/>.</typeparam>
+    /// <param name="model">A database model containing the public properties whose values are used for saving data in a database table.</param>
+    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of <paramref name="model"/>.</returns>
     internal static string GetParameters<TDto>(TDto model) where TDto : IStorageDto
     {
         if (model != null)
@@ -578,10 +578,10 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Gets the values of the public properties of the DTO and formats them as a string used in SQL commands
+    /// Gets the values of the public properties of the DTO and formats them as a string used in SQL commands.
     /// </summary>
-    /// <typeparam name="TDto">The type of database DTO whose properties are taken</typeparam>
-    /// <returns>A formatted string used in SQL commands, composed of the columns of the public properties of the provided model</returns>
+    /// <typeparam name="TDto">The type of database DTO whose properties are taken.</typeparam>
+    /// <returns>A formatted string used in SQL commands, composed of the columns of the public properties of the provided model.</returns>
     internal static string GetCommandProperties<TDto>() where TDto : IStorageDto
     {
         // get a list of all public properties of the provided model, but ignore those with the IgnoreOnQueryAttribute attribute
@@ -592,10 +592,10 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Gets the values of the public properties of the DTO and formats them as a string used in SQL queries
+    /// Gets the values of the public properties of the DTO and formats them as a string used in SQL queries.
     /// </summary>
-    /// <typeparam name="TDto">The type of database DTO whose properties are taken</typeparam>
-    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of the provided model</returns>
+    /// <typeparam name="TDto">The type of database DTO whose properties are taken.</typeparam>
+    /// <returns>A formatted string used in SQL queries, composed of the columns of the public properties of the provided model.</returns>
     internal static string GetQueryProperties<TDto>() where TDto : IStorageDto
     {
         // get a list of all public properties of the provided model, but ignore those with the IgnoreOnQueryAttribute attribute
@@ -606,22 +606,18 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Maps the names of the database columns to the names of the columns used in application
+    /// Maps the names of the database columns to the names of the columns used in application.
     /// </summary>
     private void MapDatabaseTableNames()
     {
-        dbTableNamesMaping.Add(DataContainers.Users, "Users");
-        dbTableNamesMaping.Add(DataContainers.Roles, "Roles");
-        dbTableNamesMaping.Add(DataContainers.UserPages, "UserPages");
-        dbTableNamesMaping.Add(DataContainers.UserRoles, "UserRoles");
-        dbTableNamesMaping.Add(DataContainers.Permissions, "Permissions");
-        dbTableNamesMaping.Add(DataContainers.UserPreferences, "UserPreferences");
-        dbTableNamesMaping.Add(DataContainers.RolePermissions, "RolePermissions");
-        dbTableNamesMaping.Add(DataContainers.UserPermissions, "UserPermissions");
+        dbTableNamesMaping.Add(DataContainers.Users, "users");
+        dbTableNamesMaping.Add(DataContainers.UserPages, "userpages");
+        dbTableNamesMaping.Add(DataContainers.UserPreferences, "userpreferences");
+        dbTableNamesMaping.Add(DataContainers.UserEnvironments, "userenvironments");
     }
 
     /// <summary>
-    /// Opens an SQL transaction
+    /// Opens an SQL transaction.
     /// </summary>
     public void OpenTransaction()
     {
@@ -638,7 +634,7 @@ internal sealed class SqlDataAccess : IDataAccess
     }
 
     /// <summary>
-    /// Closes an SQL transaction, rolls back changes if the transaction was faulty
+    /// Closes an SQL transaction, rolls back changes if the transaction was faulty.
     /// </summary>
     public void CloseTransaction()
     {

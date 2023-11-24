@@ -56,7 +56,7 @@ public class LoginCommandHandler : IRequestHandler<LoginQuery, ErrorOr<Authentic
     public async Task<ErrorOr<AuthenticationResultDto>> Handle(LoginQuery query, CancellationToken cancellationToken)
     {
         // validate that the user exists
-        var resultSelectUser = await userRepository.GetByEmailAsync(query.Email);
+        var resultSelectUser = await userRepository.GetByUsernameAsync(query.Username);
         if (resultSelectUser.Error is null)
         {
             if (resultSelectUser.Data is not null)
@@ -65,7 +65,7 @@ public class LoginCommandHandler : IRequestHandler<LoginQuery, ErrorOr<Authentic
                 if (!securityService.HashService.CheckStringAgainstHash(query.Password, Uri.UnescapeDataString(resultSelectUser.Data[0].Password!)))
                     return Errors.Authentication.InvalidUsername;
                 // create the JWT token
-                var token = jwtTokenGenerator.GenerateToken(resultSelectUser.Data[0].Id.ToString(), resultSelectUser.Data[0].FirstName, resultSelectUser.Data[0].LastName, resultSelectUser.Data[0].Email);
+                var token = jwtTokenGenerator.GenerateToken(resultSelectUser.Data[0].Id.ToString(), resultSelectUser.Data[0].Username);
                 // convert the user, and see if they use TOTP
                 var convertedUser = resultSelectUser.Data[0].Adapt<UserDto>();
                 bool usesTotp = resultSelectUser.Data[0].TotpSecret != null;

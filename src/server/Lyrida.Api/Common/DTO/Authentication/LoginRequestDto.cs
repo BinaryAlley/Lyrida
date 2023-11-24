@@ -6,4 +6,4 @@
 /// <remarks>
 /// Creation Date: 12th of July, 2023
 /// </remarks>
-public record LoginRequestDto(string Email, string Password, string? TotpCode);
+public record LoginRequestDto(string Username, string Password, string? TotpCode);

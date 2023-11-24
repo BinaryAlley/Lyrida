@@ -16,8 +16,6 @@ namespace Lyrida.Infrastructure.Common.Configuration;
 public sealed class AppConfig : IAppConfig
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    public ApplicationConfigDto? Application { get; set; }
-    public Dictionary<string, string>? EmailServer { get; set; }
     public string? ServerPath { get; set; }
     public int ServerPort { get; set; }
     [JsonIgnore]

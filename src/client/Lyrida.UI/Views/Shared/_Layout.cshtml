@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Lyrida.Client</title>
+    <title>Lyrida</title>
     <base href="@Configuration["BASE_URL"]/"> <!--if an environmental setting for a different base path was provided (ie: docker compose), use it as base path-->
     <link rel="stylesheet" href="~/css/button.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/textbox.css" asp-append-version="true" />
@@ -43,7 +43,7 @@
 <body>
     <header>
         <div id="accountIconContainer">
-            <img id="accountIcon" src="~/images/ui/account.svg" class="icon" title="@translationService.Translate(Terms.Account)" alt="@translationService.Translate(Terms.Account)">
+            <img src="~/images/ui/account.svg" id="accountIcon" class="icon" title="@translationService.Translate(Terms.Account)" alt="@translationService.Translate(Terms.Account)">
 
             <div id="accountDropdown" class="hidden">
                 <div id="accountDropdownArrow"></div>
@@ -52,6 +52,7 @@
                     {
                         <li><a class="menu-link text-light-one" asp-controller="Account" asp-action="Logout">@translationService.Translate(Terms.Logout)</a></li>
                         <li><a class="menu-link text-light-one" asp-controller="Account" asp-action="Profile">@translationService.Translate(Terms.MyAccount)</a></li>
+                        <li><a class="menu-link text-light-one" asp-controller="Home" asp-action="Index">@translationService.Translate(Terms.DataSources)</a></li>
                         <li><a class="menu-link text-light-one" asp-controller="FileSystem" asp-action="Index">@translationService.Translate(Terms.FileSystem)</a></li>
                     }
                     else

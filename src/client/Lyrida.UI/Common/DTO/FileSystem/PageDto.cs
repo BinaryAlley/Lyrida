@@ -16,9 +16,9 @@ namespace Lyrida.UI.Common.DTO.FileSystem;
 public class PageDto
 {
     #region ==================================================================== PROPERTIES =================================================================================
-    public Guid Uuid { get; set; }
+    public Guid PageId { get; set; }
     public string? Title { get; set; }
     public string? Path { get; set; }
-    public int PlatformId { get; set; }
+    public Guid? EnvironmentId { get; set; }
     #endregion
 }

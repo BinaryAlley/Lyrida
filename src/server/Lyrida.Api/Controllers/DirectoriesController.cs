@@ -33,11 +33,11 @@ public class DirectoriesController : ApiController
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="mediator">Injected service for mediating commands and queries</param>
-    /// <param name="translationService">Injected service for localization</param>
-    /// <param name="mapper">Injected service for mapping objects</param>
+    /// <param name="mediator">Injected service for mediating commands and queries.</param>
+    /// <param name="translationService">Injected service for localization.</param>
+    /// <param name="mapper">Injected service for mapping objects.</param>
     public DirectoriesController(ISender mediator, ITranslationService translationService, IMapper mapper) : base(translationService)
     {
         this.mapper = mapper;

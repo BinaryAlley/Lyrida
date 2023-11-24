@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lyrida.DataAccess.UoW;
 using Lyrida.Domain.Common.Errors;
-using Lyrida.Application.Core.Authorization;
 using Lyrida.Application.Common.DTO.Configuration;
 using Lyrida.DataAccess.Repositories.Configuration;
 #endregion
@@ -27,9 +26,9 @@ public class UpdateProfilePreferenceCommandHandler : IRequestHandler<UpdateProfi
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
+    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories.</param>
     public UpdateProfilePreferenceCommandHandler(IUnitOfWork unitOfWork)
     {
         userPreferenceRepository = unitOfWork.GetRepository<IUserPreferenceRepository>();
@@ -38,9 +37,10 @@ public class UpdateProfilePreferenceCommandHandler : IRequestHandler<UpdateProfi
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Updates a profile's preferences in the repository
+    /// Updates a profile's preferences in the repository.
     /// </summary>
-    /// <returns>True, if the action was successful, an Error otherwise</returns>
+    /// <returns>True, if the action was successful, an Error otherwise.</returns>
+    /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean being <see langword="true"/> if the action was successful, or an error.</returns>
     public async Task<ErrorOr<ProfilePreferencesDto>> Handle(UpdateProfilePreferenceCommand command, CancellationToken cancellationToken)
     {
         // create the repository DTO and assign its user id

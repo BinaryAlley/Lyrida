@@ -17,10 +17,10 @@ public interface IUpdateRepositoryAction<TDto> where TDto : IStorageDto
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Updates <paramref name="data"/> in the storage medium
+    /// Updates <paramref name="data"/> in the storage medium.
     /// </summary>
-    /// <param name="data">The element that will be updated</param>
-    /// <returns>The result of updating the <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
+    /// <param name="data">The element that will be updated.</param>
+    /// <returns>The result of updating the <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/>.</returns>
     Task<ApiResponse> UpdateAsync(TDto data);
     #endregion
 }

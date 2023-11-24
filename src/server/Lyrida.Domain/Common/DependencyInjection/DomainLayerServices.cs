@@ -7,11 +7,11 @@ using Lyrida.Domain.Core.FileSystem.Services.Platform;
 using Lyrida.Domain.Core.FileSystem.Services.Thumbnails;
 using Lyrida.Domain.Core.FileSystem.Services.Directories;
 using Lyrida.Domain.Core.FileSystem.Services.Environment;
+using Lyrida.Domain.Core.FileSystem.Services.Permissions;
 using Lyrida.Domain.Core.FileSystem.Services.Paths.PathStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Files.FileTypeStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Files.FileProviderStrategies;
 using Lyrida.Domain.Core.FileSystem.Services.Directories.DirectoryProviderStrategies;
-using Lyrida.Domain.Core.FileSystem.Services.Permissions;
 #endregion
 
 namespace Lyrida.Domain.Common.DependencyInjection;

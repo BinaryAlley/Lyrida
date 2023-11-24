@@ -22,16 +22,20 @@ public sealed class PageDto : IStorageDto
     public int UserId { get; set; }
     [IgnoreOnQuery]
     [MapsTo(Name = "page_id")]
-    public Guid Uuid { get; set; }
+    public Guid PageId { get; set; }
     [IgnoreOnCommand]
     [MapsTo(Name = "page_id")]
-    public string? UuidString { get; set; }
+    public string? PageIdString { get; set; }
     [MapsTo(Name = "title")]
     public string? Title { get; set; }
     [MapsTo(Name = "path")]
     public string? Path { get; set; }
-    [MapsTo(Name = "platform_id")]
-    public int PlatformId { get; set; }
+    [IgnoreOnQuery]
+    [MapsTo(Name = "environment_id")]
+    public Guid EnvironmentId { get; set; }
+    [IgnoreOnCommand]
+    [MapsTo(Name = "environment_id")]
+    public string? EnvironmentIdString { get; set; }
     [IgnoreOnCommand]
     [MapsTo(Name = "created")]
     public DateTime Created { get; set; }
@@ -42,9 +46,9 @@ public sealed class PageDto : IStorageDto
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Customized ToString() method
+    /// Customized ToString() method.
     /// </summary>
-    /// <returns>Custom string value showing relevant data for current class</returns>
+    /// <returns>Custom string value showing relevant data for current class.</returns>
     public override string ToString()
     {
         return Id + " :: " + UserId;

@@ -15,23 +15,17 @@ namespace Lyrida.DataAccess.Repositories.UserPages;
 /// Creation Date: 02nd of November, 2023
 /// </remarks>
 public interface IUserPageRepository : IRepository<PageDto>,
-                                       IInsertRepositoryAction<PageDto>, 
-                                       IGetByIdRepositoryAction<PageDto>
+                                       IInsertRepositoryAction<PageDto>,
+                                       IUpdateRepositoryAction<PageDto>,
+                                       IGetByIdRepositoryAction<PageDto>,
+                                       IDeleteByIdRepositoryAction
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Deletes a user page identified by <paramref name="userId"/> and <paramref name="pageId"/> from the storage medium.
+    /// Gets the user pages of the user identified by <paramref name="userId"/> from the storage medium.
     /// </summary>
-    /// <param name="userId">The id of the user whose user page is deleted.</param>
-    /// <param name="userId">The id of the user page to be deleted.</param>
-    /// <returns>The result of deleting the user page, wrapped in a generic API container of type <see cref="ApiResponse"/>.</returns>
-    Task<ApiResponse> DeleteByIdAsync(string userId, string pageId);
-
-    /// <summary>
-    /// Updates <paramref name="data"/> in the storage medium.
-    /// </summary>
-    /// <param name="data">The element that will be updated.</param>
-    /// <returns>The result of updating <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
-    Task<ApiResponse> UpdateAsync(PageDto data);
+    /// <param name="userId">The Id of the user whose user pages to get.</param>
+    /// <returns>The user pages of a user identified by <paramref name="userId"/>, wrapped in a generic API container of type <see cref="ApiResponse{PageDto}"/>.</returns>
+    Task<ApiResponse<PageDto>> GetByUserIdAsync(string userId);
     #endregion
 }

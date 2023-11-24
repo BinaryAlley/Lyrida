@@ -12,4 +12,4 @@ namespace Lyrida.Application.Core.Authentication.Queries.Login;
 /// <remarks>
 /// Creation Date: 18th of July, 2023
 /// </remarks>
-public record LoginQuery(string Email, string Password, string TotpCode) : IRequest<ErrorOr<AuthenticationResultDto>>;
+public record LoginQuery(string Username, string Password, string TotpCode) : IRequest<ErrorOr<AuthenticationResultDto>>;

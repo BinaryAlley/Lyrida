@@ -50,7 +50,7 @@ public class GenerateTotpQrCommandHandler : IRequestHandler<GenerateTotpQrComman
     /// <summary>
     /// Handles the execution of the <see cref="GenerateTotpQrCommand"/>, which is responsible for generating a TOTP QR code.
     /// </summary>
-    /// <param name="command">The <see cref="GenerateTotpQrCommand"/> containing the email for which a QR code needs to be generated.</param>
+    /// <param name="command">The <see cref="GenerateTotpQrCommand"/> containing the username for which a QR code needs to be generated.</param>
     /// <param name="cancellationToken">An optional <see cref="CancellationToken"/> to observe while waiting for tasks to complete.</param>
     /// <returns>
     /// A Task containing an error or a QR code result DTO
@@ -64,7 +64,7 @@ public class GenerateTotpQrCommandHandler : IRequestHandler<GenerateTotpQrComman
         // generate a TOTP secret
         byte[] secret = totpTokenGenerator.GenerateSecret();
         // convert the secret into a QR code
-        string dataUri = qrCodeGenerator.GenerateQrCodeDataUri(userResult.Data[0].Email, secret);
+        string dataUri = qrCodeGenerator.GenerateQrCodeDataUri(userResult.Data[0].Username, secret);
 
         userResult.Data[0].TotpSecret = securityService.CryptographyService.Encrypt(Convert.ToBase64String(secret));
         // update the user's totp secret

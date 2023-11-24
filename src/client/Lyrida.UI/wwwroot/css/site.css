@@ -499,6 +499,46 @@ header #btnNavigate, header #btnEditPath {
     width: 55px;
 }
 
+#availableFileSystemsContainer {
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 10px;
+}
+
+.available-file-system-card {
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    position: relative;
+}
+
+.available-file-system-button {
+    position: absolute; 
+    height: 31px;
+    width: 31px;
+    top: 10px; 
+    right: 10px; 
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    border: 1px solid #222222;
+    border-radius: 30px;
+}
+
+.available-file-system-button:hover {
+    color: #FFFFFF;
+}
+
+#indexMainBody {
+    margin: auto;
+    width: 100%;
+    height: calc(100% - 95px);
+    overflow-y: auto;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
 .text-light-one {
     color: #6DCBFE;
 }
@@ -850,5 +890,15 @@ header #btnNavigate, header #btnEditPath {
 
     #addressBarGroup {
         flex-basis: 100%; /* Make addressBarGroup take the full width on wrap, hence pushing it to a new line */
+    }
+    
+    #indexMainBody {
+        margin: auto;
+        width: 100%;
+        height: calc(100% - 159px);
+    }
+
+    #dynTab_tabPages {
+        height: calc(100% - 176px) !important;
     }
 }

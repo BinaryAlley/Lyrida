@@ -6,7 +6,6 @@ using System.Threading;
 using Lyrida.DataAccess.UoW;
 using System.Threading.Tasks;
 using Lyrida.Domain.Common.Errors;
-using Lyrida.Infrastructure.Common.Time;
 using Lyrida.DataAccess.Repositories.Users;
 using Lyrida.Infrastructure.Common.Security;
 using Lyrida.Infrastructure.Core.Authentication;
@@ -35,12 +34,12 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<R
 
     #region ====================================================================== CTOR =====================================================================================
     /// <summary>
-    /// Overload C-tor
+    /// Overload C-tor.
     /// </summary>
-    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories</param>
-    /// <param name="totpTokenGenerator">Injected service for generating TOTP tokens</param>
-    /// <param name="qrCodeGenerator">Injected service for creating QR codes</param>
-    /// <param name="securityService">Injected service for security related functionality</param>
+    /// <param name="unitOfWork">Injected unit of work for interacting with the data access layer repositories.</param>
+    /// <param name="totpTokenGenerator">Injected service for generating TOTP tokens.</param>
+    /// <param name="qrCodeGenerator">Injected service for creating QR codes.</param>
+    /// <param name="securityService">Injected service for security related functionality.</param>
     public RegisterCommandHandler(IUnitOfWork unitOfWork, ITotpTokenGenerator totpTokenGenerator, IQRCodeGenerator qrCodeGenerator, ISecurity securityService)
     {
         this.qrCodeGenerator = qrCodeGenerator;
@@ -53,29 +52,27 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<R
 
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Registers a new account in the repository
+    /// Registers a new account in the repository.
     /// </summary>
-    /// <param name="command">The account to be registered</param>
-    /// <param name="cancellationToken">Optional cancellation token</param>
-    /// <returns>A DTO containing the register result, or an error</returns>
+    /// <param name="command">The account to be registered.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>A DTO containing the register result, or an error.</returns>
     public async Task<ErrorOr<RegistrationResultDto>> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
         // check if the user already exists
-        var resultSelectUser = await userRepository.GetByEmailAsync(command.Email);
+        var resultSelectUser = await userRepository.GetByUsernameAsync(command.Username);
         if (resultSelectUser.Error is null)
         {
             if (resultSelectUser.Data is not null)
-                return Errors.Authentication.DuplicateEmailError;
+                return Errors.Authentication.DuplicateUsernameError;
         }
         else
             return Errors.DataAccess.GetUserError;
         string? totpSecret = null;
         var user = new UserDto
         {
-            Email = command.Email,
-            Password = Uri.EscapeDataString(securityService.HashService.HashString(command.Password)),
-            LastName = command.LastName,
-            FirstName = command.FirstName
+            Username = command.Username,
+            Password = Uri.EscapeDataString(securityService.HashService.HashString(command.Password))
         };
         // if the user enabled two factor auth, include a QR with the totp secret
         if (command.Use2fa)
@@ -83,7 +80,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<R
             // generate a TOTP secret
             byte[] secret = totpTokenGenerator.GenerateSecret();
             // convert the secret into a QR code for the user to scan
-            totpSecret = qrCodeGenerator.GenerateQrCodeDataUri(command.Email, secret);
+            totpSecret = qrCodeGenerator.GenerateQrCodeDataUri(command.Username, secret);
             // store the TOTP secret in the repository, encrypted
             user.TotpSecret = securityService.CryptographyService.Encrypt(Convert.ToBase64String(secret));
         }
@@ -101,10 +98,10 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<R
     }
 
     /// <summary>
-    /// Adds the admin role
+    /// Adds the admin account preferences.
     /// </summary>
-    /// <param name="userId">The id of the user whose profile preferences are added</param>
-    /// <param name="use2fa">Whether the user enabled 2fa or not when registering the account</param>
+    /// <param name="userId">The id of the user whose profile preferences are added.</param>
+    /// <param name="use2fa">Whether the user enabled 2fa or not when registering the account.</param>
     /// <returns>An <see cref="ErrorOr{T}"/> containing either a boolean result, or an error.</returns>
     private async Task<ErrorOr<bool>> AddProfilePreferences(int userId, bool use2fa)
     {

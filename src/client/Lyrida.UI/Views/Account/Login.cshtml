@@ -6,18 +6,18 @@
         @Html.AntiForgeryToken()
         <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
         <table class="w-100">
-            <!-- section email -->
+            <!-- section username -->
             <tr>
                 <td class="w-25">
-                    <label for="loginEmail" class="text-light-one">@translationService.Translate(Terms.Username)</label>
+                    <label for="loginUsername" class="text-light-one">@translationService.Translate(Terms.Username)</label>
                 </td>
                 <td class="w-75">
-                    <input type="email" class="w-100 enlightenment-input" id="loginEmail" name="email" value="@Model?.Email" autocomplete="email">
+                    <input type="text" class="w-100 enlightenment-input" id="loginUsername" name="username" value="@Model?.Username">
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
-                    <span id="loginEmailError" class="invalid-feedback hidden"></span>
+                    <span id="loginUsernameError" class="invalid-feedback hidden"></span>
                 </td>
             </tr>
             <!-- section password -->
@@ -86,25 +86,24 @@
                     success: function (data) {
                         const btnLogin = $('#btnLogin');
                         const loginError = $('#loginError');
-                        const loginEmail = $('#loginEmail');
+                        const loginUsername = $('#loginUsername');
                         const btnChangePwd = $('#btnChangePwd');
                         const loginPassword = $('#loginPassword');
                         const loginTotpCode = $('#loginTotpCode');
                         const loginTotpLabel = $('#loginTotpLabel');
                         const loginTotpError = $('#loginTotpError');
                         const btnValidateTotp = $('#btnValidateTotp');
-                        const loginEmailError = $('#loginEmailError');
+                        const loginUsernameError = $('#loginUsernameError');
                         const loginPasswordError = $('#loginPasswordError');
                         loginError.removeClass('inline').addClass('hidden');
                         loginTotpError.removeClass('inline').addClass('hidden');
-                        loginEmailError.removeClass('inline').addClass('hidden');
+                        loginUsernameError.removeClass('inline').addClass('hidden');
                         loginPasswordError.removeClass('inline').addClass('hidden');
-                        if (data.success) {
-                            getUserPermissions();
+                        if (data.success) 
                             window.location.href = data.redirectUrl;
-                        } else {
-                            if (data.emailError)
-                                loginEmailError.text(data.emailError).removeClass('hidden').addClass('inline');
+                        else {
+                            if (data.usernameError)
+                                loginUsernameError.text(data.usernameError).removeClass('hidden').addClass('inline');
                             if (data.passwordError)
                                 loginPasswordError.text(data.passwordError).removeClass('hidden').addClass('inline');
                             if (data.errorMessage)
@@ -112,7 +111,7 @@
                             if (data.totpError) { // this will be populated if the API asked for TOTP too, after password login
                                 if (loginTotpCode.hasClass('hidden')) {
                                     btnLogin.prop("disabled", true);
-                                    loginEmail.attr("readonly", true);
+                                    loginUsername.attr("readonly", true);
                                     loginPassword.attr("readonly", true);
                                     btnChangePwd.attr("disabled", "disabled");
                                     loginTotpCode.removeClass('hidden').addClass('inline');
@@ -140,7 +139,7 @@
                     }
                 });
             });
-            $('#loginEmail, #loginPassword, #loginTotpCode').on('keydown', function (e) {
+            $('#loginUsername, #loginPassword, #loginTotpCode').on('keydown', function (e) {
                 if (e.which === 13) { // Enter key's keycode
                     if ($('#loginTotpCode').is(':visible')) {
                         $('#btnValidateTotp').click(); // trigger the TOTP button click when the login part was already performed

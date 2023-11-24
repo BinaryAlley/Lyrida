@@ -162,14 +162,11 @@ public class AccountController : Controller
     public async Task<IActionResult> Register(RegisterRequestDto data)
     {
         // handle cases when mandatory info is not provided
-        if (string.IsNullOrEmpty(data.FirstName) || string.IsNullOrEmpty(data.LastName) || string.IsNullOrEmpty(data.Email) 
-            || string.IsNullOrEmpty(data.Password) ||string.IsNullOrEmpty(data.PasswordConfirm))            
+        if (string.IsNullOrEmpty(data.Username) || string.IsNullOrEmpty(data.Password) ||string.IsNullOrEmpty(data.PasswordConfirm))            
         {
             var errors = new
             {
-                FirstNameError = string.IsNullOrEmpty(data.FirstName) ? translationService.Translate(Terms.EmptyFirstName) : null,
-                LastNameError = string.IsNullOrEmpty(data.LastName) ? translationService.Translate(Terms.EmptyLastName) : null,
-                EmailError = string.IsNullOrEmpty(data.Email) ? translationService.Translate(Terms.EmptyEmail) : null,
+                UsernameError = string.IsNullOrEmpty(data.Username) ? translationService.Translate(Terms.EmptyUsername) : null,
                 PasswordError = string.IsNullOrEmpty(data.Password) ? translationService.Translate(Terms.EmptyPassword) : null,
                 PasswordConfirmError = string.IsNullOrEmpty(data.PasswordConfirm) ? translationService.Translate(Terms.EmptyPasswordConfirm) : null,
             };
@@ -212,11 +209,11 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginDto data, string? returnUrl = null)
     {
         // handle cases when mandatory info is not provided
-        if (string.IsNullOrEmpty(data.Email) || string.IsNullOrEmpty(data.Password))
+        if (string.IsNullOrEmpty(data.Username) || string.IsNullOrEmpty(data.Password))
         {
             var errors = new
             {
-                EmailError = string.IsNullOrEmpty(data.Email) ? translationService.Translate(Terms.EmptyUsername) : null,
+                UsernameError = string.IsNullOrEmpty(data.Username) ? translationService.Translate(Terms.EmptyUsername) : null,
                 PasswordError = string.IsNullOrEmpty(data.Password) ? translationService.Translate(Terms.EmptyPassword) : null
             };
             return Json(errors);
@@ -243,7 +240,7 @@ public class AccountController : Controller
                 // tell asp.net we are logged in
                 List<Claim> claims = new()
                 {
-                    new Claim(ClaimTypes.Name, responseDto?.Email!),
+                    new Claim(ClaimTypes.Name, responseDto?.Username!),
                     new Claim(ClaimTypes.NameIdentifier, responseDto?.Id.ToString()!),
                     // You can add other claims as needed, for example, you might add a claim for the JWT token
                     new Claim("Token", responseDto?.Token!),
@@ -273,25 +270,25 @@ public class AccountController : Controller
     }
 
     /// <summary>
-    /// Recovers the password of a user identified by <paramref name="email"/>.
+    /// Recovers the password of a user identified by <paramref name="username"/>.
     /// </summary>
-    /// <param name="email">The email account of the user for who to recover the password.</param>
+    /// <param name="username">The user for whom to recover the password.</param>
     [HttpPost("RecoverPassword")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RecoverPassword(string email, string totpCode)
+    public async Task<IActionResult> RecoverPassword(string username, string totpCode)
     {
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(totpCode))
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(totpCode))
         {
             var errors = new
             {
-                EmailError = string.IsNullOrEmpty(email) ? translationService.Translate(Terms.EmptyEmail) : null,
+                UsernameError = string.IsNullOrEmpty(username) ? translationService.Translate(Terms.EmptyUsername) : null,
                 TotpError = string.IsNullOrEmpty(totpCode) ? translationService.Translate(Terms.EmptyTotp) : null
             };
             return Json(errors);
         }
         else
         {
-            await apiHttpClient.PostAsync("authentication/recoverPassword/", new { email, totpCode }, language: translationService.Language);
+            await apiHttpClient.PostAsync("authentication/recoverPassword/", new { username, totpCode }, language: translationService.Language);
             return Json(new { success = true });
         }
     }
@@ -319,7 +316,7 @@ public class AccountController : Controller
         {
             try
             {
-                ChangePasswordRequestDto newDto = new() { Email = User?.Identity?.Name, CurrentPassword = data.CurrentPassword, NewPassword = data.NewPassword, NewPasswordConfirm = data.NewPasswordConfirm };
+                ChangePasswordRequestDto newDto = new() { Username = User?.Identity?.Name, CurrentPassword = data.CurrentPassword, NewPassword = data.NewPassword, NewPasswordConfirm = data.NewPasswordConfirm };
                 // attempt backend password change
                 var response = await apiHttpClient.PostAsync("authentication/changePassword/", newDto, HttpContext.Items["UserToken"]?.ToString(), translationService.Language);
                 var responseDto = JsonConvert.DeserializeObject<LoginResponseDto>(response);

@@ -39,7 +39,12 @@ public class MappingConfig : IRegister
 
         TypeAdapterConfig<DataAccess.Common.DTO.Pages.PageDto, DTO.Pages.PageDto>
             .NewConfig()
-            .Map(dest => dest.Uuid, src => ConvertUuidString(src.UuidString));
+            .Map(dest => dest.PageId, src => ConvertUuidString(src.PageIdString))
+            .Map(dest => dest.EnvironmentId, src => ConvertUuidString(src.EnvironmentIdString));
+
+        TypeAdapterConfig<DataAccess.Common.DTO.Environments.FileSystemDataSourceDto, DTO.Environments.FileSystemDataSourceDto>
+            .NewConfig()
+            .Map(dest => dest.EnvironmentId, src => ConvertUuidString(src.EnvironmentIdString));
     }
 
     /// <summary>

@@ -19,8 +19,7 @@ public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCo
     /// </summary>
     public ChangePasswordCommandValidator()
     {
-        RuleFor(x => x.Email).NotEmpty().WithMessage(Terms.EmailCannotBeEmpty.ToString())
-            .EmailAddress().WithMessage(Terms.InvalidEmailAddress.ToString());
+        RuleFor(x => x.Username).NotEmpty().WithMessage(Terms.UsernameCannotBeEmpty.ToString());
         RuleFor(x => x.CurrentPassword).NotEmpty().WithMessage(Terms.EmptyCurrentPassword.ToString())
             .Matches("^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$").WithMessage(Terms.InvalidPassword.ToString());
         RuleFor(x => x.NewPassword).NotEmpty().WithMessage(Terms.EmptyNewPassword.ToString())

@@ -23,24 +23,24 @@ public interface IUserRepository : IRepository<UserDto>,
 {
     #region ===================================================================== METHODS ===================================================================================
     /// <summary>
-    /// Gets the user identified by <paramref name="email"/> from the storage medium
+    /// Gets the user identified by <paramref name="username"/> from the storage medium.
     /// </summary>
-    /// <param name="email">The email of the user to get</param>
-    /// <returns>A user identified by <paramref name="email"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
-    Task<ApiResponse<UserDto>> GetByEmailAsync(string email);
+    /// <param name="username">The username of the user to get.</param>
+    /// <returns>A user identified by <paramref name="username"/>, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/>.</returns>
+    Task<ApiResponse<UserDto>> GetByUsernameAsync(string username);
 
     /// <summary>
-    /// Gets the user with the <paramref name="token"/> registration token from the storage medium
+    /// Gets the user with the <paramref name="token"/> registration token from the storage medium.
     /// </summary>
-    /// <param name="token">The registration validation token of the user to get</param>
-    /// <returns>A user with the <paramref name="token"/> registration token, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/></returns>
+    /// <param name="token">The registration validation token of the user to get.</param>
+    /// <returns>A user with the <paramref name="token"/> registration token, wrapped in a generic API container of type <see cref="ApiResponse{UserDto}"/>.</returns>
     Task<ApiResponse<UserDto>> GetByValidationTokenAsync(string token);
 
     /// <summary>
-    /// Updates the password for <paramref name="data"/> in the storage medium
+    /// Updates the password for <paramref name="data"/> in the storage medium.
     /// </summary>
-    /// <param name="data">The user whose password will be updated</param>
-    /// <returns>The result of updating the password of <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/></returns>
+    /// <param name="data">The user whose password will be updated.</param>
+    /// <returns>The result of updating the password of <paramref name="data"/>, wrapped in a generic API container of type <see cref="ApiResponse"/>.</returns>
     Task<ApiResponse> ChangePasswordAsync(UserDto data);
     #endregion
 }
