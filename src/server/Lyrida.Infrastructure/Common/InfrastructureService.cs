@@ -1,7 +1,6 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using Lyrida.Infrastructure.Common.Logging;
 using Lyrida.Infrastructure.Common.Security;
-using Lyrida.Infrastructure.Common.Configuration;
 #endregion
 
 namespace Lyrida.Infrastructure.Common;
@@ -17,7 +16,6 @@ public class InfrastructureService : IInfrastructure
     #region ==================================================================== PROPERTIES =================================================================================
     public ISecurity Security { get; }
     public ILoggerManager LoggerService { get; }
-    public IAppConfig ConfigurationService { get; }
     #endregion
 
     #region ====================================================================== CTOR =====================================================================================
@@ -26,13 +24,10 @@ public class InfrastructureService : IInfrastructure
     /// </summary>
     /// <param name="security">Injected security infrastructure layer service</param>
     /// <param name="loggerManager">Injected logging infrastructure layer service</param>
-    /// <param name="config">Injected configuration infrastructure layer service</param>
-    // <param name="translation">Injected translation infrastructure layer service</param>
-    public InfrastructureService(ISecurity security, ILoggerManager loggerManager, IAppConfig config)
+    public InfrastructureService(ISecurity security, ILoggerManager loggerManager)
     {
         Security = security;
         LoggerService = loggerManager;
-        ConfigurationService = config;
     }
     #endregion
 }

@@ -1,6 +1,5 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using Lyrida.Infrastructure.Common.Enums;
-using Lyrida.Infrastructure.Common.Configuration;
 #endregion
 
 namespace Lyrida.Infrastructure.Localization;
@@ -14,7 +13,6 @@ namespace Lyrida.Infrastructure.Localization;
 public class TranslationService : ITranslationService
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
-    private readonly IAppConfig appConfig;
     private readonly TranslationsCollection translations;
     #endregion
 
@@ -31,10 +29,8 @@ public class TranslationService : ITranslationService
     /// <summary>
     /// Overload C-tor
     /// </summary>
-    /// <param name="appConfig">Injected application configuration service</param>
-    public TranslationService(IAppConfig appConfig)
+    public TranslationService()
     {
-        this.appConfig = appConfig;
         translations = new TranslationsCollection
         {
             (Terms.Back, "Înapoi", "Back", "Zurück"),

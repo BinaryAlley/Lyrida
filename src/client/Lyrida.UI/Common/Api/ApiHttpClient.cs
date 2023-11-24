@@ -6,10 +6,10 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
 using Lyrida.UI.Common.Exceptions;
-using Lyrida.Infrastructure.Common.Enums;
-using Lyrida.Infrastructure.Common.Configuration;
 using Lyrida.UI.Common.DTO.Common;
 using Lyrida.UI.Common.DTO.FileSystem;
+using Lyrida.Infrastructure.Common.Enums;
+using Microsoft.Extensions.Configuration;
 #endregion
 
 namespace Lyrida.UI.Common.Api;
@@ -31,10 +31,10 @@ public class ApiHttpClient : IApiHttpClient
     /// Overload C-tor
     /// </summary>
     /// <param name="httpClient">Injected HttpClient for interacting with the API</param>
-    public ApiHttpClient(HttpClient httpClient, IAppConfig appConfig)
+    public ApiHttpClient(HttpClient httpClient, IConfiguration configuration)
     {
         this.httpClient = httpClient;
-        httpClient.BaseAddress = new Uri(appConfig.ServerPath + ":" + appConfig.ServerPort);
+        httpClient.BaseAddress = new Uri(configuration.GetValue<string>("ServerPath") + ":" + configuration.GetValue<int>("ServerPort"));
     }
     #endregion
 

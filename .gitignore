@@ -14,6 +14,8 @@ src/client/obj/*
 src/client/bin/*
 src/client/Lyrida.UI/wwwroot/lib/*
 src/client/Lyrida.UI/wwwroot/bin/*
+src/client/Lyrida.UI/appsettings.Development.json
+src/client/Lyrida.UI/appsettings.Production.json
 
 src/server/Lyrida.Api/obj/*
 src/server/Lyrida.Api/bin/*
@@ -27,7 +29,8 @@ src/server/Lyrida.Infrastructure/obj/*
 src/server/Lyrida.Infrastructure/bin/*
 src/server/obj/*
 src/server/bin/*
-src/server/Lyrida.Api/appsettings.json
+src/server/Lyrida.Api/appsettings.Development.json
+src/server/Lyrida.Api/appsettings.Production.json
 
 tests/Lyrida.Tests/obj/*
 tests/Lyrida.Tests/bin/*

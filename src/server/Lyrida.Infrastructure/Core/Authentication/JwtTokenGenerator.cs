@@ -1,11 +1,12 @@
 ﻿#region ========================================================================= USING =====================================================================================
+using System;
 using System.Text;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Configuration;
 using Lyrida.Infrastructure.Common.Security;
 using Lyrida.Infrastructure.Core.Services.Time;
-using Lyrida.Infrastructure.Common.Configuration;
 #endregion
 
 namespace Lyrida.Infrastructure.Core.Authentication;
@@ -19,7 +20,7 @@ namespace Lyrida.Infrastructure.Core.Authentication;
 public class JwtTokenGenerator : IJwtTokenGenerator
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
-    private readonly IAppConfig appConfig;
+    private readonly IConfiguration configuration;
     private readonly ICryptography cryptographyService;
     private readonly IDateTimeProvider dateTimeProviderService;
     #endregion
@@ -29,10 +30,12 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     /// Overload C-tor.
     /// </summary>
     /// <param name="dateTimeProviderService">Injected service for time related functionality.</param>
-    public JwtTokenGenerator(IDateTimeProvider dateTimeProviderService, IAppConfig appConfig, ICryptography cryptographyService)
+    /// <param name="cryptographyService">Injected service for cryptographic related functionality.</param>
+    /// <param name="configuration">Injected service for application configurations.</param>
+    public JwtTokenGenerator(IDateTimeProvider dateTimeProviderService, ICryptography cryptographyService, IConfiguration configuration)
     {
-        this.appConfig = appConfig;
         this.cryptographyService = cryptographyService;
+        this.configuration = configuration;
         this.dateTimeProviderService = dateTimeProviderService;
     }
     #endregion
@@ -47,7 +50,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     public string GenerateToken(string id, string username)
     {
         // use a symmetric key approach
-        var securityKey = cryptographyService.Decrypt(appConfig.JwtSettings!.SecretKey!);
+        var securityKey = configuration.GetSection("JwtSettings").GetValue<string>("SecretKey");
+        if (string.IsNullOrWhiteSpace(securityKey))
+            throw new InvalidOperationException("JWT secret is null!");
         var signingCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey)), SecurityAlgorithms.HmacSha256);
         var claims = new[]
         {
@@ -56,9 +61,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new Claim(JwtRegisteredClaimNames.Jti, id.ToString())
         };
         var securityToken = new JwtSecurityToken(
-            issuer: appConfig.JwtSettings.Issuer, 
-            audience: appConfig.JwtSettings.Audience, 
-            expires: dateTimeProviderService.UtcNow.AddMinutes(appConfig.JwtSettings.ExpiryMinutes),  
+            issuer: configuration.GetSection("JwtSettings").GetValue<string>("Issuer"), 
+            audience: configuration.GetSection("JwtSettings").GetValue<string>("Audience"), 
+            expires: dateTimeProviderService.UtcNow.AddMinutes(configuration.GetSection("JwtSettings").GetValue<int>("ExpiryMinutes")),  
             claims: claims, 
             signingCredentials: signingCredentials);
         return new JwtSecurityTokenHandler().WriteToken(securityToken);

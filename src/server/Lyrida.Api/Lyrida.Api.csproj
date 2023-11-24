@@ -34,12 +34,6 @@
     <ProjectReference Include="..\Lyrida.Application\Lyrida.Application.csproj" />
   </ItemGroup>
   
-  <ItemGroup>
-    <Content Update="appsettings.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
   <Target Name="RemoveSatelliteAssemblies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="@(ReferenceSatellitePaths)" />

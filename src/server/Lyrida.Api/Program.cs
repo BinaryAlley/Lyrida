@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Lyrida.Domain.Common.DependencyInjection;
 using Lyrida.Infrastructure.Core.Authentication;
-using Lyrida.Infrastructure.Common.Configuration;
 using Lyrida.DataAccess.Common.DependencyInjection;
 using Lyrida.Application.Common.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -52,6 +51,7 @@ public class Program
                .AddAuthentication(defaultScheme: JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options =>
                {
+                   //var jwtSettings = app.Services.GetRequiredService<IOptions<JwtSettings>>().Value;
                    options.TokenValidationParameters = new TokenValidationParameters()
                    {
                        ValidateIssuer = true,
@@ -94,24 +94,25 @@ public class Program
             containerBuilder.RegisterModule(new ApplicationLayerServices());
             containerBuilder.RegisterModule(new InfrastructureLayerServices());
         });
-        var app = builder.Build();
         // if environment variables are set, override configuration values with them
-        string? environment = builder.Configuration["ASPNETCORE_ENVIRONMENT"];
-        string? databaseHost = builder.Configuration["DATABASE_HOST"];
-        string? databasePort = builder.Configuration["DATABASE_PORT"];
-        string? databaseName = builder.Configuration["DATABASE_NAME"];
-        string? databaseUser = builder.Configuration["DATABASE_USER"];
-        string? databasePassword = builder.Configuration["DATABASE_PASSWORD"];
-        if (databaseHost is not null)
-        {
-            IAppConfig configService = app.Services.GetRequiredService<IAppConfig>();
-            ICryptography? cryptographyService = app.Services.GetRequiredService<ICryptography>();
-            if (environment is not null)
-                configService.Application!.IsProductionMedium = environment == "Production";
-            string connectionString = "Server=" + databaseHost + ";Port=" + databasePort + ";Database=" + databaseName + ";Uid=" + databaseUser +
-                ";Pwd=" + databasePassword + ";Convert Zero Datetime=True;Allow User Variables=True;IgnoreCommandTransaction=True";
-            configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"] = cryptographyService.Encrypt(connectionString);
-        }
+        //string? environment = builder.Configuration["ASPNETCORE_ENVIRONMENT"];
+        //string? databaseHost = builder.Configuration["DATABASE_HOST"];
+        //string? databasePort = builder.Configuration["DATABASE_PORT"];
+        //string? databaseName = builder.Configuration["DATABASE_NAME"];
+        //string? databaseUser = builder.Configuration["DATABASE_USER"];
+        //string? databasePassword = builder.Configuration["DATABASE_PASSWORD"];
+        //if (databaseHost is not null)
+        //{
+        //    IConfiguration configuration = app.Services.GetRequiredService<IConfiguration>();
+        //    ICryptography? cryptographyService = app.Services.GetRequiredService<ICryptography>();
+        //    if (environment is not null)
+        //        builder.Services.Configure()
+        //        configuration.GetSection("Application").GetValue<bool>("IsProductionMedium") = environment == "Production";
+        //    string connectionString = "Server=" + databaseHost + ";Port=" + databasePort + ";Database=" + databaseName + ";Uid=" + databaseUser +
+        //        ";Pwd=" + databasePassword + ";Convert Zero Datetime=True;Allow User Variables=True;IgnoreCommandTransaction=True";
+        //    configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"] = cryptographyService.Encrypt(connectionString);
+        //}
+        var app = builder.Build();
         app.UseExceptionHandler("/error"); // uses a middleware which reexecutes the request to the  error path
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

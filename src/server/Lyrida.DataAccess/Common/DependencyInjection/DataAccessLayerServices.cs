@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using Autofac.Extras.DynamicProxy;
 using Lyrida.Infrastructure.Common.Logging;
 using Lyrida.Infrastructure.Common.Security;
-using Lyrida.Infrastructure.Common.Configuration;
 using Lyrida.Infrastructure.Common.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 #endregion
 
 namespace Lyrida.DataAccess.Common.DependencyInjection;
@@ -52,12 +52,10 @@ public class DataAccessLayerServices : Autofac.Module
                    .OnActivating(e =>
                    {
                        Type? instanceType = e.Instance?.GetType();
-                       IAppConfig? configService = e.Context.Resolve<IAppConfig>();
-                       ICryptography? cryptographyService = e.Context.Resolve<ICryptography>();
-                       var a = cryptographyService.Decrypt(configService.DatabaseConnectionStrings!["test"]);
+                       var configuration = e.Context.Resolve<IConfiguration>();
                        instanceType?.GetProperty("ConnectionStringFactory")
                                    ?.SetValue(e.Instance,
-                                         () => cryptographyService.Decrypt(configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"]!));
+                                         () => configuration.GetConnectionString(configuration.GetSection("Application").GetValue<bool>("IsProductionMedium") ? "production" : "test")!);
                    })
                    .EnableInterfaceInterceptors()
                    .InterceptedBy(typeof(DatabaseProxyInterceptor))

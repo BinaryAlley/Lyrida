@@ -11,6 +11,7 @@ using Lyrida.Infrastructure.Common.Enums;
 using Newtonsoft.Json;
 using Lyrida.UI.Common.DTO.FileSystem;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 #endregion
 
 namespace Lyrida.Client.Controllers;
@@ -34,8 +35,9 @@ public class HomeController : Controller
     /// </summary>
     /// <param name="apiHttpClient">Injected service for interactions with the API</param>
     /// <param name="translationService">Injected service for translations</param>
-    public HomeController(IApiHttpClient apiHttpClient, ITranslationService translationService)
+    public HomeController(IApiHttpClient apiHttpClient, ITranslationService translationService, IConfiguration configuration)
     {
+        var a = configuration.GetValue<string>("ServerPath");
         this.apiHttpClient = apiHttpClient;
         this.translationService = translationService;
     }

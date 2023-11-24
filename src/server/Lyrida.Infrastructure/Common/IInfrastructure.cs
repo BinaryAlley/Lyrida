@@ -1,7 +1,6 @@
 ﻿#region ========================================================================= USING =====================================================================================
-using Lyrida.Infrastructure.Common.Configuration;
-using Lyrida.Infrastructure.Common.Security;
 using Lyrida.Infrastructure.Common.Logging;
+using Lyrida.Infrastructure.Common.Security;
 #endregion
 
 namespace Lyrida.Infrastructure.Common;
@@ -17,6 +16,5 @@ public interface IInfrastructure
     #region ==================================================================== PROPERTIES =================================================================================
     ISecurity Security { get; }
     ILoggerManager LoggerService { get; }
-    IAppConfig ConfigurationService { get; }
     #endregion
 }

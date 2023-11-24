@@ -1,17 +1,13 @@
 ﻿#region ========================================================================= USING =====================================================================================
 using System;
 using Autofac;
-using System.IO;
-using Newtonsoft.Json;
 using Autofac.Extras.DynamicProxy;
 using Lyrida.Infrastructure.Common.Time;
 using Lyrida.Infrastructure.Localization;
 using Lyrida.Infrastructure.Common.Logging;
 using Lyrida.Infrastructure.Common.Security;
 using Lyrida.Infrastructure.Core.Services.Time;
-using Lyrida.Infrastructure.Common.Notification;
 using Lyrida.Infrastructure.Core.Authentication;
-using Lyrida.Infrastructure.Common.Configuration;
 #endregion
 
 namespace Lyrida.Infrastructure.Common.DependencyInjection;
@@ -31,26 +27,11 @@ public class InfrastructureLayerServices : Module
     /// <param name="builder">The Dependency Injection container where the services are registered</param>
     protected override void Load(ContainerBuilder builder)
     {
-        string configurationFilePath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-        if (File.Exists(configurationFilePath))
-        {
-            AppConfig configuration = JsonConvert.DeserializeObject<AppConfig>(File.ReadAllText(configurationFilePath)) ?? throw new InvalidOperationException("Cannot deserialize appsettings.json!");
-            configuration.ConfigurationFilePath = configurationFilePath;
-            builder.Register(context => configuration)
-                   .OnActivating(e => e.Instance!.ConfigurationFilePath = configurationFilePath)
-                   .As<IAppConfig>()
-                   .InstancePerLifetimeScope();
-            // re-save the configuration (the configuration file might contain properties that were not previously present in the JSON file, those need to be serialized too)
-            configuration.UpdateConfiguration();
-        }
-        else
-            throw new FileNotFoundException("Configuration file not found!\nPath: " + configurationFilePath);
         builder.RegisterType<Hash>().As<IHash>().InstancePerLifetimeScope();
         builder.RegisterType<ProxyInterceptor>().InstancePerLifetimeScope();
         builder.RegisterType<TimeService>().As<ITimeService>().SingleInstance();
         builder.RegisterType<AsyncProxyInterceptor>().InstancePerLifetimeScope();
         builder.RegisterType<DatabaseProxyInterceptor>().InstancePerLifetimeScope();
-        builder.RegisterType<EmailService>().As<IEmailService>().InstancePerDependency();
         builder.RegisterType<DatabaseAsyncProxyInterceptor>().InstancePerLifetimeScope();
         builder.RegisterType<DateTimeProvider>().As<IDateTimeProvider>().SingleInstance();
         builder.RegisterType<NLogLogger>().As<ILoggerManager>().InstancePerLifetimeScope();
