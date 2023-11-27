@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
+using Microsoft.Extensions.Configuration;
 using Lyrida.Infrastructure.Common.Utilities;
 #endregion
 
@@ -23,6 +24,7 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
 {
     #region ================================================================== FIELD MEMBERS ================================================================================
     private readonly ILoggerManager logger;
+    private readonly IConfiguration configuration;
     private readonly Dictionary<string, string> dbTableNamesMaping = new();
     private static readonly ConcurrentDictionary<Type, string> PropertyNamesCache = new();
     private const string DATA_ACCESS = "Lyrida.DataAccess";
@@ -42,9 +44,11 @@ public class DatabaseAsyncProxyInterceptor : AsyncInterceptorBase
     /// Overload C-tor.
     /// </summary>
     /// <param name="logger">The injected logger to be used in interception.</param>
-    public DatabaseAsyncProxyInterceptor(ILoggerManager logger)
+    /// <param name="configuration">Injected service for application configurations.</param>
+    public DatabaseAsyncProxyInterceptor(ILoggerManager logger, IConfiguration configuration)
     {
         this.logger = logger;
+        this.configuration = configuration;
         MapDatabaseTableNames();
         CacheDataAccessLayerEntitiesPropertyNames();
     }

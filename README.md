@@ -43,7 +43,7 @@ Multiple other features are available, and they are listed in the detailed prese
 ## Documentation
 
 - **[Installation](./documents/INSTALLATION.MD)**
-- **[Usage]()**
+- **[Usage](./documents/USAGE.MD)**
 - **[FAQ]()**
 
 

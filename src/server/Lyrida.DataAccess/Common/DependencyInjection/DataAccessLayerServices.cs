@@ -30,10 +30,8 @@ public class DataAccessLayerServices : Autofac.Module
     /// <param name="builder">The Dependency Injection container where the services are registered</param>
     protected override void Load(ContainerBuilder builder)
     {
-        //builder.RegisterType<DateTimeProvider>().As<IDateTimeProvider>().SingleInstance();
         builder.RegisterType<UnitOfWork>()
                .As<IUnitOfWork>()
-               //.SingleInstance();
                .InstancePerLifetimeScope();
 
         Type[]? dataAccessLayerTypes = Assembly.GetExecutingAssembly().GetTypes();
@@ -53,9 +51,10 @@ public class DataAccessLayerServices : Autofac.Module
                    {
                        Type? instanceType = e.Instance?.GetType();
                        var configuration = e.Context.Resolve<IConfiguration>();
+                       string? connectionString = configuration.GetConnectionString("DefaultConnection");
+                       // set the delegate to return the connection string
                        instanceType?.GetProperty("ConnectionStringFactory")
-                                   ?.SetValue(e.Instance,
-                                         () => configuration.GetConnectionString(configuration.GetSection("Application").GetValue<bool>("IsProductionMedium") ? "production" : "test")!);
+                                   ?.SetValue(e.Instance, () => connectionString);
                    })
                    .EnableInterfaceInterceptors()
                    .InterceptedBy(typeof(DatabaseProxyInterceptor))

@@ -12,8 +12,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		..\..\documents\DATABASE SCHEMA.sql = ..\..\documents\DATABASE SCHEMA.sql
 		..\..\documents\ERRORS.MD = ..\..\documents\ERRORS.MD
+		..\..\documents\INSTALLATION.MD = ..\..\documents\INSTALLATION.MD
 		..\..\documents\LICENSE.MD = ..\..\documents\LICENSE.MD
+		..\..\README.md = ..\..\README.md
 		..\..\documents\SOURCES.MD = ..\..\documents\SOURCES.MD
+		..\..\documents\USAGE.MD = ..\..\documents\USAGE.MD
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lyrida.Infrastructure", "Lyrida.Infrastructure\Lyrida.Infrastructure.csproj", "{E3605BE7-6D35-446B-9232-E28130E01466}"

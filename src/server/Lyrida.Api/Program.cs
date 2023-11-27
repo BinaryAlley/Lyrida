@@ -19,6 +19,8 @@ using Lyrida.DataAccess.Common.DependencyInjection;
 using Lyrida.Application.Common.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Lyrida.Infrastructure.Common.DependencyInjection;
+using System.Linq;
+using System;
 #endregion
 
 namespace Lyrida.Api;
@@ -94,24 +96,22 @@ public class Program
             containerBuilder.RegisterModule(new ApplicationLayerServices());
             containerBuilder.RegisterModule(new InfrastructureLayerServices());
         });
-        // if environment variables are set, override configuration values with them
-        //string? environment = builder.Configuration["ASPNETCORE_ENVIRONMENT"];
-        //string? databaseHost = builder.Configuration["DATABASE_HOST"];
-        //string? databasePort = builder.Configuration["DATABASE_PORT"];
-        //string? databaseName = builder.Configuration["DATABASE_NAME"];
-        //string? databaseUser = builder.Configuration["DATABASE_USER"];
-        //string? databasePassword = builder.Configuration["DATABASE_PASSWORD"];
-        //if (databaseHost is not null)
-        //{
-        //    IConfiguration configuration = app.Services.GetRequiredService<IConfiguration>();
-        //    ICryptography? cryptographyService = app.Services.GetRequiredService<ICryptography>();
-        //    if (environment is not null)
-        //        builder.Services.Configure()
-        //        configuration.GetSection("Application").GetValue<bool>("IsProductionMedium") = environment == "Production";
-        //    string connectionString = "Server=" + databaseHost + ";Port=" + databasePort + ";Database=" + databaseName + ";Uid=" + databaseUser +
-        //        ";Pwd=" + databasePassword + ";Convert Zero Datetime=True;Allow User Variables=True;IgnoreCommandTransaction=True";
-        //    configService.DatabaseConnectionStrings![configService.Application!.IsProductionMedium ? "production" : "test"] = cryptographyService.Encrypt(connectionString);
-        //}
+        // if environment variables are set, override configuration values with them 
+        // (note: asp.net core can do this automatically, but the appsetting.json hierarchy and property names should match - I like more individual environment variables)
+        string? environment = builder.Configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
+        string? databaseHost = builder.Configuration["DATABASE_HOST"];
+        string? databasePort = builder.Configuration["DATABASE_PORT"];
+        string? databaseName = builder.Configuration["DATABASE_NAME"];
+        string? databaseUser = builder.Configuration["DATABASE_USER"];
+        string? databasePassword = builder.Configuration["DATABASE_PASSWORD"];
+        // only create and set the connection string if all parts are present
+        if (new[] { databaseHost, databasePort, databaseName, databaseUser, databasePassword }.All(part => !string.IsNullOrEmpty(part)))
+        {
+            string connectionString = $"Server={databaseHost};Port={databasePort};Database={databaseName};Uid={databaseUser};Pwd={databasePassword};Convert Zero Datetime=True;Allow User Variables=True;IgnoreCommandTransaction=True";
+            // update the IConfiguration directly
+            builder.Configuration["ConnectionStrings:DefaultConnection"] = connectionString;
+        }
+        Console.WriteLine("Environemnt was set to: " + environment);
         var app = builder.Build();
         app.UseExceptionHandler("/error"); // uses a middleware which reexecutes the request to the  error path
         // Configure the HTTP request pipeline.
@@ -127,7 +127,7 @@ public class Program
         app.UseMiddleware<PlatformMiddleware>();
         app.UseMiddleware<LanguageMiddleware>();
         //app.UseMiddleware<AuthorizationMiddleware>();
-        app.MapControllers();      
+        app.MapControllers();
         app.Run();
     }
     #endregion
