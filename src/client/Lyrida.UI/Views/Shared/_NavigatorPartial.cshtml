@@ -132,6 +132,11 @@
 
 <script type="text/javascript">
     $(function () {
+        shortcut.add("Ctrl+a", function () {
+            $('#btnSelectAll').click();
+        }, {
+            'disable_in_input': true
+        });
         shortcut.add("Ctrl+x", function () {
             $('#btnCut').click();
         }, {
@@ -174,7 +179,7 @@
                 goUpOneLevel();
         });
         $('#addressBarInput').keydown(function (event) {
-            event.preventDefault();  
+            //event.preventDefault();  
             if (event.key === 'Escape') {
                 addressBarInput.style.display = 'none'; // hide #addressBarInput
                 addressBar.style.display = 'block'; // show #addressBar
@@ -217,6 +222,20 @@
                 $(this).find('img').attr('alt', '@translationService.Translate(Terms.SelectionMode)');
             }
         });
+        $('#btnSelectAll').click(function (event) {
+            const explorer = getActiveExplorer();
+            if (explorer) {
+                // go through each .e item and mark it as selected
+                explorer.querySelectorAll('.e').forEach(item => {
+                    item.classList.add('selected');
+                    item.classList.remove('selectionHover');
+                });
+            }
+            selectionDropdown.classList.add('hidden');
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
         $('#btnCut').click(function (event) {
             const explorer = getActiveExplorer();
             if (explorer) {

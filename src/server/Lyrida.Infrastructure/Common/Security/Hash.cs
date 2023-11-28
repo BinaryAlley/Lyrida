@@ -17,10 +17,10 @@ public sealed class Hash : IHash
 {
     #region ===================================================================== METHODS =================================================================================== 
     /// <summary>
-    /// Creates a hash from a string
+    /// Creates a hash from a string.
     /// </summary>
-    /// <param name="password">The string to be hashed</param>
-    /// <returns>The hashed string</returns>
+    /// <param name="password">The string to be hashed.</param>
+    /// <returns>The hashed string.</returns>
     public string HashString(string password)
     {
         byte[] salt = new byte[16];
@@ -35,7 +35,7 @@ public sealed class Hash : IHash
             hasher.Iterations = 4; // set number of iterations
             hashBytes = hasher.GetBytes(32); // get 32 bytes hash
         }
-        // Concatenate salt and hash and return as a Base64 string
+        // concatenate salt and hash and return as a Base64 string
         byte[] hashWithSaltBytes = new byte[salt.Length + hashBytes.Length];
         Array.Copy(salt, 0, hashWithSaltBytes, 0, salt.Length);
         Array.Copy(hashBytes, 0, hashWithSaltBytes, salt.Length, hashBytes.Length);
@@ -43,16 +43,16 @@ public sealed class Hash : IHash
     }
 
     /// <summary>
-    /// Verifies a password against a hash
+    /// Verifies a password against a hash.
     /// </summary>
-    /// <param name="password">The string to be checked</param>
-    /// <param name="hashedPassword">The hashed representation of the string to be checked</param>
-    /// <returns>True if <paramref name="password"/> and the de-hashed verions of <paramref name="hashedPassword"/> are equal, False otherwise</returns>
+    /// <param name="password">The string to be checked.</param>
+    /// <param name="hashedPassword">The hashed representation of the string to be checked.</param>
+    /// <returns><see langword="true"/> if <paramref name="password"/> and the de-hashed verions of <paramref name="hashedPassword"/> are equal, <see langword="false"/> otherwise.</returns>
     public bool CheckStringAgainstHash(string password, string hashedPassword)
     {
-        // Convert the Base64 string back into a byte array
+        // convert the Base64 string back into a byte array
         byte[] hashWithSaltBytes = Convert.FromBase64String(hashedPassword);
-        // Get the salt from the stored hashed password
+        // get the salt from the stored hashed password
         byte[] saltBytes = new byte[16];
         Array.Copy(hashWithSaltBytes, 0, saltBytes, 0, saltBytes.Length);
         byte[] hashBytes;
@@ -64,10 +64,10 @@ public sealed class Hash : IHash
             hasher.Iterations = 4; // set number of iterations
             hashBytes = hasher.GetBytes(32); // get 32 bytes hash
         }
-        // Get the stored hash from the stored hashed password
+        // get the stored hash from the stored hashed password
         byte[] storedHashBytes = new byte[hashWithSaltBytes.Length - saltBytes.Length];
         Array.Copy(hashWithSaltBytes, saltBytes.Length, storedHashBytes, 0, storedHashBytes.Length);
-        // Compare computed hash with stored hash
+        // compare computed hash with stored hash
         return Convert.ToBase64String(hashBytes) == Convert.ToBase64String(storedHashBytes);
     }
     #endregion

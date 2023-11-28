@@ -60,9 +60,9 @@ public class Program
                        ValidateAudience = true,
                        ValidateLifetime = true,
                        ValidateIssuerSigningKey = true,
-                       ValidIssuer = "Lyrida",
-                       ValidAudience = "Lyrida",
-                       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ds1/L-$#FHj4-}rs^Qq.M/@sP90%j#Ma")), // TODO: remove from code! appConfig.JwtSettings!.SecretKey!
+                       ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+                       ValidAudience = builder.Configuration["JwtSettings:Audience"],
+                       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!)),
                    };
 
                    options.Events = new JwtBearerEvents

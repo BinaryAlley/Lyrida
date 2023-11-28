@@ -89,7 +89,6 @@ const btnActions = document.getElementById('btnActions');
 const renameInput = document.getElementById('renameInput');
 const btnSelection = document.getElementById('btnSelection');
 const btnSelectionMode = document.getElementById('btnSelectionMode');
-const btnSelectAll = document.getElementById('btnSelectAll');
 const btnSelectNone = document.getElementById('btnSelectNone');
 const btnSelectInverse = document.getElementById('btnSelectInverse');
 const btnCopy = document.getElementById('btnCopy');
@@ -447,24 +446,6 @@ if (btnSelectionMode)
     });
 
 /**
- * Event handler for the select all icon click.
- */
-if (btnSelectAll)
-    btnSelectAll.addEventListener('click', function (event) {
-        const explorer = getActiveExplorer();
-        if (explorer) {
-            // go through each .e item and mark it as selected
-            explorer.querySelectorAll('.e').forEach(item => {
-                item.classList.add('selected');
-                item.classList.remove('selectionHover');
-            });
-        }
-        selectionDropdown.classList.add('hidden');
-        event.preventDefault();
-        event.stopPropagation();
-    });
-
-/**
  * Event handler for the select none icon click.
  */
 if (btnSelectNone)
@@ -725,6 +706,12 @@ function fetchDataForPath(path, environmentId, pageId, title, callback) {
                                 callback(combinedData);
                                 if (enableConsoleDebugMessages)
                                     console.info(getCurrentTime() + " Got the directories and files for: " + path);
+                            } else {
+                                const toast = swal.mixin({
+                                    toast: true, position: 'bottom-left', iconColor: 'red', showConfirmButton: false, timer: 5000,
+                                    allowEscapeKey: true, showCloseButton: true, timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                                });
+                                toast.fire({ icon: 'error', title: filesData.errorMessage });
                             }
                         },
                         error: function (jqXHR, textStatus, error) {
@@ -735,9 +722,14 @@ function fetchDataForPath(path, environmentId, pageId, title, callback) {
                                     title: 'STOP!', icon: 'error', buttonsStyling: false, text: textStatus + " " + error, confirmButtonText: 'OK',
                                     customClass: { popup: 'colored-toast', confirmButton: 'confirm-button f-18 h-24px pl-10 pr-10' }, heightAuto: false
                                 });
-                                //console.error('Failed to fetch files:', error);
                         }
                     });
+                } else {
+                    const toast = swal.mixin({
+                        toast: true, position: 'bottom-left', iconColor: 'red', showConfirmButton: false, timer: 5000,
+                        allowEscapeKey: true, showCloseButton: true, timerProgressBar: true, customClass: { popup: 'colored-toast' }
+                    });
+                    toast.fire({ icon: 'error', title: directoriesData.errorMessage });
                 }
                 hideBusyIndicator();
             },
