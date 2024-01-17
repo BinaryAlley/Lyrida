@@ -1,8 +1,10 @@
 src/client/.vs/*
+src/client/.vscode/*
 src/client/.idea/*
 src/client/.editorconfig
 
 src/server/.vs/*
+src/server/.vscode/*
 src/server/.idea/*
 src/server/.editorconfig
 
@@ -40,3 +42,5 @@ bin/*
 .git/*
 lyrida.key
 lyrida.key.pub
+
+.fake
